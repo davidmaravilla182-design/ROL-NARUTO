@@ -39,6 +39,8 @@ func construir() -> void:
 	diana.rotation_degrees = Vector3(90, 0, 0)
 	diana.position = Vector3(0, 1.05, 0.21)
 	_cuerpo.add_child(diana)
+	Materiales.fusionar(_cuerpo)
+	Materiales.fusionar(self)
 
 
 func golpeado() -> void:

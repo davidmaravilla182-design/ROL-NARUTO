@@ -59,3 +59,16 @@ Cada entrada: qué se hizo, cómo se verificó, capturas comparadas, problemas y
   el fuego se veía como un disco blanco: (1) demasiadas partículas aditivas (320) → máx. 90-100 y menos alfa;
   (2) la esfera de distorsión de calor tapaba la bola (A/B con y sin ella) → ahora solo un anillo y se dibuja detrás.
   El shader de fuego tiene más contraste (zonas rojas oscuras). Resultado: bola nv3 enorme con textura de fuego.
+
+## C6 — rendimiento
+- Descubrimiento: desde que se instaló lavapipe, las capturas "OpenGL" en realidad usaban Vulkan/Mobile (el renderizador
+  del teléfono). Las capturas de C3-C5 ya representaban al celular. `cap.sh` ahora fuerza OpenGL en el modo rápido.
+  Comparación lado a lado: ambos se ven equivalentes; Mobile tiene algo más de niebla.
+- Medición (tools/medir.gd, llamadas de dibujo visibles / primitivas / llamadas de sombra):
+  - Antes: alta 238 / 75k / 169 · media 234 / 73k / 171 · baja 206 / 68k / 0
+  - Piezas del trazado agrupadas por tipo en MultiMesh: alta 233 / 63k / 165 (poco efecto).
+  - Causa real: cada personaje eran ~70 mallas sueltas (picos de pelo, anillos de vendas, ropa). `Materiales.fusionar`
+    une las mallas de cada hueso en una sola (una superficie por material); igual con los muñecos.
+  - Después: alta 99 / 63k / 35 · media 95 / 61k / 35 · baja 67 / 56k / 0. Llamadas ÷2.4, sombras ÷4.7.
+- Calidad baja verificada en captura: sin glow ni sombras, se sigue viendo bien.
+- Ojos del modo ocular: la luz roja iluminaba el emblema de la espalda → rango 0.35 m.

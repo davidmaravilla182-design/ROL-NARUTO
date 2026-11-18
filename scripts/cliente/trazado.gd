@@ -9,14 +9,23 @@ static func construir(e: Escenario, m: Mapa) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = m.semilla + 77
 	var calidad_alta := Ajustes.calidad == "alta"
-	# Piezas principales: una instancia por pieza (cada una tiene su LOD automático).
+	# Piezas principales agrupadas por tipo en MultiMesh: una llamada de dibujo por material y tipo.
+	var por_tipo: Dictionary = {}
 	for p in m.piezas:
 		var c: Vector2 = p["centro"]
 		var t := Transform3D(Basis(Vector3.UP, deg_to_rad(float(p["giro"]))), Vector3(c.x, 0, c.y))
-		e.add_child(Kit.instancia(str(p["tipo"]), t, true))
+		var tipo := str(p["tipo"])
+		if not por_tipo.has(tipo):
+			por_tipo[tipo] = []
+		por_tipo[tipo].append(t)
+	for tipo in por_tipo.keys():
+		e.add_child(Kit.multimalla(tipo, por_tipo[tipo], Ajustes.calidad == "alta" or tipo == "edificio"))
+	var arcos_t: Array = []
 	for a in m.arcos:
 		var ca: Vector2 = a["centro"]
-		e.add_child(Kit.instancia("tubo_arco", Transform3D(Basis(Vector3.UP, deg_to_rad(float(a["giro"]))), Vector3(ca.x, 0.0, ca.y)), true))
+		arcos_t.append(Transform3D(Basis(Vector3.UP, deg_to_rad(float(a["giro"]))), Vector3(ca.x, 0.0, ca.y)))
+	if not arcos_t.is_empty():
+		e.add_child(Kit.multimalla("tubo_arco", arcos_t, true))
 	for tb in m.tubos:
 		var ct: Vector2 = tb["centro"]
 		e.add_child(Kit.instancia("tubo_largo", Transform3D(Basis(Vector3.UP, deg_to_rad(float(tb["giro"]))), Vector3(ct.x, float(tb["altura"]), ct.y)), true))

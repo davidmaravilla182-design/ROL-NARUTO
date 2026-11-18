@@ -16,6 +16,9 @@ func _initialize() -> void:
 	if args.size() > 0:
 		salida = args[0]
 	DirAccess.make_dir_recursive_absolute(salida)
+	if OS.get_environment("CALIDAD") != "":
+		Ajustes.cargar()
+		Ajustes.calidad = OS.get_environment("CALIDAD")
 	menu = (load("res://escenas/menu.tscn") as PackedScene).instantiate()
 	root.add_child(menu)
 	guion = [

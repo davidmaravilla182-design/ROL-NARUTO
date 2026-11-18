@@ -75,6 +75,9 @@ func construir(plantilla_id: String) -> void:
 	_construir_cuerpo(aspecto)
 	Vestimenta.vestir(self, aspecto, aldea, clan)
 	Materiales.grosor_contorno = contorno_previo
+	# Une las piezas de cada hueso (los ojos quedan aparte: su material cambia con el modo ocular, pero es compartido).
+	for n in _adjuntos.keys():
+		Materiales.fusionar(_adjuntos[n])
 
 	anim = AnimationPlayer.new()
 	anim.name = "Animador"
@@ -189,7 +192,7 @@ func _construir_cuerpo(a: Dictionary) -> void:
 		_pieza("Cabeza", oreja, Vector3(0.12 * lado, 0.13, 0.0))
 	_luz_ojos = OmniLight3D.new()
 	_luz_ojos.light_color = Color(1, 0.1, 0.1)
-	_luz_ojos.omni_range = 0.7
+	_luz_ojos.omni_range = 0.35
 	_luz_ojos.light_energy = 0.0
 	_luz_ojos.position = Vector3(0, 0.14, 0.22)
 	hueso("Cabeza").add_child(_luz_ojos)
@@ -269,7 +272,7 @@ func poner_sharingan(activo: bool) -> void:
 		return
 	sharingan = activo
 	(_mat_ojos_normal as ShaderMaterial).set_shader_parameter("activo", 1.0 if activo else 0.0)
-	_luz_ojos.light_energy = 1.5 if activo else 0.0
+	_luz_ojos.light_energy = 0.8 if activo else 0.0
 
 
 ## Posición global de la mano derecha (para el rayo).

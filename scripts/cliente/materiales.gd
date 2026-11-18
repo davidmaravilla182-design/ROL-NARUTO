@@ -170,3 +170,41 @@ static func disco(radio: float, mat: Material, lados := 16) -> MeshInstance3D:
 	mi.mesh = c
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return mi
+
+
+## Une las mallas hijas directas de `nodo` en una sola malla (una superficie por material).
+## Reduce mucho las llamadas de dibujo de piezas hechas por código (pelo, vendas, ropa).
+## Se omiten nodos con hijos propios o con la meta "no_fusionar".
+static func fusionar(nodo: Node3D) -> void:
+	var grupos: Dictionary = {}   # material -> SurfaceTool
+	var quitar: Array = []
+	for h in nodo.get_children():
+		if not (h is MeshInstance3D) or h.get_child_count() > 0 or h.has_meta("no_fusionar"):
+			continue
+		var mi: MeshInstance3D = h
+		if mi.mesh == null or not mi.visible:
+			continue
+		var t := mi.transform
+		for i in mi.mesh.get_surface_count():
+			var mat: Material = mi.material_override if mi.material_override != null else mi.mesh.surface_get_material(i)
+			if not grupos.has(mat):
+				var st_n := SurfaceTool.new()
+				st_n.begin(Mesh.PRIMITIVE_TRIANGLES)
+				grupos[mat] = st_n
+			var st: SurfaceTool = grupos[mat]
+			st.append_from(mi.mesh, i, t)
+		quitar.append(mi)
+	if quitar.size() < 2:
+		return
+	var am := ArrayMesh.new()
+	for mat in grupos.keys():
+		var st: SurfaceTool = grupos[mat]
+		am = st.commit(am)
+		am.surface_set_material(am.get_surface_count() - 1, mat)
+	for q in quitar:
+		nodo.remove_child(q)
+		q.queue_free()
+	var nuevo := MeshInstance3D.new()
+	nuevo.name = "Fusionado"
+	nuevo.mesh = am
+	nodo.add_child(nuevo)

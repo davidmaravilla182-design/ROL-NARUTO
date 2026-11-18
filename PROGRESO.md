@@ -31,11 +31,11 @@
 - [x] C3 Nuevo trazado de la aldea con el kit (Mapa compartido: canal, muelles, plataforma de entrenamiento). Agua, cascadas, vapor, cables. (Vulkan)
 - [x] C4 Torre-cabeza monumental + horizonte de agujas + gradación de color violeta/ámbar.
 - [x] C5 Personaje: malla continua deformable (piel por pesos) desde Blender, ropa continua.
-- [ ] C6 Rendimiento: LOD/visibilidad, conteo de draw calls por calidad, ajustes baja/media. (Vulkan)
+- [x] C6 Rendimiento: LOD/visibilidad, conteo de draw calls por calidad, ajustes baja/media. (Vulkan)
 - [ ] C7 Pulido de efectos y enemigo/muñecos con el nuevo estilo; docs; release.
 
 ## Estado actual
-- Ciclo en curso: C6 (rendimiento: LOD, calidad baja/media) + Vulkan
+- Ciclo en curso: C7 (pulido: enemigo/muñecos, efectos, docs, release)
 - Texturas: `tools/blender/texturas.py` (6 materiales, ~10 s). Tras hornear: `python3 tools/ajustar_importacion.py` y `godot --headless --path . --import`.
 - Shader con texturas: `Shaders.toon_tex(nombre, tinte, escala_uv, triplanar, escala_mundo, metalico, humedad, contorno)`.
 - Capturas: `/tmp/claude-0/cap.sh <carpeta> [mobile]` (si falta, recrear: xvfb-run + godot -s res://tools/captura.gd).
@@ -43,3 +43,6 @@
 - Trazado: data/escenario.json → "trazado" (piezas, arcos, tubos, canal, puentes, horizonte). `Mapa._trazado` da colisiones; `Trazado.construir` dibuja.
 - Capturas con cámara libre: en tools/captura.gd usar `_libre(pos, mirar)` y `_seguir()`.
 - Cuerpo: `tools/blender/personaje.py` → assets/modelos/cuerpo.glb. Animaciones corrigen el reposo de Blender (padre⁻¹·D·global); las piezas por código cuelgan de un nodo "Marco" que anula la rotación de reposo.
+- IMPORTANTE: con lavapipe instalado, Godot usa Vulkan/Mobile por defecto. `cap.sh <carpeta>` fuerza OpenGL; `cap.sh <carpeta> mobile` usa Vulkan.
+  Calidad de la captura: `CALIDAD=baja /tmp/claude-0/cap.sh carpeta`.
+- Medir llamadas de dibujo: `/tmp/claude-0/medir.sh` (tools/medir.gd; salida a archivo porque Godot se cuelga al salir con Vulkan).
