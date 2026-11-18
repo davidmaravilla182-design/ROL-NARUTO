@@ -39,6 +39,17 @@ Cada vez que se hace push, GitHub Actions compila un APK nuevo y reemplaza el re
 - Paleta como las referencias: violetas fríos, tuberías granate y luz ámbar.
 - **Rendimiento**: las llamadas de dibujo bajaron de 238 a 99 en calidad alta (67 en baja).
 
+## Novedades de la v0.4: repertorio de 40 jutsus
+
+- Botón **Repertorio** en la pantalla de inicio. Pestañas por tipo (Fuego, Rayo, Agua, Tierra, Viento, Sin naturaleza, Kekkei genkai, Ojos, Cuerpo) y filtro **Solo disponibles**.
+- Cada tarjeta muestra icono, color del tipo, **puntos**, requisito y el nivel de maestría (●○○). Tócala para ver los **3 niveles** con su vista previa animada, la ventaja y la desventaja.
+- **Arrastra** tarjetas a las 4 ranuras y a la ranura **MODO** (Sharingan, Mangekyō, Rinnegan, Byakugan, Ocho Puertas…). Tope: **12 puntos**. El taijutsu básico siempre está.
+- Si no cumples un requisito (naturaleza, linaje, rango, atributos) la tarjeta sale bloqueada con el motivo. Hay incompatibles: Ocho Puertas o Modo Sabio no van con ojos; Rinnegan y Mangekyō no van juntos.
+- **3 repertorios guardados** (R1, R2, R3). En cada ranura puedes tocar «Usar» para limitar el nivel (el más alto / N1 / N2 / N3).
+- **Maestría**: usar y acertar un jutsu le da experiencia; a 100 XP se desbloquea N2 y a 300 XP el N3 (más grande, cámara lenta, sacudida y marcas en el escenario). Cada nivel cuesta más chakra.
+- Interruptor **Modo prueba: desbloquear todo** para probar todo sin requisitos.
+- Ya funcionan en sus 3 niveles: Bola de Fuego, Chidori, **Kirin**, **Rasengan**, **Amaterasu**, **Susanoo**, **Shinra Tensei** y **Ocho Puertas**, más los modos oculares. El resto dice **«Próximamente»** (ver [PROGRESO.md](PROGRESO.md)).
+
 ## Novedades de la v0.2
 
 - **Apuntado táctil**: toque rápido = auto-apuntado; mantener y arrastrar = indicador en el suelo y disparo al soltar; zona de **Cancelar** para no gastar chakra.
@@ -73,11 +84,11 @@ Botón **Ajustes** (arriba a la derecha o en la pantalla de inicio):
 - **Calidad gráfica**: **Alta** (por defecto), Media o Baja. Media y Baja quitan efectos caros (contornos del escenario, distorsión de calor, nubes, niebla, menos partículas, menor resolución 3D) para ir a 30 fps en gama media. Al cerrar el menú se reinicia el entrenamiento con la calidad nueva.
 - **Vibración** sí/no y **Mostrar FPS**.
 
-Con teclado (PC): WASD mover, J golpe, K bola de fuego, L chidori, Q sharingan, Shift esquivar, Espacio saltar.
+Con teclado (PC): WASD mover, J golpe, K/L/U/I las 4 ranuras del repertorio, Q activar/desactivar el MODO, Shift esquivar, Espacio saltar.
 
 ## Niveles de poder (depuración)
 
-Arriba a la derecha está el botón **«Nivel 1»**. Cada toque lo cambia: **1 → 2 → 3 → 1**. Afecta a la Bola de Fuego y al Chidori:
+Arriba a la derecha está el botón de nivel. Cada toque lo cambia: **Auto → 1 → 2 → 3 → Auto**. «Auto» usa el nivel que tengas desbloqueado por maestría; 1/2/3 lo fuerzan para probar. Afecta a todos los jutsus:
 
 - **Nivel 1**: técnica pequeña y barata.
 - **Nivel 2**: más grande, más partículas, humo, más luz, sacudida de cámara y marcas en el suelo.
@@ -94,4 +105,4 @@ Otros botones de depuración:
 - Decisiones tomadas durante el desarrollo: [DECISIONES.md](DECISIONES.md)
 - Licencias y créditos: [assets/LICENCIAS.md](assets/LICENCIAS.md)
 - Todos los datos de diseño (nombres, jutsus, atributos, textos) están en [`/data`](data). Cambiar esos JSON renombra o rebalancea el juego sin tocar código.
-- Verificación local (headless): `tools/verificar.sh` (importa el proyecto, corre 89 pruebas de combate y una prueba de humo). Hook de pre-commit: `git config core.hooksPath .githooks`.
+- Verificación local (headless): `tools/verificar.sh` (importa el proyecto, corre 89 pruebas de combate, 72 del repertorio y una prueba de humo). Hook de pre-commit: `git config core.hooksPath .githooks`.

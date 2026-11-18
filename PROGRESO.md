@@ -1,4 +1,39 @@
-# PROGRESO — mejora radical de gráficos (v0.3)
+# PROGRESO — repertorio de 40 jutsus (v0.4)
+
+> Si el contexto se resume: releer este archivo. Todo el diseño está en `data/jutsus.json`
+> (categorías, 40 jutsus + modos oculares, 3 niveles cada uno, requisitos, ventaja/desventaja).
+
+## Hecho
+- [x] Datos: `data/jutsus.json` reemplaza la lista anterior; reglas de repertorio y maestría en `data/reglas.json`.
+- [x] Reglas (servidor y cliente comparten `scripts/core/repertorio.gd`): 4 ranuras + 1 MODO, tope 12 puntos,
+      requisitos (naturaleza, linaje, rango, atributos, control, contrato, dominio), incompatibles, 3 repertorios.
+- [x] Maestría: XP por uso e impacto de cada jutsu; N2 a 100 XP, N3 a 300 XP; costo de chakra crece por nivel.
+      En combate se usa el nivel más alto desbloqueado salvo que el jugador lo baje en el menú; selector de
+      depuración Auto/N1/N2/N3 en el HUD.
+- [x] Menú «Repertorio»: pestañas por categoría, filtro «solo disponibles», tarjetas (icono, color, puntos,
+      requisito, ●○○), detalle con 3 niveles + vista previa animada + ventaja/desventaja, arrastrar a ranuras,
+      R1/R2/R3, «Modo prueba: desbloquear todo». Los no implementados muestran «Próximamente».
+- [x] Botones de combate generados desde el repertorio con toque/arrastre/cancelar.
+- [x] Bloque 1 (3 niveles visibles): Kirin, Rasengan, Amaterasu, Susanoo, Shinra Tensei, Ocho Puertas
+      (+ ya existían Bola de Fuego y Chidori, y los modos Sharingan, Mangekyō, Rinnegan, Byakugan).
+- [x] Pruebas: 89 de combate + 72 de repertorio + humo (menú, repertorio y partida en 3 calidades).
+- [x] Capturas por nivel del bloque 1: `GUION=tecnicas` con `tools/captura.gd`; menú con `tools/captura_menu.gd`.
+
+## Bloques pendientes (6 por bloque, cada uno con sus 3 niveles visibles)
+- [ ] Bloque 2: Fénix, Dragón de Fuego, Lanza Chidori, Manto de Rayo, Gran Ráfaga, Rasenshuriken
+- [ ] Bloque 3: Gran Dragón de Agua, Prisión de Agua, Gran Cascada, Tiburones de Agua, Muro de Tierra, Dragón de Tierra
+- [ ] Bloque 4: Golem de Tierra, Balas de Vacío, Clones de Sombra, Invocación, Dios del Trueno Volador, Sellos Explosivos
+- [ ] Bloque 5: Danza de Papel, Fuerza Sobrehumana, Curación, Madera, Hielo, Lava
+- [ ] Bloque 6: Arcilla Explosiva, Arena, Tsukuyomi, Kamui, Chibaku Tensei, 64 Palmas
+- [ ] Bloque 7: Rotación, Modo Sabio (ranura MODO)
+
+Para implementar uno: poner `"implementado": true` en `data/jutsus.json`, añadir su `mecanica` en
+`ServidorJuego._ejecutar_jutsu` / `Tecnicas`, sus visuales en `EfectosTecnicas.evento` y pruebas en
+`tests/pruebas_repertorio.gd`.
+
+---
+
+# Historial: mejora radical de gráficos (v0.3)
 
 > Si el contexto se resume: releer este archivo y BITACORA_GRAFICOS.md antes de seguir.
 > Regla: cada ciclo = cambio → verificación headless (tools/verificar.sh) → captura OpenGL →

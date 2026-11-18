@@ -96,3 +96,20 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - **Capturas**: con lavapipe instalado Godot usa Vulkan/Mobile por defecto; las revisiones visuales se hicieron con ambos renderizadores.
 - **Impermeable** del ninja enemigo como tercera malla en el mismo GLB del cuerpo (comparte esqueleto), activado desde
   los datos (`aspecto.capa`), en vez de un GLB aparte: así no hay que reasignar la piel a otro esqueleto en Godot.
+
+
+## v0.4 — repertorio de 40 jutsus
+
+- `data/jutsus.json` reemplaza la lista anterior. Además de los 40, los ojos (Sharingan, Mangekyō, Rinnegan, Byakugan) son entradas de ranura MODO con sus 3 niveles; los jutsus de ojos exigen ese ojo como MODO y **activo** al lanzarlos.
+- Los modos también cuestan puntos (1–4) para que el tope de 12 obligue a elegir.
+- Personaje de prueba: rango Jōnin, linajes Sharingan y Mangekyō, naturalezas fuego y rayo. Con «Modo prueba» se ignoran requisitos, puntos e incompatibles.
+- Maestría: 10 XP por uso, 15 XP por impacto, 2 XP por segundo de modo; N2 a 100 XP y N3 a 300 XP (en `reglas.json`). En el modo offline la maestría vive en `user://perfil.json` y el cliente la manda al servidor con el repertorio; en red la guardaría el servidor.
+- Nivel en combate: el más alto desbloqueado, salvo el tope que el jugador elija por jutsu en el menú. El botón de depuración del HUD añade «Auto».
+- Kirin necesita tormenta: la lluvia del campo de entrenamiento cuenta como tormenta (`clima.lluvia.tormenta`). Su costo es un porcentaje del chakra máximo.
+- Amaterasu: fuego negro que no se apaga con la lluvia; N2 se propaga a 4,8 m; N3 añade armadura de fuego negro. Usarlo deja ceguera temporal (reduce la asistencia de apuntado).
+- Susanoo es un interruptor que drena chakra; N2 añade flechas, N3 la espada.
+- Shinra Tensei deja al usuario vulnerable 5 s (recibe +30 % de daño); N3 deja un cráter.
+- Ocho Puertas consume vida en vez de chakra y multiplica velocidad y taijutsu; en N3 el tercer golpe del combo es un golpe definitivo.
+- El Rasengan reutiliza el embiste del Chidori (estados `chidori_carga`/`chidori_embiste` con el id del jutsu), así el servidor no duplica código.
+- La vista previa animada del menú se dibuja en 2D por código (sin escenas 3D extra) para que el menú sea ligero en el celular.
+- El HUD se puede reconstruir al cambiar de repertorio sin duplicar nodos.
