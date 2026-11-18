@@ -119,6 +119,12 @@ func aplicar_comando(e: EntidadServidor, cmd: Dictionary) -> void:
 			e.nivel_poder = int(cmd["valor"])
 			_evento({"tipo": "nivel", "entidad": e.id, "nivel": e.nivel_poder})
 		Protocolo.C_ACCION:
+			# Dirección y objetivo del disparo viajan en el comando (igual offline y en red).
+			e.apuntado = {
+				"dir": cmd.get("dir", Vector2.ZERO),
+				"objetivo": int(cmd.get("objetivo", -1)),
+				"exacto": bool(cmd.get("exacto", false)),
+			}
 			_accion(e, str(cmd["id"]))
 
 
@@ -189,9 +195,12 @@ func _iniciar_golpe(e: EntidadServidor, paso: int) -> void:
 	e.estamina -= float(j["costo_estamina"])
 	e.combo_paso = paso
 	e.combo_ventana = 0.0
-	var obj := _buscar_objetivo(e, e.yaw, 70.0, 3.5)
-	if obj != null:
-		e.yaw = _yaw_hacia(e.pos, obj.pos)
+	var dir_cmd: Vector2 = e.apuntado.get("dir", Vector2.ZERO)
+	var yaw_base := atan2(dir_cmd.x, dir_cmd.y) if dir_cmd.length() > 0.1 else e.yaw
+	var obj := _objetivo_fijado(e, 3.5)
+	if obj == null:
+		obj = _buscar_objetivo(e, yaw_base, 70.0, 3.5)
+	e.yaw = _yaw_hacia(e.pos, obj.pos) if obj != null else yaw_base
 	e.poner_estado("golpe", float(p["duracion"]), {"jutsu": "golpe", "paso": paso, "golpeado": false, "encadenar": false})
 	_evento({"tipo": "golpe", "entidad": e.id, "paso": paso})
 	if e.tipo == "enemigo":
@@ -256,8 +265,13 @@ func _accion_jutsu(e: EntidadServidor, id: String) -> void:
 	e.chakra -= costo
 	e.recargas[id] = float(j["recarga"])
 	var t := Combate.tiempo_sellos(id, e.attrs)
-	e.yaw = e.entrada_mira if e.tipo == "jugador" else e.yaw
-	e.poner_estado("sellos", t, {"jutsu": id, "nivel": nivel})
+	var dir_cmd: Vector2 = e.apuntado.get("dir", Vector2.ZERO)
+	if dir_cmd.length() > 0.1:
+		e.yaw = atan2(dir_cmd.x, dir_cmd.y)
+	elif e.tipo == "jugador":
+		e.yaw = e.entrada_mira
+	e.poner_estado("sellos", t, {"jutsu": id, "nivel": nivel, "yaw_apuntado": e.yaw,
+		"objetivo": int(e.apuntado.get("objetivo", -1)), "exacto": bool(e.apuntado.get("exacto", false))})
 	_evento({"tipo": "sellos", "entidad": e.id, "jutsu": id, "nivel": nivel, "duracion": t, "sellos": j.get("sellos", [])})
 	if e.tipo == "enemigo":
 		var obj := _jugador_mas_cercano(e.pos)
@@ -359,9 +373,11 @@ func _ejecutar_jutsu(e: EntidadServidor) -> void:
 		"bala_agua":
 			var n := int(nd.get("rafaga", 1))
 			var intervalo := float(nd.get("intervalo_rafaga", 0.2))
-			e.poner_estado("rafaga", intervalo * n, {"jutsu": id, "nivel": nivel, "quedan": n, "siguiente": 0.0, "intervalo": intervalo})
+			e.poner_estado("rafaga", intervalo * n, {"jutsu": id, "nivel": nivel, "quedan": n, "siguiente": 0.0, "intervalo": intervalo,
+				"yaw_apuntado": e.accion.get("yaw_apuntado", e.yaw), "objetivo": -1, "exacto": false})
 		"chidori":
-			e.poner_estado("chidori_carga", float(nd["carga"]), {"jutsu": id, "nivel": nivel})
+			e.poner_estado("chidori_carga", float(nd["carga"]), {"jutsu": id, "nivel": nivel, "yaw_apuntado": e.accion.get("yaw_apuntado", e.yaw),
+				"objetivo": e.accion.get("objetivo", -1), "exacto": e.accion.get("exacto", false)})
 			_evento({"tipo": "chidori_carga", "entidad": e.id, "nivel": nivel, "duracion": float(nd["carga"])})
 		_:
 			e.poner_estado("libre", 0.0)
@@ -371,8 +387,9 @@ func _disparar_proyectil(e: EntidadServidor, id: String, nivel: int) -> void:
 	var nd := Datos.nivel_jutsu(id, nivel)
 	var j := Datos.jutsu(id)
 	var escala := Combate.escala_tamano(id, e.attrs, clima)
-	var yaw_base := e.yaw
-	var obj := _buscar_objetivo(e, yaw_base, Combate.precision_grados(e.attrs), float(j.get("alcance", 25.0)))
+	var obj := _resolver_objetivo(e, float(j.get("alcance", 25.0)))
+	if obj == null:
+		e.yaw = float(e.accion.get("yaw_apuntado", e.yaw))
 	var radio := float(nd["radio"]) * escala
 	# Los proyectiles grandes salen más altos y por delante para no tocar el suelo ni al lanzador.
 	var origen := e.pos + Vector3(0, 1.4 + radio * 0.5, 0) + e.adelante() * (0.8 + radio)
@@ -407,8 +424,9 @@ func _disparar_proyectil(e: EntidadServidor, id: String, nivel: int) -> void:
 func _iniciar_embiste(e: EntidadServidor) -> void:
 	var nivel := int(e.accion["nivel"])
 	var nd := Datos.nivel_jutsu("chidori", nivel)
-	var yaw_base := e.entrada_mira if e.tipo == "jugador" else e.yaw
-	var obj := _buscar_objetivo(e, yaw_base, Combate.precision_grados(e.attrs), float(nd["distancia"]) + 2.0)
+	var yaw_base := float(e.accion.get("yaw_apuntado", e.yaw))
+	e.yaw = yaw_base
+	var obj := _resolver_objetivo(e, float(nd["distancia"]) + 2.0)
 	e.yaw = _yaw_hacia(e.pos, obj.pos) if obj != null else yaw_base
 	var dir := e.adelante()
 	var dur := float(nd["distancia"]) / float(nd["velocidad"])
@@ -629,6 +647,30 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 func _yaw_hacia(desde: Vector3, hacia: Vector3) -> float:
 	var d := hacia - desde
 	return atan2(d.x, d.z)
+
+
+## Objetivo fijado (lock-on) enviado por el cliente, si sigue siendo válido.
+func _objetivo_fijado(e: EntidadServidor, rango: float) -> EntidadServidor:
+	var oid := int(e.accion["objetivo"]) if e.accion.has("objetivo") else int(e.apuntado.get("objetivo", -1))
+	if oid < 0:
+		return null
+	var o := entidad(oid)
+	if o == null or o == e or not o.vivo() or o.equipo == e.equipo:
+		return null
+	if o.pos.distance_to(e.pos) > rango:
+		return null
+	return o
+
+
+## Decide a quién apunta un jutsu: objetivo fijado válido > dirección exacta (arrastre) > asistencia en cono.
+func _resolver_objetivo(e: EntidadServidor, rango: float) -> EntidadServidor:
+	var obj := _objetivo_fijado(e, rango + 2.0)
+	if obj != null:
+		return obj
+	if bool(e.accion.get("exacto", false)):
+		return null
+	var yaw_base := float(e.accion.get("yaw_apuntado", e.yaw))
+	return _buscar_objetivo(e, yaw_base, Combate.precision_grados(e.attrs), rango)
 
 
 ## Objetivo vivo más conveniente dentro de un cono (asistencia de puntería).

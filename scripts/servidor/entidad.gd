@@ -38,6 +38,7 @@ var invulnerable_t := 0.0
 
 var entrada_mov := Vector2.ZERO
 var entrada_mira := 0.0
+var apuntado: Dictionary = {}   # último {dir, objetivo, exacto} recibido con una acción
 
 var ia: RefCounted = null
 
@@ -73,6 +74,7 @@ func reiniciar() -> void:
 	combo_paso = 0
 	combo_ventana = 0.0
 	invulnerable_t = 0.0
+	apuntado = {}
 
 
 func vivo() -> bool:

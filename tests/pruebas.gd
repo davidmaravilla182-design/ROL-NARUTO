@@ -19,6 +19,7 @@ func _initialize() -> void:
 	probar_mapa()
 	probar_protocolo()
 	probar_servidor_bola_fuego()
+	probar_direccion_disparo()
 	probar_servidor_chidori_cadena()
 	probar_servidor_sharingan()
 	probar_servidor_combo()
@@ -219,6 +220,68 @@ func probar_servidor_bola_fuego() -> void:
 	comprobar(contar(evs, "lanzar") == 1, "se lanza la bola de fuego tras los sellos")
 	comprobar(contar(evs, "explosion") == 1, "la bola de fuego explota")
 	comprobar(contar(evs, "impacto") >= 1, "la bola de fuego impacta a un muñeco")
+	s.free()
+
+
+## La dirección del disparo llega en el comando y el servidor la respeta.
+func probar_direccion_disparo() -> void:
+	var c := Protocolo.sanear_comando({"t": "accion", "id": "bola_fuego", "dir": Vector2(3, 4), "objetivo": 7, "exacto": true})
+	comprobar(cerca((c["dir"] as Vector2).length(), 1.0) and int(c["objetivo"]) == 7 and c["exacto"], "comando de jutsu lleva dirección normalizada, objetivo y modo exacto")
+	comprobar((Protocolo.sanear_comando({"t": "accion", "id": "chidori", "dir": "x"})["dir"] as Vector2) == Vector2.ZERO, "dirección inválida se ignora")
+
+	# 1) Arrastre exacto hacia +X (lejos de los muñecos): sin asistencia, sale hacia +X.
+	var s := nuevo_servidor(false)
+	var j := s.entidad_de_peer(1)
+	j.pos = Vector3(0, 0, 6)
+	s.recibir_comando(1, {"t": "accion", "id": "bola_fuego", "dir": Vector2(1, 0), "exacto": true})
+	var evs := correr(s, 1.0)
+	var dir_lanz := Vector3.ZERO
+	for e in evs:
+		if e["tipo"] == "lanzar":
+			dir_lanz = e["dir"]
+	comprobar(dir_lanz.dot(Vector3(1, 0, 0)) > 0.98, "arrastre exacto: la bola sale en la dirección del dedo (%s)" % str(dir_lanz))
+	comprobar(absf(j.yaw - PI * 0.5) < 0.05, "el lanzador gira hacia la dirección del disparo")
+	s.free()
+
+	# 2) Toque con objetivo fijado: aunque la dirección apunte a otro lado, va al objetivo.
+	s = nuevo_servidor(false)
+	j = s.entidad_de_peer(1)
+	j.pos = Vector3(0, 0, 6)
+	var m: EntidadServidor = null
+	for e in s.entidades:
+		if e.tipo == "muneco" and e.pos.x > 1.0:
+			m = e
+	s.recibir_comando(1, {"t": "accion", "id": "bola_fuego", "dir": Vector2(-1, 0), "objetivo": m.id})
+	evs = correr(s, 1.0)
+	for e in evs:
+		if e["tipo"] == "lanzar":
+			dir_lanz = e["dir"]
+	var esperado := (m.pos - j.pos)
+	esperado.y = 0
+	var plano := Vector3(dir_lanz.x, 0, dir_lanz.z).normalized()
+	comprobar(plano.dot(esperado.normalized()) > 0.97, "objetivo fijado: la bola va al muñeco elegido")
+	s.free()
+
+	# 3) Toque sin objetivo: asistencia en cono alrededor de la dirección enviada.
+	s = nuevo_servidor(false)
+	j = s.entidad_de_peer(1)
+	j.pos = Vector3(0, 0, 6)
+	s.recibir_comando(1, {"t": "accion", "id": "bola_fuego", "dir": Vector2(0.15, -1).normalized()})
+	evs = correr(s, 3.0)
+	comprobar(contar(evs, "impacto") >= 1, "toque rápido: la asistencia corrige pequeños errores y acierta")
+	s.free()
+
+	# 4) Chidori con dirección exacta: el embiste sigue esa dirección.
+	s = nuevo_servidor(false)
+	j = s.entidad_de_peer(1)
+	j.pos = Vector3(0, 0, 10)
+	s.recibir_comando(1, {"t": "accion", "id": "chidori", "dir": Vector2(-1, 0), "exacto": true})
+	evs = correr(s, 2.0)
+	var dir_emb := Vector3.ZERO
+	for e in evs:
+		if e["tipo"] == "chidori_embiste":
+			dir_emb = e["dir"]
+	comprobar(dir_emb.dot(Vector3(-1, 0, 0)) > 0.98, "chidori: el embiste sigue la flecha arrastrada")
 	s.free()
 
 

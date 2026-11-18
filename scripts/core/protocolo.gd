@@ -6,7 +6,9 @@ extends RefCounted
 ##
 ## COMANDOS (cliente -> servidor):
 ##   {"t": "entrada", "mov": Vector2, "mira": float}   # movimiento en el plano XZ del mundo y yaw de la cámara
-##   {"t": "accion", "id": String}                     # golpe, bola_fuego, chidori, sharingan, esquivar, saltar
+##   {"t": "accion", "id": String,                     # golpe, bola_fuego, chidori, sharingan, esquivar, saltar
+##    "dir": Vector2, "objetivo": int, "exacto": bool}  # opcional: dirección XZ del disparo, objetivo fijado
+##                                                     # (-1 = ninguno) y si la dirección es manual (sin asistencia)
 ##   {"t": "nivel", "valor": int}                      # depuración: nivel de poder 1..3
 ##   {"t": "reaparecer"}                               # depuración: reinicia enemigo, muñecos y jugador
 ##
@@ -51,7 +53,15 @@ static func sanear_comando(cmd: Variant) -> Dictionary:
 		C_ACCION:
 			var id := str(c.get("id", ""))
 			if id in ACCIONES:
-				return {"t": C_ACCION, "id": id}
+				var r := {"t": C_ACCION, "id": id, "dir": Vector2.ZERO, "objetivo": -1, "exacto": false}
+				var d: Variant = c.get("dir", Vector2.ZERO)
+				if typeof(d) == TYPE_VECTOR2 and (d as Vector2).is_finite() and (d as Vector2).length() > 0.01:
+					r["dir"] = (d as Vector2).normalized()
+					r["exacto"] = bool(c.get("exacto", false))
+				var o: Variant = c.get("objetivo", -1)
+				if typeof(o) == TYPE_INT or typeof(o) == TYPE_FLOAT:
+					r["objetivo"] = int(o)
+				return r
 		C_NIVEL:
 			return {"t": C_NIVEL, "valor": clampi(int(c.get("valor", 1)), 1, 3)}
 		C_REAPARECER:
