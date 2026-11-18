@@ -52,7 +52,8 @@ var _cancelar_zona: Control
 var _cancelar_activo := false
 var _cancelar_sobre := false
 var _fps: Label
-var diag_red: Dictionary = {}    # {ping, perdida, jugadores, simulado} lo rellena el cliente en red
+var diag_red: Dictionary = {}
+var _info_red: Label    # {ping, perdida, jugadores, simulado} lo rellena el cliente en red
 var _diag_t := 0.0
 var _clima: Label
 var _margen := Rect2()     # márgenes del área segura: position = (izq, arriba), size = (der, abajo)
@@ -172,6 +173,10 @@ void fragment() {
 	_banner.visible = false
 	raiz.add_child(_banner)
 
+	_info_red = _etiqueta("", 19, HORIZONTAL_ALIGNMENT_CENTER)
+	_info_red.add_theme_constant_override("outline_size", 6)
+	_info_red.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	_info_red.add_theme_color_override("font_color", Color(1.0, 0.9, 0.55))
 	_fps = _etiqueta("", 18, HORIZONTAL_ALIGNMENT_LEFT)
 	_fps.modulate = Color(0.7, 1.0, 0.7)
 	_fps.add_theme_constant_override("outline_size", 5)
@@ -515,3 +520,14 @@ func texto_diagnostico() -> String:
 		if diag_red.get("simulado", false):
 			t += "  " + Datos.texto("diag_simulado")
 	return t
+
+
+## Texto fijo de la red (IP del anfitrión, "Conectando…"); vacío lo oculta.
+func poner_info_red(t: String) -> void:
+	if _info_red == null:
+		return
+	_info_red.text = t
+	_info_red.visible = t != ""
+	var vp := get_viewport().get_visible_rect().size
+	_info_red.size = Vector2(vp.x, 30)
+	_info_red.position = Vector2(0, vp.y - 40)

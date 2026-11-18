@@ -32,6 +32,12 @@ var _ultimo_mov := Vector2.ZERO
 var _t_envio := 0.0
 var _mov_prueba := Vector2.ZERO
 var _anuncio_fin := ""
+var red: TransporteENet = null       # anfitrión: servidor para los invitados; invitado: su transporte
+var descubrimiento: Descubrimiento = null
+var prediccion: Prediccion = null    # solo como invitado (el anfitrión no tiene latencia)
+var _seq_envio := 0.0
+var _t_diag := 0.0
+var _t_espera := 0.0
 var _info: Dictionary = {}         # id entidad -> {nombre, aspecto} (llega del servidor cada medio segundo)
 
 
@@ -105,7 +111,10 @@ func _ready() -> void:
 	hud.salir_pedido.connect(func(): get_tree().change_scene_to_file(ESCENA_MENU))
 	hud.camara_arrastre.connect(func(r): camara.girar(r * Ajustes.sensibilidad))
 
-	# Modo offline: servidor autoritativo en el mismo proceso, misma interfaz que en red.
+	if Sesion.modo == "cliente":
+		_iniciar_invitado()
+		return
+	# Offline y anfitrión: servidor autoritativo en este mismo proceso, misma interfaz que en red.
 	servidor = ServidorJuego.new()
 	servidor.name = "Servidor"
 	add_child(servidor)
@@ -115,17 +124,70 @@ func _ready() -> void:
 	local.name = "Transporte"
 	add_child(local)
 	transporte = local
+	_conectar_transporte()
+	local.iniciar(servidor)
+	if Sesion.modo == "anfitrion":
+		_iniciar_anfitrion()
+
+	var aldea := Datos.aldea("lluvia")
+	hud.mensaje(Datos.texto("msg_bienvenida", [aldea.get("nombre_largo", "")]), 3.0)
+
+
+func _conectar_transporte() -> void:
 	transporte.conectado.connect(func(id):
 		mi_id = id
 		# Personaje creado y repertorio elegido en el menú (el servidor valida ambos con las mismas reglas).
+		if red != null and not red.es_servidor:
+			hud.poner_info_red("")
 		if not Perfil.personaje().is_empty():
 			transporte.enviar(Perfil.comando_personaje())
 		transporte.enviar(Perfil.comando()))
 	transporte.estado_recibido.connect(_on_estado)
-	local.iniciar(servidor)
 
-	var aldea := Datos.aldea("lluvia")
-	hud.mensaje(Datos.texto("msg_bienvenida", [aldea.get("nombre_largo", "")]), 3.0)
+
+## Partida local: este celular es el servidor con autoridad y además juega. Anuncia la partida en el Wi-Fi.
+func _iniciar_anfitrion() -> void:
+	red = TransporteENet.new()
+	red.name = "Red"
+	add_child(red)
+	var err := red.crear_servidor(servidor)
+	if err != OK:
+		hud.mensaje(Datos.texto("red_error_crear", [err]), 5.0)
+		return
+	descubrimiento = Descubrimiento.new()
+	descubrimiento.name = "Descubrimiento"
+	add_child(descubrimiento)
+	descubrimiento.anunciar({"nombre": Perfil.nombre_activo(), "jugadores": 1, "max": int(Datos.red.get("max_jugadores", 4)),
+		"puerto": int(Datos.red.get("puerto", 7777))})
+	var ips := TransporteENet.ips_locales()
+	hud.poner_info_red(Datos.texto("red_anfitrion_info", [", ".join(ips) if not ips.is_empty() else "?", int(Datos.red.get("puerto", 7777))]))
+
+
+## Invitado: se conecta a la IP del anfitrión. Solo manda comandos; predice su propio movimiento.
+func _iniciar_invitado() -> void:
+	red = TransporteENet.new()
+	red.name = "Red"
+	add_child(red)
+	red.simular = Ajustes.simular_red
+	transporte = red
+	prediccion = Prediccion.new()
+	prediccion.mapa = mapa
+	_conectar_transporte()
+	red.rechazado.connect(func(motivo): _salir_con_mensaje(Datos.texto("red_rechazo_" + str(motivo))))
+	red.desconectado.connect(func(): _salir_con_mensaje(Datos.texto("red_desconectado")))
+	var err := red.unirse(Sesion.direccion)
+	if err != OK:
+		_salir_con_mensaje(Datos.texto("red_rechazo_sin_respuesta"))
+		return
+	_t_espera = float(Datos.red.get("tiempo_espera_conexion", 8.0))
+	hud.poner_info_red(Datos.texto("red_conectando", [Sesion.direccion]))
+
+
+func _salir_con_mensaje(t: String) -> void:
+	hud.banner(t, Datos.texto("red_volviendo"))
+	var tw := create_tween()
+	tw.tween_interval(2.5)
+	tw.tween_callback(func(): get_tree().change_scene_to_file(ESCENA_MENU))
 
 
 func _registrar_teclas() -> void:
@@ -215,7 +277,7 @@ func _objetivo_auto(alcance: float) -> int:
 	var mejor_p := INF
 	for e in _estado.get("entidades", []):
 		var eid := int(e["id"])
-		if eid == mi_id or str(e["estado"]) == "muerto" or e["tipo"] == "jugador":
+		if eid == mi_id or str(e["estado"]) == "muerto":
 			continue
 		var d: Vector3 = (e["pos"] as Vector3) - yo
 		d.y = 0
@@ -267,7 +329,7 @@ func _ciclar_objetivo() -> void:
 	var yo := _pos_entidad(mi_id)
 	var lista: Array = []
 	for e in _estado.get("entidades", []):
-		if int(e["id"]) == mi_id or e["tipo"] == "jugador" or str(e["estado"]) == "muerto":
+		if int(e["id"]) == mi_id or str(e["estado"]) == "muerto":
 			continue
 		var d := ((e["pos"] as Vector3) - yo).length()
 		if d < 30.0:
@@ -342,13 +404,22 @@ func _process(delta: float) -> void:
 	if mov.length() > 1.0:
 		mov = mov.normalized()
 	var mira := atan2(adelante.x, adelante.z)
-	_t_envio -= delta
-	# Se envía al ritmo del servidor o en cuanto cambia la entrada.
-	if _t_envio <= 0.0 or mov.distance_to(_ultimo_mov) > 0.05:
-		_t_envio = 1.0 / 30.0
-		_ultimo_mov = mov
-		transporte.enviar({"t": Protocolo.C_ENTRADA, "mov": mov, "mira": mira})
+	# Entrada a ritmo fijo (el del servidor), numerada para la predicción del invitado.
+	var paso := 1.0 / 30.0
+	_seq_envio += delta / maxf(Engine.time_scale, 0.05)
+	var enviados := 0
+	while _seq_envio >= paso and enviados < 4:
+		_seq_envio -= paso
+		enviados += 1
+		var seq := prediccion.registrar(mov, paso) if prediccion != null else 0
+		transporte.enviar({"t": Protocolo.C_ENTRADA, "mov": mov, "mira": mira, "seq": seq})
+	_ultimo_mov = mov
+	if prediccion != null and prediccion.activa and _visuales.has(mi_id):
+		_visuales[mi_id]["destino"] = prediccion.pos
+		if mov.length() > 0.1:
+			_visuales[mi_id]["yaw"] = atan2(mov.x, mov.y)
 	_interpolar(delta)
+	_actualizar_red(delta)
 
 
 ## Con objetivo fijado, la cámara gira para mantener al enemigo delante.
@@ -370,10 +441,26 @@ func _seguir_objetivo(delta: float) -> void:
 
 func _interpolar(delta: float) -> void:
 	var k := minf(1.0, delta * 18.0)
+	var ahora := Time.get_ticks_msec() / 1000.0
+	var retraso := float(Datos.red.get("interpolacion_retraso", 0.1))
 	for id in _visuales.keys():
 		var v: Dictionary = _visuales[id]
 		var n: Node3D = v["nodo"]
-		n.position = n.position.lerp(v["destino"], k)
+		if prediccion != null and id != mi_id and v.has("buf"):
+			# Invitado: los demás se dibujan un poco en el pasado, interpolando entre dos instantáneas.
+			var p := _muestra(v["buf"], ahora - retraso)
+			if not p.is_empty():
+				n.position = p[0]
+				n.rotation.y = lerp_angle(n.rotation.y, float(p[1]), k)
+				continue
+		var kp := k
+		if prediccion != null and id == mi_id:
+			var dist := n.position.distance_to(v["destino"])
+			if dist > float(Datos.red["prediccion"].get("teletransporte", 3.0)):
+				kp = 1.0
+			else:
+				kp = minf(1.0, delta * float(Datos.red["prediccion"].get("suavizado", 12.0)))
+		n.position = n.position.lerp(v["destino"], kp)
 		n.rotation.y = lerp_angle(n.rotation.y, float(v["yaw"]), k)
 	for id in _proyectiles.keys():
 		var p: Dictionary = _proyectiles[id]
@@ -382,6 +469,48 @@ func _interpolar(delta: float) -> void:
 		if pn.has_meta("pulso"):
 			var nucleo: Node3D = pn.get_meta("pulso")
 			nucleo.scale = Vector3.ONE * (1.0 + sin(Time.get_ticks_msec() * 0.03) * 0.08)
+
+
+## Posición y giro interpolados en el instante t a partir del búfer [[t, pos, yaw], ...].
+func _muestra(buf: Array, t: float) -> Array:
+	if buf.is_empty():
+		return []
+	if t <= float(buf[0][0]):
+		return [buf[0][1], buf[0][2]]
+	for i in range(buf.size() - 1):
+		var a: Array = buf[i]
+		var b: Array = buf[i + 1]
+		if t >= float(a[0]) and t <= float(b[0]):
+			var u := (t - float(a[0])) / maxf(float(b[0]) - float(a[0]), 0.001)
+			return [(a[1] as Vector3).lerp(b[1], u), lerp_angle(float(a[2]), float(b[2]), u)]
+	var ult: Array = buf[buf.size() - 1]
+	return [ult[1], ult[2]]
+
+
+## Red: diagnóstico (ping, pérdida, jugadores), tiempo de espera de la conexión y anuncio del anfitrión.
+func _actualizar_red(delta: float) -> void:
+	if red == null:
+		hud.diag_red = {}
+		return
+	if not red.es_servidor and not red.conectado_ok:
+		_t_espera -= delta
+		if _t_espera <= 0.0 and _t_espera > -1.0:
+			_t_espera = -2.0
+			_salir_con_mensaje(Datos.texto("red_rechazo_sin_respuesta"))
+	_t_diag -= delta
+	if _t_diag > 0.0:
+		return
+	_t_diag = 0.5
+	var jugadores := 0
+	for e in _estado.get("entidades", []):
+		if e["tipo"] == "jugador":
+			jugadores += 1
+	if red.es_servidor:
+		hud.diag_red = {"ping": 0, "perdida": 0.0, "jugadores": jugadores, "simulado": false}
+		if descubrimiento != null:
+			descubrimiento.info["jugadores"] = jugadores
+	else:
+		hud.diag_red = {"ping": red.ping_ms, "perdida": red.perdida, "jugadores": jugadores, "simulado": red.simular}
 
 
 # ------------------------------------------------------------ estado del servidor
@@ -454,6 +583,12 @@ func _crear_visual(e: Dictionary) -> void:
 	nodo.position = e["pos"]
 	nodo.rotation.y = float(e["yaw"])
 	_visuales[int(e["id"])] = {"nodo": nodo, "tipo": e["tipo"], "destino": e["pos"], "yaw": e["yaw"], "estado": "", "carga": null, "vel": 0.0, "paso": -1}
+	if red != null and e["tipo"] != "muneco":
+		var placa := Placa.new()
+		nodo.add_child(placa)
+		var propio := int(e["id"]) == mi_id
+		placa.construir(str(e.get("nombre", "")), Color(0.6, 1.0, 0.65) if propio else (Color(1.0, 0.85, 0.5) if e["tipo"] == "jugador" else Color(1.0, 0.55, 0.5)))
+		_visuales[int(e["id"])]["placa"] = placa
 
 
 func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
@@ -463,6 +598,21 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 	v["vel"] = lerpf(float(v["vel"]), d, 0.5)
 	v["destino"] = nuevo
 	v["yaw"] = float(e["yaw"])
+	if prediccion != null:
+		if int(e["id"]) == mi_id:
+			prediccion.reconciliar(e)
+			if prediccion.activa:
+				v["destino"] = prediccion.pos
+		elif v["tipo"] != "muneco":
+			var buf: Array = v.get("buf", [])
+			buf.append([Time.get_ticks_msec() / 1000.0, nuevo, float(e["yaw"])])
+			while buf.size() > 12:
+				buf.pop_front()
+			v["buf"] = buf
+	# Nombre y vida sobre los jugadores (y el enemigo) cuando hay más de un jugador.
+	if v.has("placa"):
+		var nom := str(_info.get(int(e["id"]), {}).get("nombre", e.get("nombre", "")))
+		(v["placa"] as Placa).actualizar(nom, float(e["vida"]) / maxf(float(e["vida_max"]), 1.0))
 	var estado := str(e["estado"])
 	var cambio := estado != str(v["estado"])
 	v["estado"] = estado

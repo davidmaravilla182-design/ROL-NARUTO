@@ -189,5 +189,20 @@
   "menu_personaje": "Personaje",
   "menu_entrenar_offline": "Entrenar (offline)",
   "menu_crear_red": "Crear partida local",
-  "menu_unirse_red": "Unirse a partida local"
+  "menu_unirse_red": "Unirse a partida local",
+  "red_error_crear": "No se pudo crear la partida (error {0}). ¿Está libre el puerto?",
+  "red_anfitrion_info": "Partida local abierta · IP {0} · puerto {1} · los demás: «Unirse a partida local»",
+  "red_conectando": "Conectando con {0}…",
+  "red_desconectado": "Se perdió la conexión con el anfitrión",
+  "red_volviendo": "Volviendo al menú…",
+  "red_rechazo_llena": "La partida está llena (máximo 4 jugadores)",
+  "red_rechazo_sin_respuesta": "No se pudo conectar con la partida",
+  "red_titulo": "Unirse a partida local",
+  "red_buscando": "Buscando partidas en este Wi-Fi…",
+  "red_ninguna": "No se encontró ninguna partida todavía. Pide al anfitrión su IP (aparece abajo en su pantalla).",
+  "red_partida": "{0} · {1}/{2} jugadores · {3}",
+  "red_ip": "IP del anfitrión",
+  "red_conectar": "Conectar",
+  "red_volver": "Volver",
+  "red_ip_invalida": "Escribe una IP como 192.168.1.20"
 }

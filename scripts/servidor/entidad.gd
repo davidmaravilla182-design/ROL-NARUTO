@@ -220,6 +220,8 @@ func a_estado() -> Dictionary:
 		"nombre": nombre,
 		"equipo": equipo,
 		"ultima_entrada": ultima_entrada,
+		"vel_mov": float(stats["velocidad"]) * Tecnicas.multiplicador_velocidad(self),
+		"empuje": empuje.length() > 0.05,
 		"recargas": r,
 		"en_suelo": en_suelo,
 		"en_charco": en_charco,

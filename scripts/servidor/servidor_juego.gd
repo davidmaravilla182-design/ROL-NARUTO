@@ -22,6 +22,7 @@ var auto_procesar := true          # en pruebas se llama a paso() manualmente
 var _acumulado := 0.0
 var _siguiente_id := 1
 var _peers: Dictionary = {}        # peer_id -> id de entidad
+var _siguiente_equipo := 0
 
 
 func _init() -> void:
@@ -58,7 +59,9 @@ func poblar_entrenamiento() -> void:
 func agregar_jugador(peer_id: int, plantilla := "jugador_uchiha") -> int:
 	var j := _crear_entidad(plantilla, Vector3(mapa.inicio_jugador.x, 0, mapa.inicio_jugador.y))
 	j.peer_id = peer_id
-	j.equipo = 1
+	# Cada jugador en su propio equipo: en red pueden pelear entre ellos (todos contra todos).
+	j.equipo = 10 + _siguiente_equipo
+	_siguiente_equipo += 1
 	j.yaw = PI
 	# Varios jugadores en red: separarlos un poco.
 	j.inicio.x += float(_peers.size()) * 2.0
@@ -109,7 +112,14 @@ func recibir_comando(peer_id: int, cmd_crudo: Variant) -> void:
 	if cmd.is_empty():
 		return
 	if cmd["t"] == Protocolo.C_REAPARECER:
-		reaparecer_todo()
+		# El anfitrión (o el modo offline) reinicia todo; un invitado solo se reanima a sí mismo.
+		if peer_id == 1:
+			reaparecer_todo()
+		else:
+			var yo := entidad_de_peer(peer_id)
+			if yo != null and not yo.vivo():
+				yo.reiniciar()
+				_evento({"tipo": "reaparecer", "entidad": yo.id})
 		return
 	var e := entidad_de_peer(peer_id)
 	if e == null:
