@@ -32,10 +32,13 @@
 - [x] C4 Torre-cabeza monumental + horizonte de agujas + gradación de color violeta/ámbar.
 - [x] C5 Personaje: malla continua deformable (piel por pesos) desde Blender, ropa continua.
 - [x] C6 Rendimiento: LOD/visibilidad, conteo de draw calls por calidad, ajustes baja/media. (Vulkan)
-- [ ] C7 Pulido de efectos y enemigo/muñecos con el nuevo estilo; docs; release.
+- [x] C7 Pulido: chaleco deformable, vendas, docs y versión 0.3 publicada.
+- [x] C8 Menú de inicio con la aldea en 3D de fondo (cámara lenta que recorre el canal).
+- [ ] C9 Lluvia más densa (como las referencias) + muñecos de práctica modelados en Blender. (Vulkan)
+- [ ] C10 Revisión final con Vulkan, prueba de calidad media/baja, release y reporte.
 
 ## Estado actual
-- Ciclo en curso: C7 (pulido: enemigo/muñecos, efectos, docs, release)
+- Ciclo en curso: C9 (lluvia densa + muñecos de Blender)
 - Texturas: `tools/blender/texturas.py` (6 materiales, ~10 s). Tras hornear: `python3 tools/ajustar_importacion.py` y `godot --headless --path . --import`.
 - Shader con texturas: `Shaders.toon_tex(nombre, tinte, escala_uv, triplanar, escala_mundo, metalico, humedad, contorno)`.
 - Capturas: `/tmp/claude-0/cap.sh <carpeta> [mobile]` (si falta, recrear: xvfb-run + godot -s res://tools/captura.gd).

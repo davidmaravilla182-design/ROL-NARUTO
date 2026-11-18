@@ -22,7 +22,7 @@ func _initialize() -> void:
 	menu = (load("res://escenas/menu.tscn") as PackedScene).instantiate()
 	root.add_child(menu)
 	guion = [
-		[0.5, func(): _guardar("00_menu"); menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[1.2, func(): _guardar("00_menu"); menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
 		[0.7, func(): _enemigo(false)],
 		[1.5, func(): _guardar("01_inicio")],
 		[1.52, func(): _libre(Vector3(22, 5.5, -20.0), Vector3(-6, -2.0, -28.0))],

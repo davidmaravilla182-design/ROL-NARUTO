@@ -78,3 +78,8 @@ Cada entrada: qué se hizo, cómo se verificó, capturas comparadas, problemas y
   mismo esqueleto. Se quitan las cajas rígidas del chaleco; quedan bolsillos, cinturón (ahora ovalado) y el emblema.
 - 1ª versión: chaleco con forma de saco hasta la cadera → radios menores y base más alta; emblema hundido → más atrás.
 - Vendas ajustadas al nuevo grosor de antebrazos y espinillas (antes flotaban como puños).
+
+## C8 — menú con la aldea en vivo
+- La pantalla de inicio muestra la aldea en 3D (SubViewport con su propio mundo, lluvia y relámpagos) con una cámara que
+  recorre la plaza mirando la torre monumental, y un velo oscuro para leer el texto.
+- 1ª versión: la cámara atravesaba un edificio → recorrido limitado al espacio abierto de la plaza.

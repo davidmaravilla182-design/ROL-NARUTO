@@ -5,6 +5,9 @@ const ESCENA_JUEGO := "res://escenas/juego.tscn"
 
 var _gotas: Array = []
 var _rng := RandomNumberGenerator.new()
+var _camara_fondo: Camera3D
+var _t_fondo := 0.0
+var _fondo_3d := false
 
 
 func _ready() -> void:
@@ -16,6 +19,8 @@ func _ready() -> void:
 	_rng.randomize()
 	for i in 110:
 		_gotas.append(Vector3(_rng.randf(), _rng.randf(), _rng.randf_range(0.6, 1.4)))
+
+	_crear_fondo_3d()
 
 	var juego: Dictionary = Datos.mundo["juego"]
 	var aldea := Datos.aldea("lluvia")
@@ -90,6 +95,50 @@ func _ready() -> void:
 	caja.add_child(_label(Datos.texto("menu_pie", [juego["version"]]), 20, Color(0.65, 0.7, 0.78)))
 
 
+## Fondo en vivo: la aldea en 3D con lluvia y una cámara que la recorre despacio.
+func _crear_fondo_3d() -> void:
+	if not ResourceLoader.exists("res://assets/modelos/edificio.glb"):
+		return
+	var contenedor := SubViewportContainer.new()
+	contenedor.set_anchors_preset(Control.PRESET_FULL_RECT)
+	contenedor.stretch = true
+	contenedor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(contenedor)
+	var vp := SubViewport.new()
+	vp.own_world_3d = true
+	vp.msaa_3d = Viewport.MSAA_DISABLED
+	vp.scaling_3d_scale = float(Ajustes.g("escala_3d", 1.0))
+	contenedor.add_child(vp)
+	var esc := Escenario.new()
+	vp.add_child(esc)
+	esc.construir(Mapa.generar())
+	_camara_fondo = Camera3D.new()
+	_camara_fondo.fov = 62.0
+	_camara_fondo.far = 300.0
+	vp.add_child(_camara_fondo)
+	_camara_fondo.current = true
+	esc.camara = _camara_fondo
+	var lluvia := Lluvia.new()
+	vp.add_child(lluvia)
+	lluvia.construir()
+	lluvia.objetivo = _camara_fondo
+	# Velo oscuro para que el texto se lea sobre la escena.
+	var velo := ColorRect.new()
+	velo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	velo.color = Color(0.02, 0.02, 0.05, 0.38)
+	add_child(velo)
+	_fondo_3d = true
+	_mover_camara(0.0)
+
+
+func _mover_camara(t: float) -> void:
+	# Recorrido lento por encima de la plaza mirando hacia la torre monumental.
+	var pos := Vector3(sin(t * 0.06) * 9.0, 5.5 + sin(t * 0.09) * 1.2, 13.0 + cos(t * 0.045) * 2.0)
+	_camara_fondo.global_position = pos
+	_camara_fondo.look_at(Vector3(-4.0 + sin(t * 0.04) * 6.0, 16.0, -45.0), Vector3.UP)
+
+
 func _label(t: String, tam: int, c: Color) -> Label:
 	var l := Label.new()
 	l.text = t
@@ -106,6 +155,10 @@ func _entrenar() -> void:
 
 
 func _process(delta: float) -> void:
+	if _fondo_3d:
+		_t_fondo += delta
+		_mover_camara(_t_fondo)
+		return
 	for i in _gotas.size():
 		var g: Vector3 = _gotas[i]
 		g.y += delta * 0.9 * g.z
@@ -118,6 +171,8 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	if _fondo_3d:
+		return
 	var t := get_viewport_rect().size
 	# Cielo gris con degradado y siluetas de torres.
 	var pasos := 12
