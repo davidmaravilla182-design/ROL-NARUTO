@@ -35,10 +35,11 @@
 - [x] C7 Pulido: chaleco deformable, vendas, docs y versión 0.3 publicada.
 - [x] C8 Menú de inicio con la aldea en 3D de fondo (cámara lenta que recorre el canal).
 - [x] C9 Lluvia más densa (como las referencias) + muñecos de práctica modelados en Blender. (Vulkan)
-- [ ] C10 Revisión final con Vulkan, prueba de calidad media/baja, release y reporte.
+- [x] C10 Revisión final: Vulkan (C9), calidad baja (C6), medición final, release v0.3 publicado por CI.
+- [x] C11 (extra) Impermeable largo y respirador para el ninja de la Lluvia (malla deformable de Blender).
 
 ## Estado actual
-- Ciclo en curso: C10 (revisión final Vulkan, calidades, release)
+- Ciclo en curso: ninguno — plan completado. Ideas siguientes en BITACORA_GRAFICOS.md (sección "Pendiente").
 - Texturas: `tools/blender/texturas.py` (6 materiales, ~10 s). Tras hornear: `python3 tools/ajustar_importacion.py` y `godot --headless --path . --import`.
 - Shader con texturas: `Shaders.toon_tex(nombre, tinte, escala_uv, triplanar, escala_mundo, metalico, humedad, contorno)`.
 - Capturas: `/tmp/claude-0/cap.sh <carpeta> [mobile]` (si falta, recrear: xvfb-run + godot -s res://tools/captura.gd).

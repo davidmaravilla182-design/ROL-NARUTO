@@ -125,14 +125,20 @@ func _cargar_cuerpo(a: Dictionary) -> void:
 	add_child(escena)
 	esqueleto = _buscar(escena, "Skeleton3D")
 	var colores := {"piel": Datos.color(str(a.get("piel", "#e8c4a0"))), "camisa": Datos.color(str(a.get("camisa", "#1d2333"))),
-		"pantalon": Datos.color(str(a.get("pantalon", "#252a3a"))), "chaleco": Datos.color(str(a.get("chaleco", "#3d4a3a")))}
+		"pantalon": Datos.color(str(a.get("pantalon", "#252a3a"))), "chaleco": Datos.color(str(a.get("chaleco", "#3d4a3a"))),
+		"capa": Datos.color(str(a.get("capa_color", "#434a5c")))}
+	var con_capa := bool(a.get("capa", false))
 	var mallas: Array = []
 	_buscar_todos(escena, mallas)
 	for mi in mallas:
 		for i in (mi as MeshInstance3D).mesh.get_surface_count():
 			var m: Material = (mi as MeshInstance3D).mesh.surface_get_material(i)
 			var nombre := m.resource_name if m != null else ""
-			var col: Color = colores.get(nombre.get_slice(".", 0), Color(0.5, 0.5, 0.5))
+			var base_n := nombre.get_slice(".", 0)
+			# Impermeable o chaleco según la plantilla (el impermeable reemplaza al chaleco).
+			if (base_n == "capa" and not con_capa) or (base_n == "chaleco" and con_capa):
+				(mi as MeshInstance3D).visible = false
+			var col: Color = colores.get(base_n, Color(0.5, 0.5, 0.5))
 			(mi as MeshInstance3D).set_surface_override_material(i, Materiales.solido(col, 0.75 if nombre == "piel" else 0.9))
 
 

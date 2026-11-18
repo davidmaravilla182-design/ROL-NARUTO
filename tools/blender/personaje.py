@@ -169,6 +169,51 @@ def cuerpo(pos):
     return ob
 
 
+def capa():
+    """Impermeable largo de los ninjas de la lluvia: cuello alto, hombros y falda hasta las rodillas."""
+    return cascara("capa", [("cuello", (0, 1.6, -0.005), (0.09, 0.085)), ("alto", (0, 1.43, 0.0), (0.19, 0.12)),
+                            ("torax", (0, 1.27, 0.005), (0.175, 0.125)), ("cintura", (0, 1.1, 0), (0.16, 0.125)),
+                            ("cadera", (0, 0.94, 0), (0.2, 0.15)), ("muslo", (0, 0.72, 0), (0.23, 0.17)),
+                            ("bajo", (0, 0.5, 0.0), (0.26, 0.19)),
+                            ("hombroI", (0.17, 1.46, 0), (0.085, 0.08)), ("hombroD", (-0.17, 1.46, 0), (0.085, 0.08)),
+                            ("mangaI", (0.2, 1.3, 0), (0.065, 0.065)), ("mangaD", (-0.2, 1.3, 0), (0.065, 0.065))],
+                   [("bajo", "muslo"), ("muslo", "cadera"), ("cadera", "cintura"), ("cintura", "torax"), ("torax", "alto"),
+                    ("alto", "cuello"), ("alto", "hombroI"), ("alto", "hombroD"), ("hombroI", "mangaI"), ("hombroD", "mangaD")],
+                   "bajo")
+
+
+def cascara(nombre, nodos, aristas, raiz):
+    bm = bmesh.new()
+    vs = {}
+    for n, p, _ in nodos:
+        vs[n] = bm.verts.new(g2b(p))
+    for a, b in aristas:
+        bm.edges.new((vs[a], vs[b]))
+    me = bpy.data.meshes.new(nombre)
+    bm.to_mesh(me)
+    bm.free()
+    ob = bpy.data.objects.new(nombre, me)
+    bpy.context.collection.objects.link(ob)
+    mod = ob.modifiers.new("piel", "SKIN")
+    mod.use_smooth_shade = True
+    sv = me.skin_vertices[0].data
+    for i, (n, _, r) in enumerate(nodos):
+        sv[i].radius = r
+        sv[i].use_root = (n == raiz)
+    sub = ob.modifiers.new("sub", "SUBSURF")
+    sub.levels = 1
+    for o in bpy.context.selected_objects:
+        o.select_set(False)
+    bpy.context.view_layer.objects.active = ob
+    ob.select_set(True)
+    bpy.ops.object.modifier_apply(modifier="piel")
+    bpy.ops.object.modifier_apply(modifier="sub")
+    for p in ob.data.polygons:
+        p.use_smooth = True
+    ob.data.materials.append(geo.material(nombre))
+    return ob
+
+
 def chaleco():
     """Chaleco ninja: cáscara deformable alrededor del torso con cuello alto y hombreras."""
     P = lambda *v: Vector(v)
@@ -276,7 +321,9 @@ def main():
     pesos(ob, arm, pos)
     ves = chaleco()
     pesos(ves, arm, pos)
-    for m in (ob, ves):
+    cap = capa()
+    pesos(cap, arm, pos)
+    for m in (ob, ves, cap):
         m.parent = arm
         mod = m.modifiers.new("arm", "ARMATURE")
         mod.object = arm
@@ -285,6 +332,7 @@ def main():
     arm.select_set(True)
     ob.select_set(True)
     ves.select_set(True)
+    cap.select_set(True)
     bpy.context.view_layer.objects.active = arm
     ruta = os.path.join(comun.DIR_MOD, "cuerpo.glb")
     bpy.ops.export_scene.gltf(filepath=ruta, export_format="GLB", use_selection=True, export_skins=True,

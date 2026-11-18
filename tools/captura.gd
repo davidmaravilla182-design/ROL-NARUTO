@@ -33,7 +33,7 @@ func _initialize() -> void:
 		[2.6, func(): _guardar("01c_panoramica")],
 		[2.62, func(): _seguir(); _listo(Vector3(18, 0, 6)); _cam(-1.2, 7.0, -0.12, 1.8)],
 		[3.1, func(): _guardar("01d_calle")],
-		[3.12, func(): _listo(Vector3(0, 0, 10)); _libre(Vector3(0.7, 1.55, -14.6), Vector3(0, 1.2, -12))],
+		[3.12, func(): _listo(Vector3(0, 0, 10)); _ver_enemigo()],
 		[3.28, func(): _guardar("01f_enemigo"); _seguir()],
 		[3.3, func(): _cam(PI, 2.6, -0.1, 1.3)],
 		[3.9, func(): _guardar("02_personaje_frente")],
@@ -91,6 +91,14 @@ func _libre(pos: Vector3, mirar: Vector3) -> void:
 	juego.camara.look_at(mirar, Vector3.UP)
 
 
+## Cámara fija frente al enemigo, esté donde esté.
+func _ver_enemigo() -> void:
+	for e in juego.servidor.entidades:
+		if e.tipo == "enemigo":
+			var f: Vector3 = e.adelante()
+			_libre(e.pos + f * 2.8 + Vector3(0.5, 1.5, 0), e.pos + Vector3(0, 1.15, 0))
+
+
 func _seguir() -> void:
 	juego.camara.libre = false
 
@@ -123,7 +131,8 @@ func _enemigo(activo: bool) -> void:
 
 func _process(d: float) -> bool:
 	t += d
-	while paso < guion.size() and t >= float(guion[paso][0]):
+	# Un paso por fotograma como máximo: así cada captura ve el resultado del paso anterior ya dibujado.
+	if paso < guion.size() and t >= float(guion[paso][0]):
 		(guion[paso][1] as Callable).call()
 		paso += 1
 	return false

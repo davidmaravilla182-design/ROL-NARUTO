@@ -89,3 +89,19 @@ Cada entrada: qué se hizo, cómo se verificó, capturas comparadas, problemas y
 - Textura de madera horneada (vetas deformadas por ruido, nudos, zonas mojadas). Muñecos de práctica modelados en Blender:
   base con patas, poste, travesaño con puños de paja, torso de paja atado con cuerdas, cabeza y diana. Base y cuerpo por
   separado para que el cuerpo se siga sacudiendo y cayendo con los golpes.
+
+## C10–C11 — cierre
+- Vulkan/Mobile (C9): menú 3D, plaza, explosión y rayo nv3 iguales a OpenGL; el rayo nv3 tiñe todo de cian (es lo pedido:
+  "iluminar todo el escenario").
+- Impermeable del ninja de la Lluvia: tercera malla deformable en cuerpo.glb (cuello alto, mangas, falda a la rodilla);
+  se muestra u oculta según `aspecto.capa` en personajes.json (reemplaza al chaleco).
+- Herramienta de capturas: ahora ejecuta un paso por fotograma (antes, un fotograma lento hacía que la captura se tomara
+  antes de mover la cámara). Cámara del enemigo relativa a su posición real.
+- Medición final (Vulkan): alta 101 llamadas / 67k primitivas / 37 de sombra · media 97 / 65k / 37 · baja 69 / 59k / 0.
+
+## Pendiente / ideas
+- Medir FPS reales en el S26 Ultra y en un gama media (calidades alta y media).
+- El impermeable atraviesa un poco las piernas al correr (falda pesada a las piernas por distancia).
+- Manos simples (manoplas); los dedos para los sellos serían el siguiente salto del personaje.
+- Reflejos del agua: solo sonda estática + brillos; un reflejo planar del canal sería más fiel pero caro en móvil.
+- Contorno del rostro de la torre poco legible desde la plaza en calidad baja (sin glow).

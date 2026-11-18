@@ -86,7 +86,9 @@
       "sandalias": "#2a2a30",
       "emblema_espalda": false,
       "mascara": true,
-      "peinado": "corto"
+      "peinado": "corto",
+      "capa": true,
+      "capa_color": "#3e4556"
     }
   },
   "muneco": {

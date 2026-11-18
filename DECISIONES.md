@@ -94,3 +94,5 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
   a mano (más predecibles que el pesado automático en modo sin interfaz).
 - **Rendimiento**: la mayor ganancia vino de fusionar las mallas de los personajes (≈70 piezas → ≈17), no de agrupar los edificios.
 - **Capturas**: con lavapipe instalado Godot usa Vulkan/Mobile por defecto; las revisiones visuales se hicieron con ambos renderizadores.
+- **Impermeable** del ninja enemigo como tercera malla en el mismo GLB del cuerpo (comparte esqueleto), activado desde
+  los datos (`aspecto.capa`), en vez de un GLB aparte: así no hay que reasignar la piel a otro esqueleto en Godot.
