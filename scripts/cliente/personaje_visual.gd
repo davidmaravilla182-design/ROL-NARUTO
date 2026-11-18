@@ -39,9 +39,16 @@ var sharingan := false
 
 func construir(plantilla_id: String) -> void:
 	var d := Datos.personaje(plantilla_id)
-	var aspecto: Dictionary = d.get("aspecto", {})
-	var aldea := Datos.aldea(str(d.get("aldea", "")))
-	var clan: Dictionary = Datos.mundo.get("clanes", {}).get(str(d.get("clan", "")), {})
+	construir_aspecto(d.get("aspecto", {}), str(d.get("aldea", "")), str(d.get("clan", "")))
+
+
+## Construye el personaje a partir de un aspecto (plantilla o personaje creado: Creacion.aspecto_visual).
+func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "") -> void:
+	var aldea := Datos.aldea(aldea_id)
+	var clan: Dictionary = Datos.mundo.get("clanes", {}).get(clan_id, {})
+	# Complexión: ancho y alto del cuerpo entero.
+	var esc: Array = aspecto.get("escala", [1.0, 1.0])
+	scale = Vector3(float(esc[0]), float(esc[1]), float(esc[0]))
 
 	var contorno_previo := Materiales.grosor_contorno
 	Materiales.grosor_contorno = 0.011 if Ajustes.g("contorno_personajes", true) else 0.0
@@ -245,6 +252,32 @@ func _pelo(a: Dictionary, mat: Material) -> void:
 			picos.append([Vector3(x, 0.24, 0.08), Vector3(x * 3.0, -1.0, 0.45), 0.13, 0.03])
 		for lado3 in [-1.0, 1.0]:
 			picos.append([Vector3(0.105 * lado3, 0.19, 0.05), Vector3(0.15 * lado3, -1.0, 0.1), 0.15, 0.03])
+	elif str(a.get("peinado", "")) == "largo":
+		# Pelo lacio que cae por la espalda y a los lados, con flequillo.
+		for i in 7:
+			var t4 := float(i) / 6.0
+			var x4 := lerpf(-0.1, 0.1, t4)
+			picos.append([Vector3(x4, 0.2, -0.11), Vector3(x4 * 0.6, -1.0, -0.35), 0.42, 0.055])
+		for lado4 in [-1.0, 1.0]:
+			picos.append([Vector3(0.115 * lado4, 0.2, 0.02), Vector3(0.1 * lado4, -1.0, -0.05), 0.3, 0.045])
+		for x5 in [-0.06, -0.02, 0.02, 0.06]:
+			picos.append([Vector3(x5, 0.25, 0.09), Vector3(x5 * 2.0, -1.0, 0.5), 0.1, 0.03])
+	elif str(a.get("peinado", "")) == "coleta":
+		# Recogido atrás con una coleta larga.
+		var nudo := Materiales.esfera(0.045, mat, 6)
+		_pieza("Cabeza", nudo, Vector3(0, 0.25, -0.14))
+		picos.append([Vector3(0, 0.24, -0.16), Vector3(0, -0.6, -1.0), 0.38, 0.06])
+		picos.append([Vector3(0, 0.22, -0.17), Vector3(0.15, -1.0, -0.6), 0.3, 0.045])
+		for x6 in [-0.07, 0.0, 0.07]:
+			picos.append([Vector3(x6, 0.25, 0.08), Vector3(x6 * 3.0, -1.0, 0.45), 0.1, 0.03])
+	elif str(a.get("peinado", "")) == "melena":
+		# Melena abultada hasta el cuello.
+		for i in 10:
+			var a7 := lerpf(-2.4, 2.4, float(i) / 9.0)
+			var base7 := Vector3(sin(a7) * 0.12, 0.2, cos(a7) * 0.12 - 0.02)
+			picos.append([base7, Vector3(sin(a7) * 0.7, -1.0, cos(a7) * 0.3 - 0.4), 0.24, 0.06])
+		for x8 in [-0.07, -0.025, 0.025, 0.07]:
+			picos.append([Vector3(x8, 0.25, 0.085), Vector3(x8 * 2.5, -1.0, 0.5), 0.12, 0.032])
 	else:
 		for i in 6:
 			var t3 := float(i) / 5.0

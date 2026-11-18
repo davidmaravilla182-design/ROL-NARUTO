@@ -67,7 +67,7 @@ func _barra(clave: String, r: Rect2) -> void:
 	cerrado.append(fondo[0])
 	draw_polyline(cerrado, Color(0.7, 0.75, 0.82, 0.8), 1.5, true)
 	if r.size.y >= 20:
-		var txt := "%d / %d" % [int(ceil(float(v[0]))), int(round(float(v[1])))]
+		var txt := "%d / %d" % [mini(int(ceil(float(v[0]))), int(round(float(v[1])))), int(round(float(v[1])))]
 		Estilo.texto(self, Vector2(r.position.x, r.position.y + r.size.y * 0.8), txt, int(r.size.y * 0.8), Color.WHITE, r.size.x - 12, HORIZONTAL_ALIGNMENT_RIGHT, Estilo.fuente_ui(), 4)
 
 

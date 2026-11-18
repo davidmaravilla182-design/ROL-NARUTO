@@ -2,6 +2,8 @@ extends Control
 ## Pantalla de inicio: título, aviso legal de proyecto de fans y botón para entrenar.
 
 const ESCENA_JUEGO := "res://escenas/juego.tscn"
+const ESCENA_PERSONAJE := "res://escenas/personaje.tscn"
+const ESCENA_RED := "res://escenas/red.tscn"
 
 var _gotas: Array = []
 var _rng := RandomNumberGenerator.new()
@@ -43,39 +45,35 @@ func _ready() -> void:
 	espacio.custom_minimum_size = Vector2(0, 20)
 	caja.add_child(espacio)
 
-	var boton := Button.new()
-	boton.name = "BotonEntrenar"
-	boton.text = Datos.texto("menu_entrenar")
-	boton.add_theme_font_size_override("font_size", 38)
-	boton.custom_minimum_size = Vector2(420, 96)
-	boton.focus_mode = Control.FOCUS_NONE
+	Perfil.cargar()
+	var boton := _boton_menu("BotonEntrenar", Datos.texto("menu_entrenar_offline"), 34, Vector2(400, 88), func(): _jugar("offline"))
 	boton.add_theme_font_override("font", Estilo.fuente_titulo())
-	boton.pressed.connect(_entrenar)
-	var ajustes := Button.new()
-	ajustes.name = "BotonAjustes"
-	ajustes.text = Datos.texto("menu_ajustes")
-	ajustes.add_theme_font_size_override("font_size", 30)
-	ajustes.custom_minimum_size = Vector2(200, 96)
-	ajustes.focus_mode = Control.FOCUS_NONE
-	ajustes.pressed.connect(func():
+	var crear_red := _boton_menu("BotonCrearRed", Datos.texto("menu_crear_red"), 24, Vector2(290, 88), func(): _jugar("anfitrion"))
+	var unirse := _boton_menu("BotonUnirse", Datos.texto("menu_unirse_red"), 24, Vector2(290, 88), func(): _jugar("cliente"))
+	var personaje := _boton_menu("BotonPersonaje", Datos.texto("pj_activo", [Perfil.nombre_activo()]), 22, Vector2(300, 66),
+		func(): get_tree().change_scene_to_file(ESCENA_PERSONAJE))
+	var repertorio := _boton_menu("BotonRepertorio", Datos.texto("menu_repertorio"), 22, Vector2(220, 66),
+		func(): get_tree().change_scene_to_file("res://escenas/repertorio.tscn"))
+	var ajustes := _boton_menu("BotonAjustes", Datos.texto("menu_ajustes"), 22, Vector2(180, 66), func():
 		var m := MenuAjustes.new()
 		add_child(m)
 		m.construir())
-	var repertorio := Button.new()
-	repertorio.name = "BotonRepertorio"
-	repertorio.text = Datos.texto("menu_repertorio")
-	repertorio.add_theme_font_size_override("font_size", 30)
-	repertorio.custom_minimum_size = Vector2(260, 96)
-	repertorio.focus_mode = Control.FOCUS_NONE
-	repertorio.pressed.connect(func(): get_tree().change_scene_to_file("res://escenas/repertorio.tscn"))
 	var fila := HBoxContainer.new()
-	fila.add_theme_constant_override("separation", 20)
+	fila.add_theme_constant_override("separation", 14)
 	fila.add_child(boton)
-	fila.add_child(repertorio)
-	fila.add_child(ajustes)
+	fila.add_child(crear_red)
+	fila.add_child(unirse)
+	var fila2 := HBoxContainer.new()
+	fila2.add_theme_constant_override("separation", 14)
+	fila2.add_child(personaje)
+	fila2.add_child(repertorio)
+	fila2.add_child(ajustes)
+	var centro_b := CenterContainer.new()
+	centro_b.add_child(fila2)
 	var centro := CenterContainer.new()
 	centro.add_child(fila)
 	caja.add_child(centro)
+	caja.add_child(centro_b)
 
 	var espacio2 := Control.new()
 	espacio2.custom_minimum_size = Vector2(0, 26)
@@ -158,8 +156,30 @@ func _label(t: String, tam: int, c: Color) -> Label:
 	return l
 
 
+func _boton_menu(nombre: String, texto: String, tam: int, minimo: Vector2, cb: Callable) -> Button:
+	var b := Button.new()
+	b.name = nombre
+	b.text = texto
+	b.add_theme_font_size_override("font_size", tam)
+	b.custom_minimum_size = minimo
+	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(cb)
+	return b
+
+
+## Entrenar, crear o unirse. Si aún no hay personaje creado, primero se crea.
+func _jugar(modo: String) -> void:
+	Sesion.modo = modo
+	var destino := ESCENA_RED if modo == "cliente" else ESCENA_JUEGO
+	if Perfil.personajes.is_empty():
+		Sesion.tras_personaje = destino
+		get_tree().change_scene_to_file(ESCENA_PERSONAJE)
+		return
+	get_tree().change_scene_to_file(destino)
+
+
 func _entrenar() -> void:
-	get_tree().change_scene_to_file(ESCENA_JUEGO)
+	_jugar("offline")
 
 
 func _process(delta: float) -> void:

@@ -32,6 +32,7 @@ var _ultimo_mov := Vector2.ZERO
 var _t_envio := 0.0
 var _mov_prueba := Vector2.ZERO
 var _anuncio_fin := ""
+var _info: Dictionary = {}         # id entidad -> {nombre, aspecto} (llega del servidor cada medio segundo)
 
 
 func _ready() -> void:
@@ -392,6 +393,18 @@ func _on_estado(est: Dictionary) -> void:
 	var vistos := {}
 	var yo: Dictionary = {}
 	var enemigo: Dictionary = {}
+	if est.has("jugadores"):
+		for inf in est["jugadores"]:
+			var iid := int(inf["id"])
+			var cambio_aspecto: bool = _info.has(iid) and JSON.stringify(_info[iid].get("aspecto", {})) != JSON.stringify(inf.get("aspecto", {}))
+			var nuevo_info: bool = not _info.has(iid) and not (inf.get("aspecto", {}) as Dictionary).is_empty()
+			_info[iid] = inf
+			# Si cambió el aspecto (o recién lo conocemos), se reconstruye su figura.
+			if (cambio_aspecto or nuevo_info) and _visuales.has(iid):
+				(_visuales[iid]["nodo"] as Node).queue_free()
+				_visuales.erase(iid)
+				if iid == mi_id:
+					camara.objetivo = null
 	for e in est["entidades"]:
 		var id := int(e["id"])
 		vistos[id] = true
@@ -428,7 +441,14 @@ func _crear_visual(e: Dictionary) -> void:
 	else:
 		var pv := PersonajeVisual.new()
 		add_child(pv)
-		pv.construir(str(e["plantilla"]))
+		var asp: Dictionary = _info.get(int(e["id"]), {}).get("aspecto", {})
+		if asp.is_empty() and int(e["id"]) == mi_id and not Perfil.personaje().is_empty():
+			asp = Creacion.aspecto_visual(Perfil.personaje())
+			asp["clan"] = str(Perfil.personaje().get("clan", ""))
+		if asp.is_empty():
+			pv.construir(str(e["plantilla"]))
+		else:
+			pv.construir_aspecto(asp, str(asp.get("aldea", "lluvia")), str(asp.get("clan", "")))
 		nodo = pv
 	nodo.name = "Entidad_%d" % int(e["id"])
 	nodo.position = e["pos"]

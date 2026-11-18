@@ -411,7 +411,7 @@ func _dibujar_enemigo() -> void:
 	_enemigo_panel.draw_rect(Rect2(barra.position, Vector2(barra.size.x * frac, barra.size.y)), Color(0.82, 0.16, 0.14))
 	_enemigo_panel.draw_rect(Rect2(barra.position, Vector2(barra.size.x * frac, barra.size.y * 0.4)), Color(1, 0.6, 0.5, 0.35))
 	_enemigo_panel.draw_rect(barra, Estilo.ACERO_BORDE, false, 1.5)
-	Estilo.texto(_enemigo_panel, Vector2(barra.position.x, barra.position.y + 15), "%d / %d" % [int(ceil(float(_enemigo["vida"]))), int(_enemigo["max"])], 17, Color.WHITE, barra.size.x - 6, HORIZONTAL_ALIGNMENT_RIGHT)
+	Estilo.texto(_enemigo_panel, Vector2(barra.position.x, barra.position.y + 15), "%d / %d" % [mini(int(ceil(float(_enemigo["vida"]))), int(round(float(_enemigo["max"])))), int(round(float(_enemigo["max"])))], 17, Color.WHITE, barra.size.x - 6, HORIZONTAL_ALIGNMENT_RIGHT)
 
 
 func mostrar_sellos(lista: Array, duracion: float) -> void:

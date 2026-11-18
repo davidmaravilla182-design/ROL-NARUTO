@@ -7,6 +7,7 @@ extends SceneTree
 var pasos := [
 	["res://escenas/menu.tscn", ""],
 	["res://escenas/repertorio.tscn", ""],
+	["res://escenas/personaje.tscn", ""],
 	["res://escenas/juego.tscn", "alta"],
 	["res://escenas/juego.tscn", "media"],
 	["res://escenas/juego.tscn", "baja"],
@@ -58,9 +59,24 @@ func _process(_delta: float) -> bool:
 			14: _actual._elegir_rep(0)
 			16: _actual.equipar("byakugan", -1)
 			18: _actual.equipar("sharingan", -1)
+	if _indice == 2 and _actual != null:
+		# Creación de personaje: recorrer los pasos y elegir opciones.
+		match _frames:
+			3:
+				if _actual.modo != "crear":
+					_actual._empezar_creacion()
+			5:
+				_actual.pj["nombre"] = "Humo"
+				for p in 6:
+					_actual.paso = p
+					_actual._mostrar_paso()
+			8:
+				_actual.pj["clan"] = "lava"
+				_actual.pj["aspecto"]["peinado"] = "melena"
+				_actual._cambio(true)
 	if _actual != null and _actual.has_method("prueba_humo"):
 		_actual.prueba_humo(_frames)
-	var limite := 30 if _indice <= 1 else (700 if _indice == 2 else 90)
+	var limite := 30 if _indice <= 2 else (700 if _indice == 3 else 90)
 	if _frames >= limite:
 		_cargar(_indice + 1)
 	return false
