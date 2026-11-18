@@ -84,6 +84,10 @@ func _crear_boton(id: String, color: Color, radio: float, angulo: float, anillo:
 func construir(rep: Dictionary = {}) -> void:
 	layer = 10
 	Ajustes.cargar()
+	# Reconstruible: al cambiar de repertorio se descarta la interfaz anterior entera.
+	if raiz != null and is_instance_valid(raiz):
+		raiz.free()
+	botones.clear()
 	raiz = Control.new()
 	raiz.set_anchors_preset(Control.PRESET_FULL_RECT)
 	raiz.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -169,7 +173,8 @@ void fragment() {
 	_fps = _etiqueta("", 20, HORIZONTAL_ALIGNMENT_LEFT)
 	_fps.modulate = Color(0.7, 1.0, 0.7)
 
-	get_viewport().size_changed.connect(_reordenar)
+	if not get_viewport().size_changed.is_connected(_reordenar):
+		get_viewport().size_changed.connect(_reordenar)
 	aplicar_ajustes()
 
 

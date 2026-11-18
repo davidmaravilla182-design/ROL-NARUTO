@@ -21,6 +21,9 @@ func _initialize() -> void:
 		Ajustes.calidad = OS.get_environment("CALIDAD")
 	menu = (load("res://escenas/menu.tscn") as PackedScene).instantiate()
 	root.add_child(menu)
+	if OS.get_environment("GUION") == "tecnicas":
+		_guion_tecnicas()
+		return
 	guion = [
 		[0.85, func(): _guardar("00_menu"); menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
 		[0.7, func(): _enemigo(false)],
@@ -136,3 +139,48 @@ func _process(d: float) -> bool:
 		(guion[paso][1] as Callable).call()
 		paso += 1
 	return false
+
+
+## Guion alternativo (GUION=tecnicas): los 6 jutsus del primer bloque en N1, N2 y N3, dos capturas cada uno.
+func _guion_tecnicas() -> void:
+	var casos := [
+		# [jutsu, modo, acción, t captura a, t captura b, distancia cámara]
+		["kirin", "sharingan", "kirin", 1.85, 2.25, 9.0],
+		["rasengan", "", "rasengan", 0.45, 0.85, 6.5],
+		["amaterasu", "mangekyo", "amaterasu", 0.6, 1.8, 7.5],
+		["susanoo", "mangekyo", "susanoo", 0.9, 1.9, 8.0],
+		["shinra_tensei", "rinnegan", "shinra_tensei", 0.45, 0.8, 11.0],
+		["ocho_puertas", "ocho_puertas", "golpe", 0.5, 1.1, 6.0],
+	]
+	guion = [[0.85, func(): menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[0.9, func(): _enemigo(false)]]
+	var t0 := 1.6
+	for c in casos:
+		for n in [1, 2, 3]:
+			var activos := [c[0], "", "", ""] if c[0] != "ocho_puertas" else ["", "", "", ""]
+			guion.append([t0, func():
+				juego.transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": activos, "modo": c[1], "prueba": true})
+				juego.hud.construir({"activos": activos, "modo": c[1], "niveles_max": {}})
+				_nivel(n)])
+			guion.append([t0 + 0.1, func(): _listo(Vector3(0, 0, 10)); _rival(Vector3(0, 0, 4.5)); _seguir(); _cam(0.7, c[5], -0.22, 1.6)])
+			if c[1] != "":
+				guion.append([t0 + 0.2, func(): _accion("modo")])
+			guion.append([t0 + 0.35, func(): _accion(c[2])])
+			if c[0] == "ocho_puertas":
+				guion.append([t0 + 0.6, func(): _accion("golpe")])
+				guion.append([t0 + 0.85, func(): _accion("golpe")])
+			guion.append([t0 + 0.35 + c[3], func(): _guardar("%s_n%d_a" % [c[0], n])])
+			guion.append([t0 + 0.35 + c[4], func(): _guardar("%s_n%d_b" % [c[0], n])])
+			guion.append([t0 + 3.0, func(): _accion("modo") if c[1] != "" else null])
+			t0 += 3.4
+	guion.append([t0, func(): quit(0)])
+
+
+## Enemigo quieto y con vida completa en `pos`, mirando al jugador.
+func _rival(pos: Vector3) -> void:
+	for e in juego.servidor.entidades:
+		if e.tipo == "enemigo":
+			e.reiniciar()
+			e.pos = pos
+			e.yaw = 0.0
+			e.ia = null

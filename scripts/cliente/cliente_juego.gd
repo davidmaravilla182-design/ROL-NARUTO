@@ -489,7 +489,8 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 	var carga = v["carga"]
 	if carga != null and is_instance_valid(carga):
 		if estado == "chidori_embiste":
-			(carga as CargaRayo).embistiendo = true
+			if carga is CargaRayo:
+				(carga as CargaRayo).embistiendo = true
 		elif estado != "chidori_carga":
 			(carga as Node).queue_free()
 			v["carga"] = null
