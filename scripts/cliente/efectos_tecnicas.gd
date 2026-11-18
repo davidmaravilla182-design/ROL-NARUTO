@@ -9,6 +9,7 @@ const COLOR_ESPECTRAL := Color(0.6, 0.35, 1.0)
 const COLOR_PUERTAS := [Color(0.35, 1.0, 0.5), Color(0.3, 0.9, 1.0), Color(1.0, 0.25, 0.2)]
 
 var efectos: Efectos
+var genericas: EfectosGenericos
 var sonidos: Sonidos
 var _adjuntos: Dictionary = {}   # "idEntidad:efecto" -> Node3D
 var _zonas: Dictionary = {}      # id zona -> Node3D
@@ -447,6 +448,13 @@ func sincronizar_zonas(lista: Array) -> void:
 		vistos[id] = true
 		if _zonas.has(id):
 			continue
+		if genericas != null and str(z.get("forma", "")) not in ["", "fuego"]:
+			var ng := genericas.crear_zona(z)
+			if ng != null:
+				add_child(ng)
+				ng.global_position = z["pos"]
+				_zonas[id] = ng
+				continue
 		var n := Node3D.new()
 		add_child(n)
 		n.global_position = z["pos"]

@@ -26,6 +26,8 @@ func _draw() -> void:
 	var j := Datos.jutsu(id)
 	var cat := str(j.get("categoria", ""))
 	var col := Datos.color(str(Repertorio.categorias().get(cat, {}).get("color", "#888888")))
+	if j.has("color"):
+		col = Color.html(str(j["color"]))
 	draw_rect(r, Color(0.05, 0.06, 0.09, 0.95))
 	var c := r.get_center()
 	var esc: float = [0.55, 0.8, 1.05][nivel - 1]
@@ -35,6 +37,10 @@ func _draw() -> void:
 		sacudida = Vector2(sin(_t * 60.0), cos(_t * 47.0)) * 2.5 * (1.0 - ciclo)
 		draw_rect(r, Color(col.r, col.g, col.b, 0.18 * (1.0 - ciclo)))
 	var meca := str(j.get("mecanica", ""))
+	if meca == "generica":
+		# Mecánica del nivel: proyectiles, área (anillos), teletransporte/invocación (desplazamiento), aura (partículas).
+		meca = {"salva": "proyectil", "area": "ondas", "teleport": "embiste", "invocar": "embiste", "aura": ""}.get(
+			str(Datos.nivel_jutsu(id, nivel).get("mecanica", "")), "")
 	var icono := str(j.get("icono", ""))
 	var pos := c + sacudida
 	match meca if meca != "" else icono:

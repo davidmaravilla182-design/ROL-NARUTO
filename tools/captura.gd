@@ -24,6 +24,9 @@ func _initialize() -> void:
 	if OS.get_environment("GUION") == "tecnicas":
 		_guion_tecnicas()
 		return
+	if OS.get_environment("GUION") == "todos":
+		_guion_todos(OS.get_environment("FILTRO"))
+		return
 	guion = [
 		[0.85, func(): _guardar("00_menu"); menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
 		[0.7, func(): _enemigo(false)],
@@ -116,6 +119,10 @@ func _nivel(n: int) -> void:
 
 func _listo(pos: Vector3) -> void:
 	var j = juego.servidor.entidad_de_peer(1)
+	juego.servidor.zonas.clear()
+	juego.servidor.criaturas.clear()
+	juego.servidor.diferidos.clear()
+	juego.servidor.proyectiles.clear()
 	j.reiniciar()
 	j.pos = pos
 	j.yaw = PI
@@ -184,3 +191,54 @@ func _rival(pos: Vector3) -> void:
 			e.pos = pos
 			e.yaw = 0.0
 			e.ia = null
+
+
+## Guion GUION=todos: cada jutsu genérico en N1, N2 y N3 (una captura en su momento más vistoso).
+## FILTRO=prefijo opcional para capturar solo algunos.
+func _guion_todos(filtro: String) -> void:
+	guion = [[0.85, func(): menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[0.9, func(): _enemigo(false)]]
+	var t0 := 1.6
+	for id in Repertorio.catalogo():
+		var j := Datos.jutsu(id)
+		if str(j.get("mecanica", "")) not in ["generica", "modo_sabio"]:
+			continue
+		if filtro != "" and not id.begins_with(filtro):
+			continue
+		var req: Array = j.get("requiere_modo_activo", [])
+		var modo := str(req[0]) if not req.is_empty() else ""
+		var es_modo := Repertorio.es_modo(id)
+		if es_modo:
+			modo = id
+		for n in [1, 2, 3]:
+			var nd := Datos.nivel_jutsu(id, n)
+			var espera := 0.55
+			match str(nd.get("mecanica", "")):
+				"area":
+					espera = float(nd.get("retardo", 0.0)) + 0.3 + float(nd.get("intervalo", 0.3)) * minf(float(nd.get("golpes", 1)) - 1.0, 2.0)
+				"aura":
+					espera = 0.7
+				"invocar":
+					espera = 1.6
+				"teleport":
+					espera = 0.25
+				"salva":
+					espera = 0.35 + float(nd.get("intervalo", 0.0)) * float(nd.get("cantidad", 1)) * 0.6
+			var activos := ["", "", "", ""] if es_modo else [id, "", "", ""]
+			guion.append([t0, func():
+				juego.transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": activos, "modo": modo, "prueba": true})
+				juego.hud.construir({"activos": activos, "modo": modo, "niveles_max": {}})
+				_nivel(n)])
+			guion.append([t0 + 0.1, func(): _listo(Vector3(0, 0, 10)); _rival(Vector3(0, 0, 4.0)); _seguir(); _cam(0.75, 9.5, -0.3, 1.6)])
+			if modo != "":
+				guion.append([t0 + 0.2, func(): _accion("modo")])
+			if not es_modo:
+				guion.append([t0 + 0.35, func(): _accion(id)])
+			else:
+				guion.append([t0 + 0.6, func(): _accion("golpe")])
+			guion.append([t0 + 0.35 + float(j.get("tiempo_sellos", 0.5)) + espera, func(): _guardar("%s_n%d" % [id, n])])
+			guion.append([t0 + 3.2, func():
+				if modo != "":
+					_accion("modo")])
+			t0 += 3.5
+	guion.append([t0, func(): quit(0)])

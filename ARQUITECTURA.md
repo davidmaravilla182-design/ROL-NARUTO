@@ -41,7 +41,7 @@ Todos los mensajes son `Dictionary` con tipos serializables por Godot (int, floa
 
 Comandos: `entrada {mov, mira}`, `accion {id, dir, objetivo, exacto}`, `nivel {valor 0..3}` (0 = automático por maestría), `reaparecer`, `repertorio {activos[4], modo, niveles_max, maestria, prueba}`.
 
-**Repertorio (v0.4)**: el cliente elige (menú) y el servidor valida con `Repertorio.validar` (puntos, requisitos, incompatibles); si no es válido, usa el repertorio por defecto y avisa con un `mensaje`. El servidor resuelve el nivel de cada uso con `Repertorio.nivel_efectivo` (maestría, tope elegido, nivel forzado de depuración), suma XP y emite `maestria`. Las mecánicas nuevas viven en `scripts/servidor/tecnicas.gd` (modos, Kirin, Amaterasu, Susanoo, Shinra Tensei, Ocho Puertas) y las zonas persistentes (fuego negro, cráter) viajan en la instantánea como `zonas[]`. Offline, la maestría se guarda en el perfil local (`user://perfil.json`); en red la guardaría el servidor.
+**Repertorio (v0.4)**: el cliente elige (menú) y el servidor valida con `Repertorio.validar` (puntos, requisitos, incompatibles); si no es válido, usa el repertorio por defecto y avisa con un `mensaje`. El servidor resuelve el nivel de cada uso con `Repertorio.nivel_efectivo` (maestría, tope elegido, nivel forzado de depuración), suma XP y emite `maestria`. Las mecánicas nuevas viven en `scripts/servidor/tecnicas.gd` (modos, Kirin, Amaterasu, Susanoo, Shinra Tensei, Ocho Puertas) y las zonas persistentes (fuego negro, cráter, lago, lava) viajan en la instantánea como `zonas[]`. Los otros 31 jutsus usan `scripts/servidor/genericas.gd`: cinco mecánicas configuradas con los campos de cada nivel en `data/jutsus.json` (`mecanica`, `forma`, `cantidad`, `radio`, `atrapa`, `duracion`…); las invocaciones viajan como `criaturas[]` y el cliente las dibuja con `scripts/cliente/efectos_genericos.gd` según su `forma`. Offline, la maestría se guarda en el perfil local (`user://perfil.json`); en red la guardaría el servidor.
 
 **Apuntado (v0.2)**: la dirección del disparo viaja dentro del comando `accion`, igual offline y en red:
 - `dir` (Vector2 en el plano XZ del mundo), `objetivo` (id de entidad fijada o `-1`) y `exacto` (true si el jugador arrastró la dirección a mano).
@@ -79,7 +79,7 @@ Los nombres de la serie solo existen en `/data` (una prueba automática lo vigil
 data/               datos de diseño (JSON)
 escenas/            menu.tscn y juego.tscn (solo nodo raíz + script)
 scripts/core/       Datos, Combate, Mapa, Protocolo, Repertorio (reglas compartidas del repertorio)
-scripts/servidor/   ServidorJuego, EntidadServidor, IaEnemigo, Tecnicas (mecánicas del repertorio)
+scripts/servidor/   ServidorJuego, EntidadServidor, IaEnemigo, Tecnicas (primer bloque), Genericas (salva, área, aura, invocación, teletransporte)
 scripts/red/        Transporte, TransporteLocal, TransporteENet
 scripts/cliente/    escena de juego, personaje, vestimenta, animaciones, escenario, lluvia, efectos, cámara,
                     shaders (toon, contorno, fuego, calor, charcos, nubes, niebla, ojos, indicadores),

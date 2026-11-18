@@ -118,15 +118,15 @@
   "categoria": "fuego",
   "ranura": "activo",
   "puntos": 2,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "fuego",
   "icono": "llama",
   "apuntable": true,
   "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "tiempo_sellos": 0.5,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "naturalezas": [
     "fuego"
@@ -138,34 +138,64 @@
    {
     "descripcion": "3 bolas pequeñas.",
     "costo": 12.0,
-    "dano": 6.0
+    "dano": 6.0,
+    "mecanica": "salva",
+    "forma": "bola",
+    "cantidad": 3,
+    "abanico": 18,
+    "velocidad": 18,
+    "radio": 0.3,
+    "radio_explosion": 1.2,
+    "empuje": 2
    },
    {
     "descripcion": "8 bolas con shuriken ocultos.",
     "costo": 20.0,
-    "dano": 6.0
+    "dano": 6.0,
+    "mecanica": "salva",
+    "forma": "bola",
+    "cantidad": 8,
+    "abanico": 34,
+    "velocidad": 19,
+    "radio": 0.32,
+    "radio_explosion": 1.3,
+    "empuje": 2,
+    "intervalo": 0.04
    },
    {
     "descripcion": "20 bolas que persiguen al objetivo.",
     "costo": 34.0,
-    "dano": 6.0
+    "dano": 6.0,
+    "mecanica": "salva",
+    "forma": "bola",
+    "cantidad": 20,
+    "abanico": 70,
+    "velocidad": 17,
+    "radio": 0.34,
+    "radio_explosion": 1.5,
+    "teledirigido": 3.5,
+    "intervalo": 0.05,
+    "sacudida": 0.6,
+    "marca": 1.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#ff7a1a"
  },
  "dragon_fuego": {
   "nombre": "Dragón de Fuego",
   "categoria": "fuego",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "fuego",
   "icono": "llama",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 7.0,
+  "tiempo_sellos": 0.8,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "naturalezas": [
     "fuego"
@@ -178,19 +208,61 @@
    {
     "descripcion": "Llamarada en línea.",
     "costo": 18.0,
-    "dano": 22.0
+    "dano": 22.0,
+    "mecanica": "salva",
+    "forma": "dragon",
+    "cantidad": 1,
+    "velocidad": 16,
+    "radio": 0.6,
+    "radio_explosion": 2.2,
+    "empuje": 5,
+    "segmentos": 6
    },
    {
     "descripcion": "Dragón que serpentea.",
     "costo": 30.0,
-    "dano": 34.0
+    "dano": 34.0,
+    "mecanica": "salva",
+    "forma": "dragon",
+    "cantidad": 1,
+    "velocidad": 15,
+    "radio": 1.0,
+    "radio_explosion": 3.2,
+    "empuje": 8,
+    "derriba": true,
+    "teledirigido": 1.6,
+    "segmentos": 10,
+    "zona_radio": 2.2,
+    "zona_duracion": 3,
+    "zona_dps": 6,
+    "zona_forma": "fuego",
+    "sacudida": 0.5,
+    "marca": 1.6
    },
    {
     "descripcion": "Dragón gigante que rodea al enemigo.",
     "costo": 48.0,
-    "dano": 52.0
+    "dano": 52.0,
+    "mecanica": "salva",
+    "forma": "dragon",
+    "cantidad": 1,
+    "velocidad": 14,
+    "radio": 1.8,
+    "radio_explosion": 5.0,
+    "empuje": 12,
+    "derriba": true,
+    "teledirigido": 2.6,
+    "segmentos": 16,
+    "zona_radio": 4.0,
+    "zona_duracion": 5,
+    "zona_dps": 9,
+    "zona_forma": "fuego",
+    "sacudida": 1.2,
+    "marca": 3.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#ff5a10"
  },
  "chidori": {
   "nombre": "Chidori",
@@ -273,15 +345,15 @@
   "categoria": "rayo",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "rayo",
   "icono": "rayo",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 5.0,
+  "tiempo_sellos": 0.3,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "naturalezas": [
     "rayo"
@@ -296,19 +368,50 @@
    {
     "descripcion": "Agujas de rayo.",
     "costo": 14.0,
-    "dano": 12.0
+    "dano": 12.0,
+    "mecanica": "salva",
+    "forma": "aguja",
+    "cantidad": 5,
+    "abanico": 24,
+    "velocidad": 32,
+    "radio": 0.14,
+    "radio_explosion": 0.6
    },
    {
     "descripcion": "Lanza que se extiende a distancia.",
     "costo": 24.0,
-    "dano": 30.0
+    "dano": 30.0,
+    "mecanica": "salva",
+    "forma": "lanza",
+    "cantidad": 1,
+    "velocidad": 48,
+    "radio": 0.3,
+    "radio_explosion": 1.2,
+    "perfora": true,
+    "empuje": 4,
+    "sacudida": 0.4
    },
    {
     "descripcion": "Lanza que se ramifica a varios enemigos.",
     "costo": 38.0,
-    "dano": 30.0
+    "dano": 30.0,
+    "mecanica": "salva",
+    "forma": "lanza",
+    "cantidad": 5,
+    "abanico": 50,
+    "velocidad": 42,
+    "radio": 0.3,
+    "radio_explosion": 1.5,
+    "perfora": true,
+    "teledirigido": 7,
+    "objetivos_distintos": true,
+    "empuje": 5,
+    "sacudida": 0.9,
+    "marca": 1.2,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#8fd8ff"
  },
  "kirin": {
   "nombre": "Kirin",
@@ -396,15 +499,15 @@
   "categoria": "rayo",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "rayo",
   "icono": "rayo",
   "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 14.0,
+  "tiempo_sellos": 0.3,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 14.0,
   "requisitos": {
    "naturalezas": [
     "rayo"
@@ -417,34 +520,57 @@
    {
     "descripcion": "+Velocidad.",
     "costo": 12.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "manto_rayo",
+    "duracion": 8,
+    "vel_mult": 1.4
    },
    {
     "descripcion": "+Velocidad y daño.",
     "costo": 20.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "manto_rayo",
+    "duracion": 10,
+    "vel_mult": 1.6,
+    "dano_mult": 1.25
    },
    {
     "descripcion": "Desplazamiento instantáneo con estela eléctrica.",
     "costo": 30.0,
-    "dano": 20.0
+    "dano": 20.0,
+    "mecanica": "teleport",
+    "forma": "manto_rayo",
+    "distancia": 10,
+    "detras": true,
+    "cadena": 1,
+    "radio_golpe": 2.5,
+    "aura": true,
+    "duracion": 10,
+    "vel_mult": 1.8,
+    "dano_mult": 1.35,
+    "sacudida": 0.8,
+    "marca": 1.5,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#9fe4ff"
  },
  "dragon_agua": {
   "nombre": "Gran Dragón de Agua",
   "categoria": "agua",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "agua",
   "icono": "gota",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 8.0,
+  "tiempo_sellos": 0.9,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "naturalezas": [
     "agua"
@@ -456,34 +582,75 @@
    {
     "descripcion": "Un dragón.",
     "costo": 20.0,
-    "dano": 26.0
+    "dano": 26.0,
+    "mecanica": "salva",
+    "forma": "dragon",
+    "cantidad": 1,
+    "velocidad": 15,
+    "radio": 0.9,
+    "radio_explosion": 2.6,
+    "empuje": 8,
+    "derriba": true,
+    "segmentos": 10
    },
    {
     "descripcion": "Dos dragones.",
     "costo": 34.0,
-    "dano": 26.0
+    "dano": 26.0,
+    "mecanica": "salva",
+    "forma": "dragon",
+    "cantidad": 2,
+    "abanico": 36,
+    "velocidad": 15,
+    "radio": 0.9,
+    "radio_explosion": 2.6,
+    "empuje": 8,
+    "derriba": true,
+    "teledirigido": 1.4,
+    "segmentos": 10,
+    "sacudida": 0.5
    },
    {
     "descripcion": "Cinco dragones que dejan un lago temporal.",
     "costo": 55.0,
-    "dano": 26.0
+    "dano": 26.0,
+    "mecanica": "salva",
+    "forma": "dragon",
+    "cantidad": 5,
+    "abanico": 80,
+    "velocidad": 14,
+    "radio": 1.1,
+    "radio_explosion": 3.0,
+    "empuje": 10,
+    "derriba": true,
+    "teledirigido": 2.2,
+    "segmentos": 12,
+    "intervalo": 0.12,
+    "zona_radio": 7,
+    "zona_duracion": 10,
+    "zona_dps": 0,
+    "zona_forma": "lago",
+    "sacudida": 1.2,
+    "marca": 2.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#3f8cff"
  },
  "prision_agua": {
   "nombre": "Prisión de Agua",
   "categoria": "agua",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "agua",
   "icono": "gota",
   "apuntable": true,
-  "recarga": 6.0,
+  "recarga": 9.0,
   "tiempo_sellos": 0.6,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 12.0,
   "requisitos": {
    "naturalezas": [
     "agua"
@@ -495,34 +662,52 @@
    {
     "descripcion": "Atrapa 2 s.",
     "costo": 16.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "area",
+    "forma": "burbuja",
+    "centro": "objetivo",
+    "radio": 1.6,
+    "atrapa": 2.0
    },
    {
     "descripcion": "Atrapa 4 s y se mueve contigo.",
     "costo": 26.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "area",
+    "forma": "burbuja",
+    "centro": "objetivo",
+    "radio": 1.8,
+    "atrapa": 4.0
    },
    {
     "descripcion": "Encierra a varios.",
     "costo": 40.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "area",
+    "forma": "burbuja",
+    "centro": "objetivo",
+    "radio": 6.0,
+    "atrapa": 4.0,
+    "sacudida": 0.6,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#4aa8ff"
  },
  "cascada": {
   "nombre": "Gran Cascada",
   "categoria": "agua",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "agua",
   "icono": "gota",
-  "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "apuntable": true,
+  "recarga": 8.0,
+  "tiempo_sellos": 0.8,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 16.0,
   "requisitos": {
    "naturalezas": [
     "agua"
@@ -534,34 +719,64 @@
    {
     "descripcion": "Ola.",
     "costo": 18.0,
-    "dano": 18.0
+    "dano": 18.0,
+    "mecanica": "area",
+    "forma": "ola",
+    "centro": "frente",
+    "distancia": 3.5,
+    "radio": 4.0,
+    "cono": 70,
+    "empuje": 9
    },
    {
     "descripcion": "Ola gigante frontal.",
     "costo": 30.0,
-    "dano": 30.0
+    "dano": 30.0,
+    "mecanica": "area",
+    "forma": "ola",
+    "centro": "frente",
+    "distancia": 5.5,
+    "radio": 7.0,
+    "cono": 80,
+    "empuje": 13,
+    "derriba": true,
+    "sacudida": 0.6
    },
    {
     "descripcion": "Inunda toda el área (potencia el rayo).",
     "costo": 50.0,
-    "dano": 34.0
+    "dano": 34.0,
+    "mecanica": "area",
+    "forma": "inundacion",
+    "centro": "propio",
+    "radio": 14.0,
+    "empuje": 14,
+    "derriba": true,
+    "zona_radio": 14,
+    "zona_duracion": 8,
+    "zona_dps": 0,
+    "zona_forma": "lago",
+    "sacudida": 1.3,
+    "marca": 0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#3a7dff"
  },
  "tiburones": {
   "nombre": "Tiburones de Agua",
   "categoria": "agua",
   "ranura": "activo",
   "puntos": 2,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "agua",
   "icono": "gota",
   "apuntable": true,
   "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "tiempo_sellos": 0.5,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "naturalezas": [
     "agua"
@@ -573,34 +788,66 @@
    {
     "descripcion": "Un tiburón.",
     "costo": 12.0,
-    "dano": 18.0
+    "dano": 18.0,
+    "mecanica": "salva",
+    "forma": "tiburon",
+    "cantidad": 1,
+    "velocidad": 16,
+    "radio": 0.6,
+    "radio_explosion": 1.6,
+    "teledirigido": 2.2,
+    "empuje": 4
    },
    {
     "descripcion": "Cardumen.",
     "costo": 22.0,
-    "dano": 12.0
+    "dano": 12.0,
+    "mecanica": "salva",
+    "forma": "tiburon",
+    "cantidad": 6,
+    "abanico": 50,
+    "velocidad": 17,
+    "radio": 0.4,
+    "radio_explosion": 1.2,
+    "teledirigido": 2.6,
+    "intervalo": 0.08,
+    "empuje": 3
    },
    {
     "descripcion": "Tiburón gigante que traga jutsus enemigos.",
     "costo": 38.0,
-    "dano": 40.0
+    "dano": 40.0,
+    "mecanica": "salva",
+    "forma": "tiburon",
+    "cantidad": 1,
+    "velocidad": 12,
+    "radio": 1.8,
+    "radio_explosion": 3.5,
+    "teledirigido": 1.6,
+    "traga": true,
+    "empuje": 10,
+    "derriba": true,
+    "sacudida": 1.0,
+    "marca": 1.5,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#2f7fe8"
  },
  "muro_tierra": {
   "nombre": "Muro de Tierra",
   "categoria": "tierra",
   "ranura": "activo",
   "puntos": 2,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "tierra",
   "icono": "roca",
   "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 10.0,
+  "tiempo_sellos": 0.4,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 4.0,
   "requisitos": {
    "naturalezas": [
     "tierra"
@@ -612,34 +859,55 @@
    {
     "descripcion": "Muro.",
     "costo": 12.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "muro",
+    "duracion": 4,
+    "reduccion": 0.6,
+    "repele_radio": 2.6
    },
    {
     "descripcion": "Cúpula protectora.",
     "costo": 22.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "cupula",
+    "duracion": 5,
+    "reduccion": 0.8,
+    "repele_radio": 3.0
    },
    {
     "descripcion": "Fortaleza con picos.",
     "costo": 36.0,
-    "dano": 20.0
+    "dano": 20.0,
+    "mecanica": "aura",
+    "forma": "fortaleza",
+    "duracion": 6,
+    "reduccion": 0.8,
+    "repele_radio": 3.5,
+    "contacto_radio": 3.4,
+    "contacto_dps": 20,
+    "sacudida": 0.8,
+    "marca": 2.5,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#a7794a"
  },
  "dragon_tierra": {
   "nombre": "Dragón de Tierra",
   "categoria": "tierra",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "tierra",
   "icono": "roca",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 8.0,
+  "tiempo_sellos": 0.7,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "naturalezas": [
     "tierra"
@@ -651,32 +919,64 @@
    {
     "descripcion": "Proyectiles de lodo.",
     "costo": 14.0,
-    "dano": 10.0
+    "dano": 10.0,
+    "mecanica": "salva",
+    "forma": "lodo",
+    "cantidad": 4,
+    "abanico": 28,
+    "velocidad": 20,
+    "radio": 0.35,
+    "radio_explosion": 1.2,
+    "empuje": 2
    },
    {
     "descripcion": "Dragón de lodo.",
     "costo": 26.0,
-    "dano": 28.0
+    "dano": 28.0,
+    "mecanica": "salva",
+    "forma": "dragon",
+    "cantidad": 1,
+    "velocidad": 14,
+    "radio": 1.0,
+    "radio_explosion": 3.0,
+    "empuje": 8,
+    "derriba": true,
+    "teledirigido": 1.4,
+    "segmentos": 10,
+    "sacudida": 0.5,
+    "marca": 1.6
    },
    {
     "descripcion": "Terremoto que agrieta el suelo.",
     "costo": 44.0,
-    "dano": 40.0
+    "dano": 40.0,
+    "mecanica": "area",
+    "forma": "terremoto",
+    "centro": "propio",
+    "radio": 12.0,
+    "retardo": 0.45,
+    "derriba": true,
+    "aturde": 1.5,
+    "empuje": 6,
+    "sacudida": 1.6,
+    "marca": 6.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#8a5a32"
  },
  "golem_tierra": {
   "nombre": "Golem de Tierra",
   "categoria": "tierra",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "tierra",
   "icono": "roca",
   "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 16.0,
+  "tiempo_sellos": 0.9,
   "sellos": [],
   "alcance": 20.0,
   "requisitos": {
@@ -691,34 +991,64 @@
    {
     "descripcion": "Golem pequeño.",
     "costo": 20.0,
-    "dano": 14.0
+    "dano": 14.0,
+    "mecanica": "invocar",
+    "forma": "golem",
+    "cantidad": 1,
+    "escala": 0.8,
+    "duracion": 12,
+    "velocidad": 3.8,
+    "alcance_golpe": 1.8,
+    "intervalo_golpe": 1.4
    },
    {
     "descripcion": "Golem grande.",
     "costo": 34.0,
-    "dano": 24.0
+    "dano": 24.0,
+    "mecanica": "invocar",
+    "forma": "golem",
+    "cantidad": 1,
+    "escala": 1.4,
+    "duracion": 15,
+    "velocidad": 3.4,
+    "alcance_golpe": 2.6,
+    "intervalo_golpe": 1.5,
+    "sacudida": 0.4
    },
    {
     "descripcion": "Golem gigante que pelea a tu lado.",
     "costo": 55.0,
-    "dano": 36.0
+    "dano": 36.0,
+    "mecanica": "invocar",
+    "forma": "golem",
+    "cantidad": 1,
+    "escala": 2.6,
+    "duracion": 20,
+    "velocidad": 3.0,
+    "alcance_golpe": 4.2,
+    "intervalo_golpe": 1.6,
+    "onda_radio": 6,
+    "sacudida": 1.2,
+    "marca": 3.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#9a6b3e"
  },
  "gran_rafaga": {
   "nombre": "Gran Ráfaga",
   "categoria": "viento",
   "ranura": "activo",
   "puntos": 2,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "viento",
   "icono": "viento",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 5.0,
+  "tiempo_sellos": 0.3,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 12.0,
   "requisitos": {
    "naturalezas": [
     "viento"
@@ -730,34 +1060,61 @@
    {
     "descripcion": "Ráfaga que empuja.",
     "costo": 10.0,
-    "dano": 6.0
+    "dano": 6.0,
+    "mecanica": "area",
+    "forma": "rafaga",
+    "centro": "frente",
+    "distancia": 3.0,
+    "radio": 6.0,
+    "cono": 60,
+    "empuje": 12
    },
    {
     "descripcion": "Ráfaga cortante.",
     "costo": 18.0,
-    "dano": 18.0
+    "dano": 18.0,
+    "mecanica": "area",
+    "forma": "cortante",
+    "centro": "frente",
+    "distancia": 4.0,
+    "radio": 8.0,
+    "cono": 60,
+    "empuje": 14,
+    "sacudida": 0.4
    },
    {
     "descripcion": "Tornado.",
     "costo": 32.0,
-    "dano": 28.0
+    "dano": 4.7,
+    "mecanica": "area",
+    "forma": "tornado",
+    "centro": "objetivo",
+    "radio": 4.0,
+    "golpes": 6,
+    "intervalo": 0.4,
+    "atrae": 6,
+    "sigue": true,
+    "sacudida": 0.8,
+    "marca": 2.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#9be8c0"
  },
  "balas_vacio": {
   "nombre": "Balas de Vacío",
   "categoria": "viento",
   "ranura": "activo",
   "puntos": 2,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "viento",
   "icono": "viento",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 5.0,
+  "tiempo_sellos": 0.3,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 24.0,
   "requisitos": {
    "naturalezas": [
     "viento"
@@ -769,34 +1126,63 @@
    {
     "descripcion": "Una bala.",
     "costo": 10.0,
-    "dano": 16.0
+    "dano": 16.0,
+    "mecanica": "salva",
+    "forma": "bala",
+    "cantidad": 1,
+    "velocidad": 30,
+    "radio": 0.35,
+    "radio_explosion": 1.1,
+    "empuje": 4
    },
    {
     "descripcion": "Ráfaga de 5.",
     "costo": 20.0,
-    "dano": 10.0
+    "dano": 10.0,
+    "mecanica": "salva",
+    "forma": "bala",
+    "cantidad": 5,
+    "abanico": 18,
+    "velocidad": 30,
+    "radio": 0.3,
+    "radio_explosion": 1.0,
+    "empuje": 3,
+    "intervalo": 0.12
    },
    {
     "descripcion": "Bala gigante perforante.",
     "costo": 34.0,
-    "dano": 45.0
+    "dano": 45.0,
+    "mecanica": "salva",
+    "forma": "bala",
+    "cantidad": 1,
+    "velocidad": 26,
+    "radio": 1.2,
+    "radio_explosion": 2.8,
+    "perfora": true,
+    "empuje": 10,
+    "derriba": true,
+    "sacudida": 0.9,
+    "marca": 1.5,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#c8f5e0"
  },
  "rasenshuriken": {
   "nombre": "Rasenshuriken",
   "categoria": "viento",
   "ranura": "activo",
   "puntos": 5,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "viento",
   "icono": "espiral",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 14.0,
+  "tiempo_sellos": 0.9,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 18.0,
   "requisitos": {
    "naturalezas": [
     "viento"
@@ -811,19 +1197,68 @@
    {
     "descripcion": "Lanzado corto.",
     "costo": 40.0,
-    "dano": 60.0
+    "dano": 60.0,
+    "mecanica": "salva",
+    "forma": "rasenshuriken",
+    "cantidad": 1,
+    "velocidad": 14,
+    "radio": 0.7,
+    "radio_explosion": 4.0,
+    "aturde": 1.0,
+    "empuje": 6,
+    "zona_radio": 3.0,
+    "zona_duracion": 1.5,
+    "zona_dps": 16,
+    "zona_forma": "corte",
+    "sacudida": 0.6,
+    "marca": 2.0
    },
    {
     "descripcion": "Explosión enorme.",
     "costo": 60.0,
-    "dano": 85.0
+    "dano": 85.0,
+    "mecanica": "salva",
+    "forma": "rasenshuriken",
+    "cantidad": 1,
+    "velocidad": 14,
+    "radio": 0.9,
+    "radio_explosion": 7.0,
+    "aturde": 1.5,
+    "empuje": 10,
+    "derriba": true,
+    "zona_radio": 5.0,
+    "zona_duracion": 2.0,
+    "zona_dps": 22,
+    "zona_forma": "corte",
+    "sacudida": 1.2,
+    "marca": 3.5
    },
    {
     "descripcion": "Lluvia de varios Rasenshuriken.",
     "costo": 85.0,
-    "dano": 70.0
+    "dano": 70.0,
+    "mecanica": "salva",
+    "forma": "rasenshuriken",
+    "cantidad": 4,
+    "abanico": 60,
+    "velocidad": 13,
+    "radio": 0.9,
+    "radio_explosion": 5.5,
+    "teledirigido": 1.2,
+    "intervalo": 0.2,
+    "aturde": 1.5,
+    "empuje": 10,
+    "derriba": true,
+    "zona_radio": 4.0,
+    "zona_duracion": 2.0,
+    "zona_dps": 20,
+    "zona_forma": "corte",
+    "sacudida": 1.6,
+    "marca": 3.5,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#bff0ff"
  },
  "rasengan": {
   "nombre": "Rasengan",
@@ -904,13 +1339,13 @@
   "categoria": "neutro",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "clones",
   "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 14.0,
+  "tiempo_sellos": 0.4,
   "sellos": [],
   "alcance": 20.0,
   "requisitos": {
@@ -922,32 +1357,59 @@
    {
     "descripcion": "2 clones.",
     "costo": 20.0,
-    "dano": 0.0
+    "dano": 8.0,
+    "mecanica": "invocar",
+    "forma": "clon",
+    "cantidad": 2,
+    "escala": 1.0,
+    "duracion": 10,
+    "velocidad": 5.5,
+    "alcance_golpe": 1.4,
+    "intervalo_golpe": 0.9
    },
    {
     "descripcion": "5 clones.",
     "costo": 32.0,
-    "dano": 0.0
+    "dano": 8.0,
+    "mecanica": "invocar",
+    "forma": "clon",
+    "cantidad": 5,
+    "escala": 1.0,
+    "duracion": 10,
+    "velocidad": 5.5,
+    "alcance_golpe": 1.4,
+    "intervalo_golpe": 0.9
    },
    {
     "descripcion": "Multitud de 20 clones.",
     "costo": 55.0,
-    "dano": 0.0
+    "dano": 8.0,
+    "mecanica": "invocar",
+    "forma": "clon",
+    "cantidad": 20,
+    "escala": 1.0,
+    "duracion": 12,
+    "velocidad": 5.5,
+    "alcance_golpe": 1.4,
+    "intervalo_golpe": 1.0,
+    "sacudida": 0.5,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#f2b33a"
  },
  "invocacion": {
   "nombre": "Invocación",
   "categoria": "neutro",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "pergamino",
   "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 20.0,
+  "tiempo_sellos": 1.0,
   "sellos": [],
   "alcance": 20.0,
   "requisitos": {
@@ -960,32 +1422,64 @@
    {
     "descripcion": "Criatura pequeña.",
     "costo": 20.0,
-    "dano": 12.0
+    "dano": 12.0,
+    "mecanica": "invocar",
+    "forma": "criatura",
+    "cantidad": 1,
+    "escala": 0.6,
+    "duracion": 10,
+    "velocidad": 5.0,
+    "alcance_golpe": 1.6,
+    "intervalo_golpe": 1.2
    },
    {
     "descripcion": "Criatura mediana.",
     "costo": 36.0,
-    "dano": 22.0
+    "dano": 22.0,
+    "mecanica": "invocar",
+    "forma": "criatura",
+    "cantidad": 1,
+    "escala": 1.4,
+    "duracion": 12,
+    "velocidad": 4.2,
+    "alcance_golpe": 2.8,
+    "intervalo_golpe": 1.4,
+    "onda_radio": 3,
+    "sacudida": 0.6
    },
    {
     "descripcion": "Criatura gigante.",
     "costo": 60.0,
-    "dano": 40.0
+    "dano": 40.0,
+    "mecanica": "invocar",
+    "forma": "criatura",
+    "cantidad": 1,
+    "escala": 3.0,
+    "duracion": 15,
+    "velocidad": 3.4,
+    "alcance_golpe": 5.0,
+    "intervalo_golpe": 1.6,
+    "onda_radio": 8,
+    "aturde": 1.0,
+    "sacudida": 1.6,
+    "marca": 5.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#e0a050"
  },
  "hiraishin": {
   "nombre": "Dios del Trueno Volador",
   "categoria": "neutro",
   "ranura": "activo",
   "puntos": 5,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "kunai",
-  "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "apuntable": true,
+  "recarga": 8.0,
+  "tiempo_sellos": 0.2,
   "sellos": [],
   "alcance": 20.0,
   "requisitos": {
@@ -1000,32 +1494,52 @@
    {
     "descripcion": "1 marca.",
     "costo": 14.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "teleport",
+    "forma": "hiraishin",
+    "distancia": 12,
+    "detras": true,
+    "cadena": 1
    },
    {
     "descripcion": "3 marcas.",
     "costo": 26.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "teleport",
+    "forma": "hiraishin",
+    "distancia": 16,
+    "detras": true,
+    "cadena": 3
    },
    {
     "descripcion": "Teletransporte en cadena por todas las marcas.",
     "costo": 44.0,
-    "dano": 40.0
+    "dano": 40.0,
+    "mecanica": "teleport",
+    "forma": "hiraishin",
+    "distancia": 22,
+    "detras": true,
+    "cadena": 6,
+    "radio_golpe": 2.5,
+    "sacudida": 0.9,
+    "marca": 1.2,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#ffd84a"
  },
  "sellos_explosivos": {
   "nombre": "Sellos Explosivos",
   "categoria": "neutro",
   "ranura": "activo",
   "puntos": 2,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "papel",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 5.0,
+  "tiempo_sellos": 0.3,
   "sellos": [],
   "alcance": 20.0,
   "requisitos": {
@@ -1039,34 +1553,67 @@
    {
     "descripcion": "Kunai explosivo.",
     "costo": 8.0,
-    "dano": 18.0
+    "dano": 18.0,
+    "mecanica": "salva",
+    "forma": "kunai",
+    "cantidad": 1,
+    "velocidad": 30,
+    "radio": 0.15,
+    "radio_explosion": 2.6,
+    "empuje": 6,
+    "derriba": true,
+    "sacudida": 0.4,
+    "marca": 1.2
    },
    {
     "descripcion": "Muro de sellos.",
     "costo": 16.0,
-    "dano": 26.0
+    "dano": 26.0,
+    "mecanica": "area",
+    "forma": "sellos",
+    "centro": "frente",
+    "distancia": 3.0,
+    "radio": 4.0,
+    "retardo": 1.0,
+    "empuje": 8,
+    "derriba": true,
+    "sacudida": 0.7,
+    "marca": 2.5
    },
    {
     "descripcion": "Explosión en cadena de cientos de sellos.",
     "costo": 32.0,
-    "dano": 50.0
+    "dano": 10.0,
+    "mecanica": "area",
+    "forma": "sellos",
+    "centro": "objetivo",
+    "radio": 9.0,
+    "retardo": 0.8,
+    "golpes": 5,
+    "intervalo": 0.25,
+    "empuje": 10,
+    "derriba": true,
+    "sacudida": 1.5,
+    "marca": 5.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#e8d7a8"
  },
  "danza_papel": {
   "nombre": "Danza de Papel",
   "categoria": "neutro",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "papel",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 7.0,
+  "tiempo_sellos": 0.4,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "linaje": "papel"
   },
@@ -1076,34 +1623,60 @@
    {
     "descripcion": "Lluvia de shuriken de papel.",
     "costo": 16.0,
-    "dano": 14.0
+    "dano": 14.0,
+    "mecanica": "salva",
+    "forma": "papel",
+    "cantidad": 10,
+    "abanico": 40,
+    "velocidad": 24,
+    "radio": 0.2,
+    "radio_explosion": 0.6,
+    "intervalo": 0.03
    },
    {
     "descripcion": "Alas de papel para planear.",
     "costo": 26.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "alas",
+    "duracion": 8,
+    "vel_mult": 1.5,
+    "planea": true
    },
    {
     "descripcion": "Tormenta de miles de hojas explosivas.",
     "costo": 52.0,
-    "dano": 60.0
+    "dano": 10.0,
+    "mecanica": "area",
+    "forma": "papel_explosivo",
+    "centro": "objetivo",
+    "radio": 10.0,
+    "retardo": 1.0,
+    "golpes": 6,
+    "intervalo": 0.3,
+    "empuje": 8,
+    "derriba": true,
+    "sacudida": 1.5,
+    "marca": 5.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#f4f0e6"
  },
  "fuerza_sobrehumana": {
   "nombre": "Fuerza Sobrehumana",
   "categoria": "neutro",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "puno",
-  "apuntable": false,
+  "apuntable": true,
   "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "tiempo_sellos": 0.1,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 4.0,
   "requisitos": {
    "control_min": 3.5
   },
@@ -1113,34 +1686,62 @@
    {
     "descripcion": "Golpe que agrieta el suelo.",
     "costo": 12.0,
-    "dano": 28.0
+    "dano": 28.0,
+    "mecanica": "area",
+    "forma": "grietas",
+    "centro": "frente",
+    "distancia": 1.6,
+    "radio": 3.0,
+    "empuje": 9,
+    "derriba": true,
+    "sacudida": 0.6,
+    "marca": 2.0,
+    "acerca": true
    },
    {
     "descripcion": "Golpe que hace cráter.",
     "costo": 22.0,
-    "dano": 45.0
+    "dano": 45.0,
+    "mecanica": "area",
+    "forma": "crater",
+    "centro": "frente",
+    "distancia": 1.8,
+    "radio": 5.0,
+    "empuje": 13,
+    "derriba": true,
+    "sacudida": 1.0,
+    "marca": 4.0,
+    "acerca": true
    },
    {
     "descripcion": "Sello de regeneración activo durante el combate.",
     "costo": 40.0,
-    "dano": 45.0
+    "dano": 45.0,
+    "mecanica": "aura",
+    "forma": "sello_regeneracion",
+    "duracion": 15,
+    "cura_ps": 4,
+    "dano_mult": 1.3,
+    "sacudida": 0.5,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#ff6f8a"
  },
  "curacion": {
   "nombre": "Curación Médica",
   "categoria": "neutro",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "cruz",
   "apuntable": false,
-  "recarga": 6.0,
+  "recarga": 12.0,
   "tiempo_sellos": 0.6,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 6.0,
   "requisitos": {
    "control_min": 4.5
   },
@@ -1150,34 +1751,50 @@
    {
     "descripcion": "Curación propia lenta.",
     "costo": 14.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "cura",
+    "duracion": 6,
+    "cura_ps": 4
    },
    {
     "descripcion": "Curar aliados (para el online).",
     "costo": 24.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "cura",
+    "duracion": 6,
+    "cura_ps": 6,
+    "cura_aliados_radio": 6
    },
    {
     "descripcion": "Regeneración continua.",
     "costo": 40.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "cura",
+    "duracion": 20,
+    "cura_ps": 5,
+    "cura_aliados_radio": 6,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#6dff9a"
  },
  "madera": {
   "nombre": "Madera",
   "categoria": "kekkei",
   "ranura": "activo",
   "puntos": 5,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "hoja",
-  "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "apuntable": true,
+  "recarga": 9.0,
+  "tiempo_sellos": 0.7,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 18.0,
   "requisitos": {
    "naturalezas": [
     "tierra",
@@ -1191,34 +1808,61 @@
    {
     "descripcion": "Raíces que atrapan.",
     "costo": 20.0,
-    "dano": 10.0
+    "dano": 10.0,
+    "mecanica": "area",
+    "forma": "raices",
+    "centro": "objetivo",
+    "radio": 2.0,
+    "atrapa": 2.0
    },
    {
     "descripcion": "Bosque que bloquea el área.",
     "costo": 36.0,
-    "dano": 16.0
+    "dano": 16.0,
+    "mecanica": "area",
+    "forma": "bosque",
+    "centro": "objetivo",
+    "radio": 7.0,
+    "atrapa": 3.0,
+    "sacudida": 0.6,
+    "marca": 3.0
    },
    {
     "descripcion": "Dragón de madera gigante.",
     "costo": 60.0,
-    "dano": 50.0
+    "dano": 50.0,
+    "mecanica": "salva",
+    "forma": "dragon",
+    "cantidad": 1,
+    "velocidad": 13,
+    "radio": 1.6,
+    "radio_explosion": 4.0,
+    "empuje": 12,
+    "derriba": true,
+    "teledirigido": 2.0,
+    "segmentos": 16,
+    "atrapa": 1.5,
+    "sacudida": 1.3,
+    "marca": 3.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#5f8f3a"
  },
  "hielo": {
   "nombre": "Hielo",
   "categoria": "kekkei",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "cristal",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 7.0,
+  "tiempo_sellos": 0.5,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "naturalezas": [
     "agua",
@@ -1232,31 +1876,55 @@
    {
     "descripcion": "Agujas de hielo.",
     "costo": 14.0,
-    "dano": 14.0
+    "dano": 14.0,
+    "mecanica": "salva",
+    "forma": "hielo",
+    "cantidad": 6,
+    "abanico": 30,
+    "velocidad": 28,
+    "radio": 0.18,
+    "radio_explosion": 0.7
    },
    {
     "descripcion": "Espejos de hielo para moverte.",
     "costo": 28.0,
-    "dano": 20.0
+    "dano": 20.0,
+    "mecanica": "teleport",
+    "forma": "espejos",
+    "distancia": 8,
+    "detras": true,
+    "cadena": 2,
+    "radio_golpe": 2.0
    },
    {
     "descripcion": "Domo de espejos que encierra al rival.",
     "costo": 48.0,
-    "dano": 40.0
+    "dano": 8.0,
+    "mecanica": "area",
+    "forma": "domo_hielo",
+    "centro": "objetivo",
+    "radio": 4.0,
+    "atrapa": 4.0,
+    "golpes": 5,
+    "intervalo": 0.5,
+    "sacudida": 0.8,
+    "marca": 2.5,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#bfeaff"
  },
  "lava": {
   "nombre": "Lava",
   "categoria": "kekkei",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "llama",
   "apuntable": true,
-  "recarga": 6.0,
+  "recarga": 8.0,
   "tiempo_sellos": 0.6,
   "sellos": [],
   "alcance": 20.0,
@@ -1273,34 +1941,72 @@
    {
     "descripcion": "Bolas de lava.",
     "costo": 20.0,
-    "dano": 24.0
+    "dano": 24.0,
+    "mecanica": "salva",
+    "forma": "lava",
+    "cantidad": 3,
+    "abanico": 20,
+    "velocidad": 16,
+    "radio": 0.5,
+    "radio_explosion": 2.0,
+    "empuje": 3,
+    "zona_radio": 1.4,
+    "zona_duracion": 3,
+    "zona_dps": 6,
+    "zona_forma": "lava"
    },
    {
     "descripcion": "Río de lava.",
     "costo": 36.0,
-    "dano": 30.0
+    "dano": 30.0,
+    "mecanica": "area",
+    "forma": "rio_lava",
+    "centro": "frente",
+    "distancia": 6.0,
+    "radio": 6.0,
+    "cono": 40,
+    "empuje": 4,
+    "zona_radio": 5,
+    "zona_duracion": 5,
+    "zona_dps": 10,
+    "zona_forma": "lava",
+    "sacudida": 0.5,
+    "marca": 3.0
    },
    {
     "descripcion": "Golem de lava.",
     "costo": 58.0,
-    "dano": 44.0
+    "dano": 44.0,
+    "mecanica": "invocar",
+    "forma": "golem_lava",
+    "cantidad": 1,
+    "escala": 2.5,
+    "duracion": 18,
+    "velocidad": 3.0,
+    "alcance_golpe": 4.0,
+    "intervalo_golpe": 1.5,
+    "onda_radio": 5,
+    "sacudida": 1.2,
+    "marca": 3.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#ff5a1e"
  },
  "arcilla": {
   "nombre": "Arcilla Explosiva",
   "categoria": "kekkei",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "ave",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 7.0,
+  "tiempo_sellos": 0.4,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 22.0,
   "requisitos": {
    "naturalezas": [
     "tierra",
@@ -1314,34 +2020,69 @@
    {
     "descripcion": "Arañas explosivas.",
     "costo": 16.0,
-    "dano": 20.0
+    "dano": 20.0,
+    "mecanica": "salva",
+    "forma": "arana",
+    "cantidad": 4,
+    "abanico": 40,
+    "velocidad": 8,
+    "radio": 0.3,
+    "radio_explosion": 2.0,
+    "teledirigido": 3.0,
+    "rastrero": true,
+    "empuje": 4
    },
    {
     "descripcion": "Aves teledirigidas.",
     "costo": 28.0,
-    "dano": 30.0
+    "dano": 30.0,
+    "mecanica": "salva",
+    "forma": "ave",
+    "cantidad": 3,
+    "abanico": 50,
+    "velocidad": 14,
+    "radio": 0.4,
+    "radio_explosion": 3.0,
+    "teledirigido": 3.0,
+    "empuje": 7,
+    "derriba": true,
+    "sacudida": 0.5
    },
    {
     "descripcion": "Dragón de arcilla que bombardea.",
     "costo": 50.0,
-    "dano": 40.0
+    "dano": 6.7,
+    "mecanica": "area",
+    "forma": "bombardeo",
+    "centro": "objetivo",
+    "radio": 3.5,
+    "retardo": 0.8,
+    "golpes": 6,
+    "intervalo": 0.5,
+    "sigue": true,
+    "empuje": 8,
+    "derriba": true,
+    "sacudida": 1.2,
+    "marca": 3.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#f0e4c8"
  },
  "arena": {
   "nombre": "Arena",
   "categoria": "kekkei",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "roca",
-  "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "apuntable": true,
+  "recarga": 9.0,
+  "tiempo_sellos": 0.5,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 16.0,
   "requisitos": {
    "linaje": "arena"
   },
@@ -1351,19 +2092,40 @@
    {
     "descripcion": "Escudo automático.",
     "costo": 14.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "arena",
+    "duracion": 8,
+    "reduccion": 0.5,
+    "repele_radio": 2.2
    },
    {
     "descripcion": "Ataúd que atrapa.",
     "costo": 28.0,
-    "dano": 30.0
+    "dano": 30.0,
+    "mecanica": "area",
+    "forma": "ataud",
+    "centro": "objetivo",
+    "radio": 2.0,
+    "atrapa": 2.0,
+    "retardo": 0.3
    },
    {
     "descripcion": "Funeral de arena gigante.",
     "costo": 50.0,
-    "dano": 60.0
+    "dano": 60.0,
+    "mecanica": "area",
+    "forma": "funeral",
+    "centro": "objetivo",
+    "radio": 6.0,
+    "atrapa": 2.0,
+    "retardo": 1.5,
+    "sacudida": 1.4,
+    "marca": 4.0,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#d9b56a"
  },
  "sharingan": {
   "nombre": "Sharingan",
@@ -1546,15 +2308,15 @@
   "categoria": "ojos",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "ojo",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 14.0,
+  "tiempo_sellos": 0.2,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 14.0,
   "requisitos": {
    "modo": [
     "mangekyo"
@@ -1566,22 +2328,40 @@
    {
     "descripcion": "Paraliza 2 s.",
     "costo": 24.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "area",
+    "forma": "genjutsu",
+    "centro": "objetivo",
+    "radio": 1.6,
+    "aturde": 2.0
    },
    {
     "descripcion": "Paraliza 4 s.",
     "costo": 36.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "area",
+    "forma": "genjutsu",
+    "centro": "objetivo",
+    "radio": 1.6,
+    "aturde": 4.0
    },
    {
     "descripcion": "Paraliza 6 s y deja al rival sin chakra.",
     "costo": 55.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "area",
+    "forma": "genjutsu",
+    "centro": "objetivo",
+    "radio": 1.6,
+    "aturde": 6.0,
+    "sin_chakra": 1.0,
+    "lenta": true
    }
   ],
   "requiere_modo_activo": [
    "mangekyo"
-  ]
+  ],
+  "color": "#c0102a"
  },
  "amaterasu": {
   "nombre": "Amaterasu",
@@ -1719,15 +2499,15 @@
   "categoria": "ojos",
   "ranura": "activo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "espiral",
   "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 10.0,
+  "tiempo_sellos": 0.1,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 5.0,
   "requisitos": {
    "modo": [
     "mangekyo"
@@ -1739,22 +2519,37 @@
    {
     "descripcion": "Intangibilidad breve.",
     "costo": 18.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "kamui",
+    "duracion": 1.5,
+    "intangible": true
    },
    {
     "descripcion": "Intangibilidad larga.",
     "costo": 28.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "kamui",
+    "duracion": 3.5,
+    "intangible": true
    },
    {
     "descripcion": "Absorbe proyectiles enemigos.",
     "costo": 44.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "mecanica": "aura",
+    "forma": "kamui",
+    "duracion": 4.0,
+    "intangible": true,
+    "repele_radio": 3.0,
+    "lenta": true
    }
   ],
   "requiere_modo_activo": [
    "mangekyo"
-  ]
+  ],
+  "color": "#8b5cff"
  },
  "shinra_tensei": {
   "nombre": "Shinra Tensei",
@@ -1822,15 +2617,15 @@
   "categoria": "ojos",
   "ranura": "activo",
   "puntos": 5,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "ondas",
   "apuntable": true,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "recarga": 18.0,
+  "tiempo_sellos": 0.8,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 18.0,
   "requisitos": {
    "modo": [
     "rinnegan"
@@ -1843,37 +2638,70 @@
    {
     "descripcion": "Esfera pequeña.",
     "costo": 40.0,
-    "dano": 20.0
+    "dano": 6.7,
+    "mecanica": "area",
+    "forma": "chibaku",
+    "centro": "objetivo",
+    "radio": 3.0,
+    "retardo": 0.5,
+    "golpes": 3,
+    "intervalo": 0.5,
+    "atrae": 5,
+    "atrapa": 2.0
    },
    {
     "descripcion": "Esfera que atrae rocas.",
     "costo": 60.0,
-    "dano": 35.0
+    "dano": 8.8,
+    "mecanica": "area",
+    "forma": "chibaku",
+    "centro": "objetivo",
+    "radio": 6.0,
+    "retardo": 0.6,
+    "golpes": 4,
+    "intervalo": 0.5,
+    "atrae": 7,
+    "atrapa": 3.0,
+    "sacudida": 0.8,
+    "marca": 3.0
    },
    {
     "descripcion": "Esfera gigante que atrapa a todos.",
     "costo": 90.0,
-    "dano": 60.0
+    "dano": 10.0,
+    "mecanica": "area",
+    "forma": "chibaku",
+    "centro": "objetivo",
+    "radio": 12.0,
+    "retardo": 0.8,
+    "golpes": 6,
+    "intervalo": 0.5,
+    "atrae": 9,
+    "atrapa": 5.0,
+    "sacudida": 1.8,
+    "marca": 6.0,
+    "lenta": true
    }
   ],
   "requiere_modo_activo": [
    "rinnegan"
-  ]
+  ],
+  "color": "#8c7cff"
  },
  "palmas_64": {
   "nombre": "64 Palmas",
   "categoria": "ojos",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "puno",
-  "apuntable": false,
-  "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "apuntable": true,
+  "recarga": 8.0,
+  "tiempo_sellos": 0.1,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 4.0,
   "requisitos": {
    "modo": [
     "byakugan"
@@ -1885,37 +2713,73 @@
    {
     "descripcion": "8 palmas.",
     "costo": 12.0,
-    "dano": 16.0
+    "dano": 2.0,
+    "mecanica": "area",
+    "forma": "palmas",
+    "centro": "frente",
+    "distancia": 1.4,
+    "radio": 2.4,
+    "golpes": 8,
+    "intervalo": 0.06,
+    "empuje": 1,
+    "sin_chakra": 0.1,
+    "acerca": true
    },
    {
     "descripcion": "64 palmas.",
     "costo": 22.0,
-    "dano": 40.0
+    "dano": 2.5,
+    "mecanica": "area",
+    "forma": "palmas",
+    "centro": "frente",
+    "distancia": 1.4,
+    "radio": 2.4,
+    "golpes": 16,
+    "intervalo": 0.05,
+    "empuje": 1,
+    "sin_chakra": 0.3,
+    "sacudida": 0.5,
+    "acerca": true
    },
    {
     "descripcion": "128 palmas.",
     "costo": 36.0,
-    "dano": 70.0
+    "dano": 3.0,
+    "mecanica": "area",
+    "forma": "palmas",
+    "centro": "frente",
+    "distancia": 1.4,
+    "radio": 2.6,
+    "golpes": 24,
+    "intervalo": 0.04,
+    "empuje": 10,
+    "derriba": true,
+    "sin_chakra": 0.6,
+    "sacudida": 1.0,
+    "marca": 2.0,
+    "lenta": true,
+    "acerca": true
    }
   ],
   "requiere_modo_activo": [
    "byakugan"
-  ]
+  ],
+  "color": "#eef0ff"
  },
  "rotacion": {
   "nombre": "Rotación",
   "categoria": "ojos",
   "ranura": "activo",
   "puntos": 3,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "generica",
   "naturaleza": "",
   "icono": "ondas",
   "apuntable": false,
   "recarga": 6.0,
-  "tiempo_sellos": 0.6,
+  "tiempo_sellos": 0.1,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 10.0,
   "requisitos": {
    "modo": [
     "byakugan"
@@ -1927,22 +2791,46 @@
    {
     "descripcion": "Escudo giratorio.",
     "costo": 12.0,
-    "dano": 8.0
+    "dano": 8.0,
+    "mecanica": "aura",
+    "forma": "rotacion",
+    "duracion": 1.5,
+    "repele_radio": 2.6,
+    "contacto_radio": 2.6,
+    "contacto_dps": 16,
+    "reduccion": 1.0
    },
    {
     "descripcion": "Escudo grande que repele jutsus.",
     "costo": 22.0,
-    "dano": 16.0
+    "dano": 16.0,
+    "mecanica": "aura",
+    "forma": "rotacion",
+    "duracion": 2.5,
+    "repele_radio": 4.0,
+    "contacto_radio": 4.0,
+    "contacto_dps": 22,
+    "reduccion": 1.0
    },
    {
     "descripcion": "Onda de aire que golpea a distancia.",
     "costo": 34.0,
-    "dano": 26.0
+    "dano": 26.0,
+    "mecanica": "area",
+    "forma": "onda",
+    "centro": "propio",
+    "radio": 10.0,
+    "empuje": 14,
+    "derriba": true,
+    "sacudida": 1.2,
+    "marca": 3.0,
+    "lenta": true
    }
   ],
   "requiere_modo_activo": [
    "byakugan"
-  ]
+  ],
+  "color": "#e2f2ff"
  },
  "ocho_puertas": {
   "nombre": "Ocho Puertas Internas",
@@ -2010,15 +2898,15 @@
   "categoria": "cuerpo",
   "ranura": "modo",
   "puntos": 4,
-  "implementado": false,
-  "mecanica": "",
+  "implementado": true,
+  "mecanica": "modo_sabio",
   "naturaleza": "",
   "icono": "hoja",
   "apuntable": false,
   "recarga": 3.0,
   "tiempo_sellos": 0.6,
   "sellos": [],
-  "alcance": 20.0,
+  "alcance": 0.0,
   "requisitos": {
    "atributos_min": {
     "estamina": 4
@@ -2030,19 +2918,33 @@
    {
     "descripcion": "Sentidos mejorados.",
     "costo": 10.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "costo_por_segundo": 2.0,
+    "vel_mult": 1.1,
+    "dano_mult": 1.1
    },
    {
     "descripcion": "+Daño a todo.",
     "costo": 16.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "costo_por_segundo": 2.5,
+    "vel_mult": 1.15,
+    "dano_mult": 1.3,
+    "reduccion": 0.1
    },
    {
     "descripcion": "Transformación completa.",
     "costo": 24.0,
-    "dano": 0.0
+    "dano": 0.0,
+    "costo_por_segundo": 3.0,
+    "vel_mult": 1.3,
+    "dano_mult": 1.5,
+    "reduccion": 0.2,
+    "sacudida": 0.8,
+    "lenta": true
    }
-  ]
+  ],
+  "color": "#ff9a3a"
  },
  "golpe": {
   "nombre": "Golpe",

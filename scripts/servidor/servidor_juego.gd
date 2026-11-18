@@ -11,6 +11,8 @@ var clima := "lluvia"
 var entidades: Array[EntidadServidor] = []
 var proyectiles: Array = []        # [Dictionary]
 var zonas: Array = []              # zonas de daño en el suelo: suelo ardiente, llamas negras...
+var criaturas: Array = []          # invocaciones aliadas temporales (golem, clones, criatura)
+var diferidos: Array = []          # golpes de área retardados/repetidos y saltos de teletransporte
 var eventos: Array = []
 var tick := 0
 var dt_tick := 1.0 / 30.0
@@ -173,6 +175,8 @@ func ganar_xp(e: EntidadServidor, id: String, cantidad: float) -> void:
 func reaparecer_todo() -> void:
 	proyectiles.clear()
 	zonas.clear()
+	criaturas.clear()
+	diferidos.clear()
 	for e in entidades:
 		e.reiniciar()
 		if e.ia != null:
@@ -346,7 +350,10 @@ func paso(dt: float) -> void:
 	for e in entidades:
 		_actualizar_recursos(e, dt)
 		Tecnicas.actualizar_entidad(self, e, dt)
+		Genericas.actualizar_entidad(self, e, dt)
 	Tecnicas.actualizar_zonas(self, dt)
+	Genericas.actualizar_diferidos(self, dt)
+	Genericas.actualizar_criaturas(self, dt)
 	for e in entidades:
 		if e.ia != null and e.vivo():
 			e.ia.pensar(self, dt)
@@ -430,6 +437,8 @@ func _ejecutar_jutsu(e: EntidadServidor) -> void:
 			Tecnicas.alternar_susanoo(self, e, nivel)
 		"shinra":
 			Tecnicas.shinra(self, e, nivel)
+		"generica":
+			Genericas.ejecutar(self, e, id, nivel)
 		"rafaga":
 			var n := int(nd.get("rafaga", 1))
 			var intervalo := float(nd.get("intervalo_rafaga", 0.2))
@@ -610,7 +619,11 @@ func _resolver_golpe(e: EntidadServidor, paso: int) -> void:
 
 func _actualizar_proyectiles(dt: float) -> void:
 	var quitar: Array = []
-	for p in proyectiles:
+	for p in proyectiles.duplicate():
+		if not proyectiles.has(p):
+			continue   # tragado por otro proyectil
+		if p.get("generico", false) and not Genericas.mover_proyectil(self, p, dt):
+			continue
 		var vel := float(p["velocidad"])
 		# modo ocular: los proyectiles que van hacia quien lo tiene activo avanzan más lento.
 		var obj := entidad(int(p["objetivo"]))
@@ -621,15 +634,30 @@ func _actualizar_proyectiles(dt: float) -> void:
 		p["recorrido"] = float(p["recorrido"]) + paso_v.length()
 		var pos: Vector3 = p["pos"]
 		var radio := float(p["radio"])
+		if p.get("rastrero", false):
+			p["pos"] = Vector3(pos.x, radio, pos.z)
+			pos = p["pos"]
+		if p.get("traga", false):
+			Genericas.tragar(self, p)
+		if Genericas.repelido(self, p):
+			quitar.append(p)
+			continue
 		var impacto: EntidadServidor = null
 		for e in entidades:
-			if e.id == int(p["dueno"]) or not e.vivo():
+			if e.id == int(p["dueno"]) or not e.vivo() or Genericas.intangible(e):
+				continue
+			if p.has("equipo") and e.equipo == int(p["equipo"]):
 				continue
 			if e.centro().distance_to(pos) <= radio + Datos.sim("radio_cuerpo"):
+				if p.get("perfora", false):
+					# Perforante: hiere al pasar y sigue de largo.
+					if not (e.id in p["golpeados"]):
+						Genericas.impacto_proyectil(self, p, e, false)
+					continue
 				impacto = e
 				break
 		var choca := impacto != null
-		if not choca and pos.y - radio * 0.25 <= 0.0:
+		if not choca and pos.y - radio * 0.25 <= 0.0 and not p.get("rastrero", false):
 			choca = true
 		if not choca and mapa.punto_bloqueado(Vector2(pos.x, pos.z), radio * 0.6, pos.y, true):
 			choca = true
@@ -643,6 +671,9 @@ func _actualizar_proyectiles(dt: float) -> void:
 
 
 func _explotar(p: Dictionary, directo: EntidadServidor) -> void:
+	if p.get("generico", false):
+		Genericas.impacto_proyectil(self, p, directo)
+		return
 	var id := str(p["jutsu"])
 	var nivel := int(p["nivel"])
 	var dueno := entidad(int(p["dueno"]))
@@ -673,10 +704,16 @@ func _explotar(p: Dictionary, directo: EntidadServidor) -> void:
 func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServidor, info: Dictionary) -> void:
 	if not o.vivo():
 		return
-	if o.invulnerable_t > 0.0:
+	if o.invulnerable_t > 0.0 or Genericas.intangible(o):
 		_evento({"tipo": "esquivado", "entidad": o.id})
 		return
-	cantidad *= Tecnicas.multiplicador_recibido(o)
+	cantidad *= Tecnicas.multiplicador_recibido(o) * Genericas.mult_dano_saliente(atacante)
+	# Suelo inundado: el rayo hace más daño a quien está dentro.
+	if str(info.get("naturaleza", "")) == "rayo":
+		for z in zonas:
+			if str(z.get("forma", "")) == "lago" and Vector2(o.pos.x, o.pos.z).distance_to(Vector2(z["pos"].x, z["pos"].z)) <= float(z["radio"]):
+				cantidad *= 1.3
+				break
 	o.vida = maxf(o.vida - cantidad, 0.0)
 	var jid := str(info.get("jutsu", ""))
 	if atacante != null and atacante != o and not info.get("dot", false) and not info.get("cadena", false):
@@ -733,7 +770,7 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	if e.estado != "esquiva" and e.estado != "chidori_embiste":
 		e.empuje = e.empuje.move_toward(Vector3.ZERO, dt * 18.0)
 	# Gravedad y salto.
-	e.vel_y -= Datos.sim("gravedad") * dt
+	e.vel_y -= Datos.sim("gravedad") * dt * (0.3 if Genericas.planea(e) and e.vel_y < 0.0 else 1.0)
 	var nueva := e.pos + horiz * dt
 	nueva.y = e.pos.y + e.vel_y * dt
 	if nueva.y <= 0.0:
@@ -839,11 +876,17 @@ func publicar_estado() -> void:
 		ents.append(e.a_estado())
 	var proys: Array = []
 	for p in proyectiles:
-		proys.append({"id": p["id"], "jutsu": p["jutsu"], "pos": p["pos"], "dir": p["dir"], "radio": p["radio"], "nivel": p["nivel"], "dueno": p["dueno"]})
+		proys.append({"id": p["id"], "jutsu": p["jutsu"], "pos": p["pos"], "dir": p["dir"], "radio": p["radio"], "nivel": p["nivel"], "dueno": p["dueno"],
+			"forma": p.get("forma", ""), "color": p.get("color", "")})
 	var zs: Array = []
 	for z in zonas:
-		zs.append({"id": z["id"], "pos": z["pos"], "radio": z["radio"], "jutsu": z["jutsu"], "nivel": z["nivel"], "t": z["t"], "total": z["total"]})
-	var base := {"tick": tick, "clima": clima, "entidades": ents, "proyectiles": proys, "zonas": zs, "eventos": eventos}
+		zs.append({"id": z["id"], "pos": z["pos"], "radio": z["radio"], "jutsu": z["jutsu"], "nivel": z["nivel"], "t": z["t"], "total": z["total"],
+			"forma": z.get("forma", "")})
+	var cs: Array = []
+	for c in criaturas:
+		cs.append({"id": c["id"], "jutsu": c["jutsu"], "nivel": c["nivel"], "pos": c["pos"], "yaw": c["yaw"], "forma": c["forma"],
+			"escala": c["escala"], "dueno": c["dueno"], "golpe": c["golpe"], "t": c["t"]})
+	var base := {"tick": tick, "clima": clima, "entidades": ents, "proyectiles": proys, "zonas": zs, "criaturas": cs, "eventos": eventos}
 	for peer in _peers.keys():
 		var est := base.duplicate()
 		est["tu_entidad"] = _peers[peer]

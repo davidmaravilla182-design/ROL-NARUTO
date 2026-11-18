@@ -57,9 +57,10 @@ static func ralentizacion(e: EntidadServidor) -> float:
 
 
 static func multiplicador_velocidad(e: EntidadServidor) -> float:
+	var m := Genericas.mult_velocidad(e)
 	if e.efectos.has("puertas"):
-		return float(Datos.nivel_jutsu("ocho_puertas", int(e.efectos["puertas"]["nivel"])).get("vel_mult", 1.0))
-	return 1.0
+		m *= float(Datos.nivel_jutsu("ocho_puertas", int(e.efectos["puertas"]["nivel"])).get("vel_mult", 1.0))
+	return m
 
 
 static func multiplicador_taijutsu(e: EntidadServidor) -> float:
@@ -75,7 +76,7 @@ static func multiplicador_recibido(o: EntidadServidor) -> float:
 		m *= 1.0 - float(Datos.nivel_jutsu("susanoo", int(o.efectos["susanoo"]["nivel"])).get("reduccion", 0.5))
 	if o.efectos.has("vulnerable"):
 		m *= float(Datos.reglas["estados"].get("vulnerable_dano", 1.3))
-	return m
+	return m * Genericas.mult_recibido(o)
 
 
 # ------------------------------------------------------------------ actualización por tick
@@ -89,6 +90,11 @@ static func actualizar_entidad(s: ServidorJuego, e: EntidadServidor, dt: float) 
 		var nd := Datos.nivel_jutsu(e.modo, e.modo_nivel)
 		if e.modo in OJOS:
 			e.chakra -= float(nd.get("costo_por_segundo", 3.0)) * maxf(1.0 - Combate.control(e.attrs) * Datos.formula("ahorro_por_control"), 0.1) * dt
+			if e.chakra <= 0.0:
+				e.chakra = 0.0
+				apagar_modo(s, e)
+		elif e.modo == "modo_sabio":
+			e.chakra -= float(nd.get("costo_por_segundo", 2.0)) * dt
 			if e.chakra <= 0.0:
 				e.chakra = 0.0
 				apagar_modo(s, e)

@@ -60,7 +60,7 @@ func _process(_delta: float) -> bool:
 			18: _actual.equipar("sharingan", -1)
 	if _actual != null and _actual.has_method("prueba_humo"):
 		_actual.prueba_humo(_frames)
-	var limite := 30 if _indice <= 1 else (640 if _indice == 2 else 90)
+	var limite := 30 if _indice <= 1 else (700 if _indice == 2 else 90)
 	if _frames >= limite:
 		_cargar(_indice + 1)
 	return false

@@ -17,6 +17,7 @@ var hud: Hud
 var sonidos: Sonidos
 var indicadores: Indicadores
 var tecnicas: EfectosTecnicas
+var genericas: EfectosGenericos
 var objetivo_fijado := -1
 var _apuntado_activo := ""
 var _t_pasos := 0.0
@@ -69,6 +70,13 @@ func _ready() -> void:
 	tecnicas.efectos = efectos
 	tecnicas.sonidos = sonidos
 	add_child(tecnicas)
+
+	genericas = EfectosGenericos.new()
+	genericas.name = "Genericas"
+	genericas.efectos = efectos
+	genericas.sonidos = sonidos
+	add_child(genericas)
+	tecnicas.genericas = genericas
 
 	indicadores = Indicadores.new()
 	indicadores.name = "Indicadores"
@@ -393,6 +401,7 @@ func _on_estado(est: Dictionary) -> void:
 			_visuales.erase(id)
 	_actualizar_proyectiles(est["proyectiles"])
 	tecnicas.sincronizar_zonas(est.get("zonas", []))
+	genericas.sincronizar_criaturas(est.get("criaturas", []))
 	for ev in est["eventos"]:
 		_procesar_evento(ev)
 	if not yo.is_empty():
@@ -453,6 +462,7 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 	var modo := str(e.get("modo", ""))
 	pv.poner_ojos(int(Datos.jutsu(modo).get("patron", 0)) if bool(e.get("modo_activo", false)) and modo in Tecnicas.OJOS else 0)
 	tecnicas.sincronizar(int(e["id"]), pv, e)
+	genericas.sincronizar(int(e["id"]), pv, e)
 	match estado:
 		"muerto", "caido":
 			pv.reproducir("caer", 0.08)
@@ -502,7 +512,7 @@ func _actualizar_proyectiles(lista: Array) -> void:
 		var id := int(p["id"])
 		vistos[id] = true
 		if not _proyectiles.has(id):
-			var nodo := efectos.crear_proyectil(p)
+			var nodo: Node3D = genericas.crear_proyectil(p) if str(p.get("forma", "")) != "" else efectos.crear_proyectil(p)
 			_proyectiles[id] = {"nodo": nodo, "destino": p["pos"]}
 		else:
 			_proyectiles[id]["destino"] = p["pos"]
@@ -530,6 +540,7 @@ func _pos_entidad(id: int) -> Vector3:
 func _procesar_evento(ev: Dictionary) -> void:
 	var id := int(ev.get("entidad", -1))
 	tecnicas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
+	genericas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
 	match str(ev["tipo"]):
 		"maestria":
 			if id == mi_id:
@@ -571,7 +582,10 @@ func _procesar_evento(ev: Dictionary) -> void:
 		"impacto":
 			_evento_impacto(ev)
 		"explosion":
-			efectos.explosion(ev)
+			if ev.has("forma"):
+				genericas.explosion(ev)
+			else:
+				efectos.explosion(ev)
 		"cadena":
 			efectos.cadena(ev["puntos"], int(ev["nivel"]))
 			if id == mi_id:
@@ -611,6 +625,8 @@ func _evento_impacto(ev: Dictionary) -> void:
 	var cant := float(ev["cantidad"])
 	var nat := str(Datos.jutsu(jutsu).get("naturaleza", "")) if jutsu != "golpe" else ""
 	var color: Color = COLOR_NATURALEZA.get(nat, Color.WHITE)
+	if nat == "" and jutsu != "golpe" and Datos.jutsu(jutsu).has("color"):
+		color = Color.html(str(Datos.jutsu(jutsu)["color"])).lightened(0.2)
 	var imp: Dictionary = Datos.graficos.get("impacto", {})
 	var involucra_me := int(ev["atacante"]) == mi_id or int(ev["entidad"]) == mi_id
 	match jutsu:
@@ -712,3 +728,13 @@ func prueba_humo(frame: int) -> void:
 		570: _on_accion("golpe")
 		580: _on_accion("golpe")
 		590: _on_accion("golpe")
+		# Mecánicas genéricas (salva, área, invocación, aura, teletransporte) con sus visuales.
+		594: transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["dragon_agua", "madera", "golem_tierra", "hiraishin"], "modo": "modo_sabio", "prueba": true})
+		596: _on_accion("modo")
+		598: _on_accion("dragon_agua")
+		606: _on_accion("madera")
+		614: _on_accion("golem_tierra")
+		622: _on_accion("hiraishin")
+		626: transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["muro_tierra", "rasenshuriken", "", ""], "modo": "", "prueba": true})
+		628: _on_accion("muro_tierra")
+		632: _on_accion("rasenshuriken")

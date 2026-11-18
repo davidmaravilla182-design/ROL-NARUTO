@@ -16,20 +16,24 @@
 - [x] Botones de combate generados desde el repertorio con toque/arrastre/cancelar.
 - [x] Bloque 1 (3 niveles visibles): Kirin, Rasengan, Amaterasu, Susanoo, Shinra Tensei, Ocho Puertas
       (+ ya existían Bola de Fuego y Chidori, y los modos Sharingan, Mangekyō, Rinnegan, Byakugan).
-- [x] Pruebas: 89 de combate + 77 de repertorio + humo (menú, repertorio y partida en 3 calidades).
+- [x] Pruebas: 89 de combate + 81 de repertorio + humo (menú, repertorio y partida en 3 calidades).
 - [x] Capturas por nivel del bloque 1: `GUION=tecnicas` con `tools/captura.gd`; menú con `tools/captura_menu.gd`.
 
-## Bloques pendientes (6 por bloque, cada uno con sus 3 niveles visibles)
-- [ ] Bloque 2: Fénix, Dragón de Fuego, Lanza Chidori, Manto de Rayo, Gran Ráfaga, Rasenshuriken
-- [ ] Bloque 3: Gran Dragón de Agua, Prisión de Agua, Gran Cascada, Tiburones de Agua, Muro de Tierra, Dragón de Tierra
-- [ ] Bloque 4: Golem de Tierra, Balas de Vacío, Clones de Sombra, Invocación, Dios del Trueno Volador, Sellos Explosivos
-- [ ] Bloque 5: Danza de Papel, Fuerza Sobrehumana, Curación, Madera, Hielo, Lava
-- [ ] Bloque 6: Arcilla Explosiva, Arena, Tsukuyomi, Kamui, Chibaku Tensei, 64 Palmas
-- [ ] Bloque 7: Rotación, Modo Sabio (ranura MODO)
+## Bloques 2 a 7 (hechos): los 40 jutsus y el Modo Sabio
+- [x] Mecánicas genéricas configuradas solo con datos (`scripts/servidor/genericas.gd`): salva, área, aura,
+      invocación y teletransporte. Un jutsu puede cambiar de mecánica según el nivel (p. ej. Danza de Papel:
+      shuriken → alas → tormenta explosiva).
+- [x] Visuales por forma (`scripts/cliente/efectos_genericos.gd`): dragones que serpentean, tiburones, agujas, lanza,
+      balas de aire, rasenshuriken, kunai, papel, lodo, arañas y aves de arcilla, olas, inundación, terremoto,
+      tornado, raíces, bosque, domo de hielo, río de lava, bombardeo, ataúd y funeral de arena, genjutsu,
+      esfera de gravedad, palmas, muro/cúpula/fortaleza, alas, auras de rayo/curación/arena/kamui/rotación/sabio,
+      golems, clones, criatura invocada, teletransportes y zonas (lago, lava, cortes).
+- [x] N3 de cada uno: más grande, cámara lenta para quien lo lanza, sacudida fuerte, destello y marcas en el suelo.
+- [x] Prueba que lanza los 31 genéricos en N1/N2/N3 (93 usos) y comprueba su efecto; humo con varios en el cliente.
+- [x] Capturas: `GUION=todos` (y `FILTRO=prefijo`) en `tools/captura.gd`.
 
-Para implementar uno: poner `"implementado": true` en `data/jutsus.json`, añadir su `mecanica` en
-`ServidorJuego._ejecutar_jutsu` / `Tecnicas`, sus visuales en `EfectosTecnicas.evento` y pruebas en
-`tests/pruebas_repertorio.gd`.
+## Siguiente (ideas)
+- Afinar balance con partidas reales; sonidos propios por forma; IA enemiga que use el repertorio.
 
 ---
 

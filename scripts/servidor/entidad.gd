@@ -139,6 +139,9 @@ func _efectos_estado() -> Dictionary:
 	var r := {}
 	for k in efectos.keys():
 		r[k] = {"t": snappedf(minf(float(efectos[k]["t"]), 999.0), 0.01), "nivel": int(efectos[k].get("nivel", 1))}
+		if efectos[k].has("forma"):
+			r[k]["forma"] = efectos[k]["forma"]
+			r[k]["jutsu"] = efectos[k].get("jutsu", "")
 	return r
 
 

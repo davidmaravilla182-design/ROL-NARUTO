@@ -33,7 +33,7 @@ func _process(_d: float) -> bool:
 			m._solo_disponibles = true
 			m._refrescar()
 		60: _foto("rep_disponibles")
-		62: m.abrir_detalle("kirin")
+		62: m.abrir_detalle("dragon_fuego")
 		90: _foto("rep_detalle_kirin")
 		92:
 			m._detalle.queue_free()

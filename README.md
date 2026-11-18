@@ -48,7 +48,7 @@ Cada vez que se hace push, GitHub Actions compila un APK nuevo y reemplaza el re
 - **3 repertorios guardados** (R1, R2, R3). En cada ranura puedes tocar «Usar» para limitar el nivel (el más alto / N1 / N2 / N3).
 - **Maestría**: usar y acertar un jutsu le da experiencia; a 100 XP se desbloquea N2 y a 300 XP el N3 (más grande, cámara lenta, sacudida y marcas en el escenario). Cada nivel cuesta más chakra.
 - Interruptor **Modo prueba: desbloquear todo** para probar todo sin requisitos.
-- Ya funcionan en sus 3 niveles: Bola de Fuego, Chidori, **Kirin**, **Rasengan**, **Amaterasu**, **Susanoo**, **Shinra Tensei** y **Ocho Puertas**, más los modos oculares. El resto dice **«Próximamente»** (ver [PROGRESO.md](PROGRESO.md)).
+- **Los 40 jutsus y los 6 modos funcionan en sus 3 niveles.** El personaje de prueba solo cumple los requisitos de fuego, rayo y sus ojos; para usar los de agua, tierra, viento, kekkei genkai, Byakugan o Rinnegan activa **«Modo prueba: desbloquear todo»** en el menú.
 
 ## Novedades de la v0.2
 
@@ -105,4 +105,4 @@ Otros botones de depuración:
 - Decisiones tomadas durante el desarrollo: [DECISIONES.md](DECISIONES.md)
 - Licencias y créditos: [assets/LICENCIAS.md](assets/LICENCIAS.md)
 - Todos los datos de diseño (nombres, jutsus, atributos, textos) están en [`/data`](data). Cambiar esos JSON renombra o rebalancea el juego sin tocar código.
-- Verificación local (headless): `tools/verificar.sh` (importa el proyecto, corre 89 pruebas de combate, 77 del repertorio y una prueba de humo). Hook de pre-commit: `git config core.hooksPath .githooks`.
+- Verificación local (headless): `tools/verificar.sh` (importa el proyecto, corre 89 pruebas de combate, 81 del repertorio y una prueba de humo). Hook de pre-commit: `git config core.hooksPath .githooks`.

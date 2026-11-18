@@ -19,6 +19,7 @@ func _initialize() -> void:
 	probar_amaterasu()
 	probar_susanoo()
 	probar_sincronia_repertorio()
+	probar_genericos()
 	probar_shinra()
 	probar_ocho_puertas()
 	probar_bola_fuego_suelo()
@@ -77,7 +78,10 @@ func probar_datos() -> void:
 	comprobar(bien_cat, "todas las categorías existen")
 	for id in ["kirin", "rasengan", "amaterasu", "susanoo", "shinra_tensei", "ocho_puertas"]:
 		comprobar(Repertorio.implementado(id), "primer bloque implementado: %s" % id)
-	comprobar(not Repertorio.implementado("fenix"), "los demás aparecen como próximamente (fenix)")
+	var todos := true
+	for id in Repertorio.catalogo():
+		todos = todos and Repertorio.implementado(id)
+	comprobar(todos, "los 40 jutsus y los modos están implementados")
 	comprobar(Repertorio.es_modo("ocho_puertas") and Repertorio.es_modo("modo_sabio") and Repertorio.es_modo("byakugan"), "Ocho Puertas, Modo Sabio y los ojos van en la ranura de modo")
 
 
@@ -413,3 +417,72 @@ func probar_sincronia_repertorio() -> void:
 	correr(s, 0.15)
 	comprobar(j.estado == "chidori_carga", "el Rasengan se lanza con el repertorio del menú")
 	s.free()
+
+
+## Todos los jutsus genéricos, en sus 3 niveles, hacen algo visible y medible contra los muñecos.
+func probar_genericos() -> void:
+	var fallos: Array = []
+	var total := 0
+	for id in Repertorio.catalogo():
+		var j := Datos.jutsu(id)
+		if str(j.get("mecanica", "")) != "generica":
+			continue
+		for nivel in [1, 2, 3]:
+			total += 1
+			var req: Array = j.get("requiere_modo_activo", [])
+			var s := servidor([id, "", "", ""], str(req[0]) if not req.is_empty() else "")
+			var jg := s.entidad_de_peer(1)
+			var m := muneco_central(s)
+			jg.pos = m.pos + Vector3(0, 0, 5)
+			jg.yaw = PI
+			jg.vida = 60.0
+			s.recibir_comando(1, {"t": "nivel", "valor": nivel})
+			s.recibir_comando(1, {"t": "accion", "id": id, "objetivo": m.id, "dir": Vector2(0, -1)})
+			var evs := correr(s, 4.0)
+			var nd := Datos.nivel_jutsu(id, nivel)
+			var ok := false
+			match str(nd.get("mecanica", "")):
+				"aura":
+					ok = contar(evs, "aura") > 0
+					if float(nd.get("cura_ps", 0.0)) > 0.0:
+						ok = ok and jg.vida > 60.0
+				"invocar":
+					ok = contar(evs, "invocar") > 0 and contar(evs, "criatura_golpe") > 0
+				"teleport":
+					ok = contar(evs, "teletransporte") >= int(nd.get("cadena", 1)) and jg.pos.distance_to(m.pos + Vector3(0, 0, 5)) > 2.0
+				_:
+					ok = contar(evs, "impacto") > 0 or contar(evs, "control") > 0
+			var usado := false
+			for e in evs:
+				if e["tipo"] == "sellos" and e["jutsu"] == id and int(e["nivel"]) == nivel:
+					usado = true
+			if not (ok and usado):
+				fallos.append("%s N%d" % [id, nivel])
+			s.free()
+	comprobar(fallos.is_empty(), "los %d usos genéricos (jutsu × nivel) funcionan %s" % [total, str(fallos)])
+	# Controles concretos.
+	var s2 := servidor(["prision_agua", "", "", ""], "", true)
+	var j2 := s2.entidad_de_peer(1)
+	var rival: EntidadServidor = null
+	for e in s2.entidades:
+		if e.tipo == "enemigo":
+			rival = e
+	rival.ia = null
+	j2.pos = rival.pos + Vector3(0, 0, 4)
+	s2.recibir_comando(1, {"t": "accion", "id": "prision_agua", "objetivo": rival.id})
+	correr(s2, 1.0)
+	comprobar(rival.estado == "atrapado", "la prisión de agua atrapa al rival (%s)" % rival.estado)
+	s2.free()
+	s2 = servidor(["kamui", "", "", ""], "mangekyo")
+	j2 = s2.entidad_de_peer(1)
+	s2.recibir_comando(1, {"t": "accion", "id": "kamui"})
+	correr(s2, 0.3)
+	var vida := j2.vida
+	s2._aplicar_dano(j2, 30.0, null, {"jutsu": "golpe"})
+	comprobar(j2.vida == vida, "kamui vuelve intangible")
+	s2.free()
+	s2 = servidor(["", "", "", ""], "modo_sabio")
+	j2 = s2.entidad_de_peer(1)
+	s2.recibir_comando(1, {"t": "accion", "id": "modo"})
+	comprobar(j2.modo_activo and Genericas.mult_dano_saliente(j2) > 1.0, "el Modo Sabio se activa y aumenta el daño")
+	s2.free()
