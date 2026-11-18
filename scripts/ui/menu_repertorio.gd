@@ -223,17 +223,40 @@ func equipar(id: String, i: int) -> bool:
 	var r := rep()
 	if Repertorio.es_modo(id) != (i == -1):
 		return false
-	var activos: Array = r["activos"]
+	var nuevo: Dictionary = r.duplicate(true)
+	var activos: Array = nuevo["activos"]
 	for k in activos.size():
 		if str(activos[k]) == id:
 			activos[k] = ""
+	var aviso := ""
 	if i == -1:
-		r["modo"] = id
+		nuevo["modo"] = id
 	else:
 		activos[i] = id
+		# Si el jutsu pide un ojo como MODO y no está, se equipa ese ojo automáticamente.
+		var req_modo: Array = Datos.jutsu(id).get("requisitos", {}).get("modo", [])
+		if not req_modo.is_empty() and not (str(nuevo["modo"]) in req_modo):
+			var elegido := str(req_modo[0])
+			for m in req_modo:
+				if Perfil.modo_prueba or Repertorio.requisitos(str(m), Perfil.ficha(), str(m))["ok"]:
+					elegido = str(m)
+					break
+			nuevo["modo"] = elegido
+			aviso = Datos.texto("rep_modo_auto", [Datos.jutsu(elegido).get("nombre", elegido), Datos.jutsu(id).get("nombre", id)])
+	var tope := int(Repertorio.conf().get("tope_puntos", 12))
+	if not Perfil.modo_prueba and Repertorio.puntos_usados(nuevo) > tope:
+		_refrescar()
+		_errores.text = Datos.texto("rep_sin_puntos")
+		_errores.add_theme_color_override("font_color", Color(1, 0.5, 0.45))
+		return false
+	r["activos"] = nuevo["activos"]
+	r["modo"] = nuevo["modo"]
 	Perfil.guardar()
 	Ajustes.vibrar(15)
 	_refrescar()
+	if aviso != "":
+		_errores.text = aviso
+		_errores.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
 	return true
 
 

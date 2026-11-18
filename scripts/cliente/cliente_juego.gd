@@ -537,6 +537,9 @@ func _procesar_evento(ev: Dictionary) -> void:
 				if ev.get("subio", false):
 					hud.mensaje(Datos.texto("msg_maestria", [Datos.jutsu(str(ev["jutsu"])).get("nombre", ""), int(ev["nivel"])]), 2.5)
 					Perfil.guardar()
+		"repertorio":
+			if id == mi_id:
+				hud.construir({"activos": ev.get("activos", []), "modo": ev.get("modo", ""), "niveles_max": ev.get("niveles_max", {})})
 		"modo":
 			if id == mi_id:
 				hud.mensaje(("%s ✓" if ev["activo"] else "%s ✗") % Datos.jutsu(str(ev["modo"])).get("nombre", ""), 1.2)
@@ -595,7 +598,7 @@ func _procesar_evento(ev: Dictionary) -> void:
 				v["carga"] = null
 		"mensaje":
 			if id == mi_id or ev.get("para_todos", false):
-				hud.mensaje(Datos.texto(str(ev["clave"]), ev.get("args", [])), 1.5)
+				hud.mensaje(Datos.texto(str(ev["clave"]), ev.get("args", [])), 4.0 if str(ev["clave"]).begins_with("rep_") else 1.5)
 
 
 const COLOR_NATURALEZA := {"fuego": Color(1.0, 0.55, 0.15), "rayo": Color(0.55, 0.88, 1.0), "agua": Color(0.4, 0.68, 1.0),

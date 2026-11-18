@@ -18,6 +18,7 @@ func _initialize() -> void:
 	probar_rasengan()
 	probar_amaterasu()
 	probar_susanoo()
+	probar_sincronia_repertorio()
 	probar_shinra()
 	probar_ocho_puertas()
 	probar_bola_fuego_suelo()
@@ -260,13 +261,18 @@ func probar_rasengan() -> void:
 
 
 func probar_amaterasu() -> void:
-	var s := servidor(["amaterasu", "", "", ""], "mangekyo")
+	var s := servidor(["amaterasu", "", "", ""], "sharingan")
 	var j := s.entidad_de_peer(1)
 	var m := muneco_central(s)
 	j.pos = m.pos + Vector3(0, 0, 6)
 	s.recibir_comando(1, {"t": "accion", "id": "amaterasu", "objetivo": m.id})
 	correr(s, 0.5)
-	comprobar(j.estado == "libre" and not m.efectos.has("ardiendo"), "amaterasu exige el mangekyō activo")
+	comprobar(j.estado == "libre" and not m.efectos.has("ardiendo"), "amaterasu exige el mangekyō (con otro ojo no sale)")
+	s.free()
+	s = servidor(["amaterasu", "", "", ""], "mangekyo")
+	j = s.entidad_de_peer(1)
+	m = muneco_central(s)
+	j.pos = m.pos + Vector3(0, 0, 6)
 	s.recibir_comando(1, {"t": "accion", "id": "modo"})
 	comprobar(j.modo_activo, "el botón de modo activa el mangekyō")
 	j.recargas.clear()
@@ -373,4 +379,37 @@ func probar_bola_fuego_suelo() -> void:
 	s.recibir_comando(1, {"t": "accion", "id": "bola_fuego", "dir": Vector2(0, -1)})
 	correr(s, 2.5)
 	comprobar(s.zonas.size() >= 1, "bola de fuego N2 deja el suelo ardiendo")
+	s.free()
+
+
+## Lo que el jugador ve en sus botones debe ser lo que el servidor aceptó, y el ojo requerido se enciende solo.
+func probar_sincronia_repertorio() -> void:
+	var s := ServidorJuego.new()
+	s.auto_procesar = false
+	s.iniciar()
+	s.agregar_jugador(1)
+	s.eventos = []
+	s.recibir_comando(1, {"t": "repertorio", "activos": ["rasengan", "susanoo", "bola_fuego", ""], "modo": "sharingan", "prueba": false, "maestria": {}})
+	var ev_rep := {}
+	var ev_msg := {}
+	for e in s.eventos:
+		if e["tipo"] == "repertorio":
+			ev_rep = e
+		if e["tipo"] == "mensaje" and e["clave"] == "rep_invalido_servidor":
+			ev_msg = e
+	comprobar(not ev_rep.is_empty() and ev_rep.has("activos") and not ("susanoo" in ev_rep["activos"]), "el servidor devuelve el repertorio aceptado (por defecto si no es válido)")
+	comprobar(not ev_msg.is_empty() and str(ev_msg["args"][0]) != "", "el aviso de repertorio no válido explica el motivo")
+	s.free()
+	s = servidor(["susanoo", "rasengan", "", ""], "mangekyo", false, false)
+	var j := s.entidad_de_peer(1)
+	comprobar("susanoo" in j.jutsus, "repertorio válido aceptado sin modo prueba")
+	s.recibir_comando(1, {"t": "accion", "id": "susanoo"})
+	comprobar(j.modo_activo and j.estado == "sellos", "el Susanoo enciende solo el Mangekyō equipado y se lanza")
+	correr(s, 1.0)
+	j.recargas.clear()
+	j.chakra = 200.0
+	s.eventos = []
+	s.recibir_comando(1, {"t": "accion", "id": "rasengan"})
+	correr(s, 0.15)
+	comprobar(j.estado == "chidori_carga", "el Rasengan se lanza con el repertorio del menú")
 	s.free()

@@ -16,7 +16,7 @@
 - [x] Botones de combate generados desde el repertorio con toque/arrastre/cancelar.
 - [x] Bloque 1 (3 niveles visibles): Kirin, Rasengan, Amaterasu, Susanoo, Shinra Tensei, Ocho Puertas
       (+ ya existían Bola de Fuego y Chidori, y los modos Sharingan, Mangekyō, Rinnegan, Byakugan).
-- [x] Pruebas: 89 de combate + 72 de repertorio + humo (menú, repertorio y partida en 3 calidades).
+- [x] Pruebas: 89 de combate + 77 de repertorio + humo (menú, repertorio y partida en 3 calidades).
 - [x] Capturas por nivel del bloque 1: `GUION=tecnicas` con `tools/captura.gd`; menú con `tools/captura_menu.gd`.
 
 ## Bloques pendientes (6 por bloque, cada uno con sus 3 niveles visibles)

@@ -113,3 +113,4 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - El Rasengan reutiliza el embiste del Chidori (estados `chidori_carga`/`chidori_embiste` con el id del jutsu), así el servidor no duplica código.
 - La vista previa animada del menú se dibuja en 2D por código (sin escenas 3D extra) para que el menú sea ligero en el celular.
 - El HUD se puede reconstruir al cambiar de repertorio sin duplicar nodos.
+- Corrección tras probar en el celular: si el repertorio del menú no era válido, el servidor usaba el de por defecto pero los botones seguían mostrando el elegido (los jutsus no hacían nada). Ahora el servidor devuelve lo que aceptó, el HUD se reconstruye con eso y el aviso dice el motivo. Además, al equipar un jutsu que pide un ojo, el menú pone ese ojo en la ranura MODO y no deja pasar de 12 puntos; y en combate el ojo requerido se enciende solo al usar el jutsu.

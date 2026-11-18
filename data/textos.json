@@ -93,7 +93,7 @@
   "rep_repetido": "{0} está repetido",
   "rep_modo_invalido": "El modo no es válido",
   "rep_puntos": "Puntos {0}/{1}: superas el tope",
-  "rep_invalido_servidor": "Repertorio no válido; se usa el de por defecto",
+  "rep_invalido_servidor": "Repertorio no válido ({0}). Se usa el de por defecto: arréglalo en «Repertorio»",
   "menu_repertorio": "Repertorio",
   "rep_titulo": "Repertorio de jutsus",
   "rep_puntos_hud": "Puntos {0}/{1}",
@@ -127,5 +127,7 @@
   "msg_bloqueado_jutsu": "No puedes usar jutsus ahora",
   "hud_nivel_auto": "Nivel auto",
   "boton_modo": "Modo",
-  "rep_cat_todas": "Todas"
+  "rep_cat_todas": "Todas",
+  "rep_sin_puntos": "No alcanzan los puntos: quita otro jutsu primero",
+  "rep_modo_auto": "Se equipó {0} en la ranura MODO (lo necesita {1})"
 }

@@ -146,9 +146,11 @@ func aplicar_repertorio(e: EntidadServidor, cmd: Dictionary) -> void:
 	var v := Repertorio.validar(rep, Repertorio.ficha(e.plantilla_id, e.maestria), bool(cmd.get("prueba", false)))
 	if not v["ok"]:
 		rep = Repertorio.repertorio_por_defecto(e.plantilla_id)
-		_evento({"tipo": "mensaje", "entidad": e.id, "clave": "rep_invalido_servidor"})
+		_evento({"tipo": "mensaje", "entidad": e.id, "clave": "rep_invalido_servidor", "args": [str(v["errores"][0]) if not v["errores"].is_empty() else ""]})
 	e.aplicar_repertorio(rep)
-	_evento({"tipo": "repertorio", "entidad": e.id, "jutsus": e.jutsus, "modo": e.modo})
+	# El cliente reconstruye sus botones con lo que el servidor aceptó de verdad.
+	_evento({"tipo": "repertorio", "entidad": e.id, "jutsus": e.jutsus, "modo": e.modo,
+		"activos": (rep.get("activos", []) as Array).duplicate(), "niveles_max": (rep.get("niveles_max", {}) as Dictionary).duplicate()})
 
 
 ## Nivel efectivo de una técnica para una entidad (maestría, máximo elegido y depuración).
@@ -292,6 +294,9 @@ func _accion_jutsu(e: EntidadServidor, id: String) -> void:
 		_mensaje(e, "msg_recarga")
 		return
 	var req_modo: Array = j.get("requiere_modo_activo", [])
+	# Si el ojo que pide está en la ranura de modo pero apagado, se enciende solo.
+	if not req_modo.is_empty() and not e.modo_activo and e.modo in req_modo:
+		Tecnicas.alternar_modo(self, e)
 	if not req_modo.is_empty() and not (e.modo_activo and e.modo in req_modo):
 		_evento({"tipo": "mensaje", "entidad": e.id, "clave": "msg_requiere_modo", "args": [Datos.jutsu(str(req_modo[0])).get("nombre", "")]})
 		return
