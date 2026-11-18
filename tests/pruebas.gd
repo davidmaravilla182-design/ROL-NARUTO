@@ -23,6 +23,7 @@ func _initialize() -> void:
 	probar_servidor_sharingan()
 	probar_servidor_combo()
 	probar_ia_puede_ganar()
+	probar_jugador_puede_ganar()
 	probar_textos_sin_codigo()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
@@ -289,6 +290,41 @@ func probar_ia_puede_ganar() -> void:
 	comprobar(contar(evs, "aviso") > 0, "el enemigo telegrafía sus ataques (para el Sharingan)")
 	comprobar(contar(evs, "lanzar") > 0, "el enemigo dispara proyectiles de agua")
 	comprobar(not j.vivo(), "el enemigo derrota a un jugador que no hace nada")
+	s.free()
+
+
+func probar_jugador_puede_ganar() -> void:
+	# Un jugador que usa el rayo (ventaja con la lluvia) y esquiva debe poder ganar.
+	var s := nuevo_servidor(true)
+	var j := s.entidad_de_peer(1)
+	s.recibir_comando(1, {"t": "nivel", "valor": 2})
+	var enemigo: EntidadServidor = null
+	for e in s.entidades:
+		if e.tipo == "enemigo":
+			enemigo = e
+	var gano := false
+	for i in int(90.0 / s.dt_tick):
+		var d := enemigo.pos - j.pos
+		var mira := atan2(d.x, d.z)
+		var mov := Vector2.ZERO
+		if d.length() > 9.0:
+			mov = Vector2(d.x, d.z).normalized()
+		s.recibir_comando(1, {"t": "entrada", "mov": mov, "mira": mira})
+		if j.recarga("chidori") <= 0.0 and d.length() < 14.0:
+			s.recibir_comando(1, {"t": "accion", "id": "chidori"})
+		elif d.length() < 2.5:
+			s.recibir_comando(1, {"t": "accion", "id": "golpe"})
+		for p in s.proyectiles:
+			if int(p["dueno"]) == enemigo.id and (p["pos"] as Vector3).distance_to(j.centro()) < 4.0:
+				s.recibir_comando(1, {"t": "accion", "id": "esquivar"})
+		s.paso(s.dt_tick)
+		s.eventos = []
+		if not enemigo.vivo():
+			gano = true
+			break
+		if not j.vivo():
+			break
+	comprobar(gano, "un jugador que usa bien el rayo puede ganar (vida restante %d)" % int(j.vida))
 	s.free()
 
 
