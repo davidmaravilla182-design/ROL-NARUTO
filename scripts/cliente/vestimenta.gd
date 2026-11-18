@@ -37,24 +37,30 @@ static func vestir(pv: PersonajeVisual, aspecto: Dictionary, aldea: Dictionary, 
 	# --- Chaleco ninja con cuello alto y bolsillos.
 	var m_chaleco := Materiales.solido(c_chaleco, 0.85)
 	var pecho := pv.hueso("Pecho")
-	var torso := Materiales.caja(Vector3(0.39, 0.27, 0.23), m_chaleco)
-	torso.position = Vector3(0, 0.12, 0)
-	pecho.add_child(torso)
-	var cuello := Materiales.cilindro(0.1, 0.12, 0.08, m_chaleco, 8)
-	cuello.position = Vector3(0, 0.27, -0.01)
-	pecho.add_child(cuello)
+	# Con cuerpo continuo el chaleco es una malla deformable de Blender; aquí solo van bolsillos y detalles.
+	if not pv.cuerpo_continuo:
+		var torso := Materiales.caja(Vector3(0.39, 0.27, 0.23), m_chaleco)
+		torso.position = Vector3(0, 0.12, 0)
+		pecho.add_child(torso)
+		var cuello := Materiales.cilindro(0.1, 0.12, 0.08, m_chaleco, 8)
+		cuello.position = Vector3(0, 0.27, -0.01)
+		pecho.add_child(cuello)
 	for lado in [-1.0, 1.0]:
 		var bolsillo := Materiales.caja(Vector3(0.09, 0.07, 0.03), Materiales.solido(c_chaleco.darkened(0.15), 0.85))
-		bolsillo.position = Vector3(0.09 * lado, 0.07, 0.12)
+		bolsillo.position = Vector3(0.085 * lado, 0.04, 0.122)
 		pecho.add_child(bolsillo)
-		var hombrera := Materiales.caja(Vector3(0.09, 0.05, 0.2), m_chaleco)
-		hombrera.position = Vector3(0.16 * lado, 0.25, 0)
-		pecho.add_child(hombrera)
+		if not pv.cuerpo_continuo:
+			var hombrera := Materiales.caja(Vector3(0.09, 0.05, 0.2), m_chaleco)
+			hombrera.position = Vector3(0.16 * lado, 0.25, 0)
+			pecho.add_child(hombrera)
 	var columna := pv.hueso("Columna")
-	var abdomen := Materiales.caja(Vector3(0.33, 0.2, 0.21), m_chaleco)
-	abdomen.position = Vector3(0, 0.1, 0)
-	columna.add_child(abdomen)
-	var cinturon := Materiales.caja(Vector3(0.34, 0.045, 0.22), Materiales.solido(Color(0.15, 0.14, 0.13), 0.7))
+	if not pv.cuerpo_continuo:
+		var abdomen := Materiales.caja(Vector3(0.33, 0.2, 0.21), m_chaleco)
+		abdomen.position = Vector3(0, 0.1, 0)
+		columna.add_child(abdomen)
+	var cinturon := Materiales.cilindro(0.15, 0.15, 0.045, Materiales.solido(Color(0.15, 0.14, 0.13), 0.7), 12) if pv.cuerpo_continuo else Materiales.caja(Vector3(0.34, 0.045, 0.22), Materiales.solido(Color(0.15, 0.14, 0.13), 0.7))
+	if pv.cuerpo_continuo:
+		cinturon.scale = Vector3(1.0, 1.0, 0.76)
 	cinturon.position = Vector3(0, 0.0, 0)
 	columna.add_child(cinturon)
 
@@ -62,7 +68,7 @@ static func vestir(pv: PersonajeVisual, aspecto: Dictionary, aldea: Dictionary, 
 	if aspecto.get("emblema_espalda", false) and clan.get("emblema") != null:
 		var em: Dictionary = clan["emblema"]
 		var abanico := crear_abanico(Datos.color(str(em["color_superior"])), Datos.color(str(em["color_inferior"])))
-		abanico.position = Vector3(0, 0.13, -0.122)
+		abanico.position = Vector3(0, 0.13, -0.122 if not pv.cuerpo_continuo else -0.128)
 		abanico.rotation_degrees = Vector3(0, 180, 0)
 		pecho.add_child(abanico)
 
@@ -71,13 +77,15 @@ static func vestir(pv: PersonajeVisual, aspecto: Dictionary, aldea: Dictionary, 
 	var m_vendas2 := Materiales.solido(c_vendas.darkened(0.1), 0.95)
 	for h in ["AntebrazoI", "AntebrazoD"]:
 		for i in 4:
-			var anillo := Materiales.cilindro(0.054, 0.052, 0.045, m_vendas if i % 2 == 0 else m_vendas2, 8)
+			var r_v := 0.047 if pv.cuerpo_continuo else 0.054
+			var anillo := Materiales.cilindro(r_v, r_v - 0.002, 0.045, m_vendas if i % 2 == 0 else m_vendas2, 8)
 			anillo.position = Vector3(0, -0.06 - i * 0.04, 0)
 			anillo.rotation_degrees = Vector3(0, 0, 4 if i % 2 == 0 else -4)
 			pv.hueso(h).add_child(anillo)
 	for h in ["RodillaI", "RodillaD"]:
 		for i in 4:
-			var anillo := Materiales.cilindro(0.066, 0.062, 0.05, m_vendas if i % 2 == 0 else m_vendas2, 8)
+			var r_p := 0.06 if pv.cuerpo_continuo else 0.066
+			var anillo := Materiales.cilindro(r_p, r_p - 0.004, 0.05, m_vendas if i % 2 == 0 else m_vendas2, 8)
 			anillo.position = Vector3(0, -0.2 - i * 0.045, 0)
 			anillo.rotation_degrees = Vector3(4 if i % 2 == 0 else -4, 0, 0)
 			pv.hueso(h).add_child(anillo)

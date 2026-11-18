@@ -124,15 +124,23 @@ func _cargar_cuerpo(a: Dictionary) -> void:
 	escena.name = "Cuerpo"
 	add_child(escena)
 	esqueleto = _buscar(escena, "Skeleton3D")
-	var mi: MeshInstance3D = _buscar(escena, "MeshInstance3D")
-	if mi != null:
-		var colores := {"piel": Datos.color(str(a.get("piel", "#e8c4a0"))), "camisa": Datos.color(str(a.get("camisa", "#1d2333"))),
-			"pantalon": Datos.color(str(a.get("pantalon", "#252a3a")))}
-		for i in mi.mesh.get_surface_count():
-			var m := mi.mesh.surface_get_material(i)
+	var colores := {"piel": Datos.color(str(a.get("piel", "#e8c4a0"))), "camisa": Datos.color(str(a.get("camisa", "#1d2333"))),
+		"pantalon": Datos.color(str(a.get("pantalon", "#252a3a"))), "chaleco": Datos.color(str(a.get("chaleco", "#3d4a3a")))}
+	var mallas: Array = []
+	_buscar_todos(escena, mallas)
+	for mi in mallas:
+		for i in (mi as MeshInstance3D).mesh.get_surface_count():
+			var m: Material = (mi as MeshInstance3D).mesh.surface_get_material(i)
 			var nombre := m.resource_name if m != null else ""
 			var col: Color = colores.get(nombre.get_slice(".", 0), Color(0.5, 0.5, 0.5))
-			mi.set_surface_override_material(i, Materiales.solido(col, 0.75 if nombre == "piel" else 0.9))
+			(mi as MeshInstance3D).set_surface_override_material(i, Materiales.solido(col, 0.75 if nombre == "piel" else 0.9))
+
+
+func _buscar_todos(n: Node, lista: Array) -> void:
+	if n is MeshInstance3D:
+		lista.append(n)
+	for h in n.get_children():
+		_buscar_todos(h, lista)
 
 
 func _buscar(n: Node, clase: String) -> Node:

@@ -72,3 +72,9 @@ Cada entrada: qué se hizo, cómo se verificó, capturas comparadas, problemas y
   - Después: alta 99 / 63k / 35 · media 95 / 61k / 35 · baja 67 / 56k / 0. Llamadas ÷2.4, sombras ÷4.7.
 - Calidad baja verificada en captura: sin glow ni sombras, se sigue viendo bien.
 - Ojos del modo ocular: la luz roja iluminaba el emblema de la espalda → rango 0.35 m.
+
+## C7 — pulido del personaje
+- Chaleco como malla deformable de Blender (cáscara con Skin alrededor del torso, cuello alto y hombreras), pesada al
+  mismo esqueleto. Se quitan las cajas rígidas del chaleco; quedan bolsillos, cinturón (ahora ovalado) y el emblema.
+- 1ª versión: chaleco con forma de saco hasta la cadera → radios menores y base más alta; emblema hundido → más atrás.
+- Vendas ajustadas al nuevo grosor de antebrazos y espinillas (antes flotaban como puños).

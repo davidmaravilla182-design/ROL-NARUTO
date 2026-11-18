@@ -169,6 +169,47 @@ def cuerpo(pos):
     return ob
 
 
+def chaleco():
+    """Chaleco ninja: cáscara deformable alrededor del torso con cuello alto y hombreras."""
+    P = lambda *v: Vector(v)
+    nodos = [("base", P(0, 1.02, 0), (0.132, 0.1)), ("cintura", P(0, 1.12, 0), (0.128, 0.098)),
+             ("torax", P(0, 1.28, 0.005), (0.165, 0.112)), ("alto", P(0, 1.43, 0.0), (0.175, 0.106)),
+             ("cuello", P(0, 1.53, -0.005), (0.085, 0.078)), ("collar", P(0, 1.6, -0.005), (0.078, 0.072))]
+    for s, L in ((1, "I"), (-1, "D")):
+        nodos.append(("hombro" + L, P(0.15 * s, 1.47, 0), (0.07, 0.07)))
+    aristas = [("base", "cintura"), ("cintura", "torax"), ("torax", "alto"), ("alto", "cuello"), ("cuello", "collar"),
+               ("alto", "hombroI"), ("alto", "hombroD")]
+    bm = bmesh.new()
+    vs = {}
+    for n, p, _ in nodos:
+        vs[n] = bm.verts.new(g2b(p))
+    for a, b in aristas:
+        bm.edges.new((vs[a], vs[b]))
+    me = bpy.data.meshes.new("chaleco")
+    bm.to_mesh(me)
+    bm.free()
+    ob = bpy.data.objects.new("chaleco", me)
+    bpy.context.collection.objects.link(ob)
+    mod = ob.modifiers.new("piel", "SKIN")
+    mod.use_smooth_shade = True
+    sv = me.skin_vertices[0].data
+    for i, (n, _, r) in enumerate(nodos):
+        sv[i].radius = r
+        sv[i].use_root = (n == "base")
+    sub = ob.modifiers.new("sub", "SUBSURF")
+    sub.levels = 1
+    for o in bpy.context.selected_objects:
+        o.select_set(False)
+    bpy.context.view_layer.objects.active = ob
+    ob.select_set(True)
+    bpy.ops.object.modifier_apply(modifier="piel")
+    bpy.ops.object.modifier_apply(modifier="sub")
+    for p in ob.data.polygons:
+        p.use_smooth = True
+    ob.data.materials.append(geo.material("chaleco"))
+    return ob
+
+
 def materiales_por_zona(ob):
     for n in ("piel", "camisa", "pantalon"):
         ob.data.materials.append(geo.material(n))
@@ -233,13 +274,17 @@ def main():
     ob = cuerpo(pos)
     materiales_por_zona(ob)
     pesos(ob, arm, pos)
-    ob.parent = arm
-    mod = ob.modifiers.new("arm", "ARMATURE")
-    mod.object = arm
+    ves = chaleco()
+    pesos(ves, arm, pos)
+    for m in (ob, ves):
+        m.parent = arm
+        mod = m.modifiers.new("arm", "ARMATURE")
+        mod.object = arm
     for o in bpy.context.selected_objects:
         o.select_set(False)
     arm.select_set(True)
     ob.select_set(True)
+    ves.select_set(True)
     bpy.context.view_layer.objects.active = arm
     ruta = os.path.join(comun.DIR_MOD, "cuerpo.glb")
     bpy.ops.export_scene.gltf(filepath=ruta, export_format="GLB", use_selection=True, export_skins=True,
