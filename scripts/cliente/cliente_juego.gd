@@ -16,6 +16,7 @@ var lluvia: Lluvia
 var hud: Hud
 var sonidos: Sonidos
 var indicadores: Indicadores
+var tecnicas: EfectosTecnicas
 var objetivo_fijado := -1
 var _apuntado_activo := ""
 var _t_pasos := 0.0
@@ -63,6 +64,12 @@ func _ready() -> void:
 	efectos.sonidos = sonidos
 	add_child(efectos)
 
+	tecnicas = EfectosTecnicas.new()
+	tecnicas.name = "Tecnicas"
+	tecnicas.efectos = efectos
+	tecnicas.sonidos = sonidos
+	add_child(tecnicas)
+
 	indicadores = Indicadores.new()
 	indicadores.name = "Indicadores"
 	add_child(indicadores)
@@ -76,7 +83,8 @@ func _ready() -> void:
 	hud = Hud.new()
 	hud.name = "Hud"
 	add_child(hud)
-	hud.construir()
+	Perfil.cargar()
+	hud.construir(Perfil.repertorio())
 	hud.accion.connect(_on_accion)
 	hud.apuntar.connect(_on_apuntar)
 	hud.soltar.connect(_on_soltar)
@@ -98,7 +106,10 @@ func _ready() -> void:
 	local.name = "Transporte"
 	add_child(local)
 	transporte = local
-	transporte.conectado.connect(func(id): mi_id = id)
+	transporte.conectado.connect(func(id):
+		mi_id = id
+		# El repertorio elegido en el menú (el servidor lo valida con las mismas reglas).
+		transporte.enviar(Perfil.comando()))
 	transporte.estado_recibido.connect(_on_estado)
 	local.iniciar(servidor)
 
@@ -110,7 +121,7 @@ func _registrar_teclas() -> void:
 	var teclas := {
 		"mover_arriba": [KEY_W, KEY_UP], "mover_abajo": [KEY_S, KEY_DOWN],
 		"mover_izq": [KEY_A, KEY_LEFT], "mover_der": [KEY_D, KEY_RIGHT],
-		"golpe": [KEY_J], "bola_fuego": [KEY_K], "chidori": [KEY_L], "sharingan": [KEY_Q],
+		"golpe": [KEY_J], "ranura1": [KEY_K], "ranura2": [KEY_L], "ranura3": [KEY_U], "ranura4": [KEY_I], "modo": [KEY_Q],
 		"esquivar": [KEY_SHIFT], "saltar": [KEY_SPACE],
 	}
 	for accion_n in teclas.keys():
@@ -127,13 +138,29 @@ func _unhandled_input(ev: InputEvent) -> void:
 	for a in Protocolo.ACCIONES:
 		if ev.is_action_pressed(a, false, true):
 			_on_accion(a)
+	var activos: Array = Perfil.repertorio()["activos"]
+	for i in 4:
+		if ev.is_action_pressed("ranura%d" % (i + 1), false, true) and i < activos.size() and str(activos[i]) != "":
+			_on_accion(str(activos[i]))
+
+
+func _exit_tree() -> void:
+	Perfil.guardar()
+
+
+## Nivel efectivo que el servidor informa para una técnica del jugador local.
+func _nivel_local(id: String) -> int:
+	for e in _estado.get("entidades", []):
+		if int(e["id"]) == mi_id:
+			return int(e.get("niveles", {}).get(id, 1))
+	return 1
 
 
 ## Toque rápido: auto-apuntado al objetivo fijado o al enemigo más cercano frente a la cámara;
 ## si no hay ninguno, hacia donde mira la cámara. La dirección viaja en el comando.
 func _on_accion(id: String) -> void:
 	var cmd := {"t": Protocolo.C_ACCION, "id": id}
-	if id in ["bola_fuego", "chidori", "golpe"]:
+	if id == "golpe" or bool(Datos.jutsu(id).get("apuntable", false)):
 		var alcance := _alcance(id)
 		var obj := _objetivo_auto(alcance)
 		var dir := _dir_camara()
@@ -146,10 +173,12 @@ func _on_accion(id: String) -> void:
 
 
 func _alcance(id: String) -> float:
-	match id:
-		"bola_fuego": return float(Datos.jutsu("bola_fuego").get("alcance", 25.0))
-		"chidori": return float(Datos.nivel_jutsu("chidori", hud.nivel).get("distancia", 10.0)) + 3.0
-	return 3.5
+	if id == "golpe":
+		return 3.5
+	var j := Datos.jutsu(id)
+	if str(j.get("mecanica", "")) == "embiste":
+		return float(Datos.nivel_jutsu(id, _nivel_local(id)).get("distancia", 6.0)) + 3.0
+	return float(j.get("alcance", 20.0))
 
 
 func _dir_camara() -> Vector2:
@@ -203,13 +232,14 @@ func _on_apuntar(id: String, arrastre: Vector2, cancelar: bool) -> void:
 	_apuntado_activo = id
 	var dir := _dir_arrastre(arrastre)
 	var yo := _pos_entidad(mi_id)
-	if id == "bola_fuego":
-		var nd := Datos.nivel_jutsu("bola_fuego", hud.nivel)
-		var ancho := float(nd.get("radio", 0.6)) * 2.0 * 0.9 + 0.4
-		indicadores.mostrar_apuntado(yo, Vector3(dir.x, 0, dir.y), minf(_alcance(id), 22.0), ancho, Color(1.0, 0.45, 0.1), false, cancelar)
+	var nd := Datos.nivel_jutsu(id, _nivel_local(id))
+	var color := Hud.color_de(id).lightened(0.45)
+	if str(Datos.jutsu(id).get("mecanica", "")) == "embiste":
+		# Flecha de embiste del largo real del nivel.
+		indicadores.mostrar_apuntado(yo, Vector3(dir.x, 0, dir.y), float(nd.get("distancia", 8.0)), 1.1, color, true, cancelar)
 	else:
-		var nd2 := Datos.nivel_jutsu("chidori", hud.nivel)
-		indicadores.mostrar_apuntado(yo, Vector3(dir.x, 0, dir.y), float(nd2.get("distancia", 10.0)), 1.1, Color(0.4, 0.75, 1.0), true, cancelar)
+		var ancho := maxf(float(nd.get("radio", 0.6)) * 2.0 * 0.9 + 0.4, 1.0)
+		indicadores.mostrar_apuntado(yo, Vector3(dir.x, 0, dir.y), minf(_alcance(id), 22.0), ancho, color, false, cancelar)
 
 
 ## Soltar tras arrastrar: dispara en la dirección exacta del dedo (sin asistencia).
@@ -362,6 +392,7 @@ func _on_estado(est: Dictionary) -> void:
 			(_visuales[id]["nodo"] as Node).queue_free()
 			_visuales.erase(id)
 	_actualizar_proyectiles(est["proyectiles"])
+	tecnicas.sincronizar_zonas(est.get("zonas", []))
 	for ev in est["eventos"]:
 		_procesar_evento(ev)
 	if not yo.is_empty():
@@ -419,7 +450,9 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 		mu.poner_caido(estado == "muerto")
 		return
 	var pv: PersonajeVisual = v["nodo"]
-	pv.poner_sharingan(bool(e["sharingan"]))
+	var modo := str(e.get("modo", ""))
+	pv.poner_ojos(int(Datos.jutsu(modo).get("patron", 0)) if bool(e.get("modo_activo", false)) and modo in Tecnicas.OJOS else 0)
+	tecnicas.sincronizar(int(e["id"]), pv, e)
 	match estado:
 		"muerto", "caido":
 			pv.reproducir("caer", 0.08)
@@ -437,7 +470,7 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 			pv.reproducir("chidori_carga", 0.1)
 		"chidori_embiste":
 			pv.reproducir("chidori_embiste", 0.05)
-		"lanzar", "rafaga":
+		"lanzar", "rafaga", "kirin":
 			pv.reproducir("lanzar", 0.08)
 		"esquiva":
 			pv.reproducir("esquivar", 0.05)
@@ -495,7 +528,17 @@ func _pos_entidad(id: int) -> Vector3:
 
 func _procesar_evento(ev: Dictionary) -> void:
 	var id := int(ev.get("entidad", -1))
+	tecnicas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
 	match str(ev["tipo"]):
+		"maestria":
+			if id == mi_id:
+				Perfil.maestria[str(ev["jutsu"])] = float(ev["xp"])
+				if ev.get("subio", false):
+					hud.mensaje(Datos.texto("msg_maestria", [Datos.jutsu(str(ev["jutsu"])).get("nombre", ""), int(ev["nivel"])]), 2.5)
+					Perfil.guardar()
+		"modo":
+			if id == mi_id:
+				hud.mensaje(("%s ✓" if ev["activo"] else "%s ✗") % Datos.jutsu(str(ev["modo"])).get("nombre", ""), 1.2)
 		"sellos":
 			if id == mi_id:
 				hud.mostrar_sellos(ev["sellos"], float(ev["duracion"]))
@@ -512,7 +555,10 @@ func _procesar_evento(ev: Dictionary) -> void:
 				var anterior = _visuales[id]["carga"]
 				if anterior != null and is_instance_valid(anterior):
 					anterior.queue_free()
-				_visuales[id]["carga"] = efectos.crear_carga_rayo(_visuales[id]["nodo"], int(ev["nivel"]))
+				if str(ev.get("jutsu", "chidori")) == "rasengan":
+					_visuales[id]["carga"] = tecnicas.crear_esfera_mano(_visuales[id]["nodo"], int(ev["nivel"]))
+				else:
+					_visuales[id]["carga"] = efectos.crear_carga_rayo(_visuales[id]["nodo"], int(ev["nivel"]))
 		"chidori_embiste":
 			efectos.polvo(ev["desde"], 10 + int(ev["nivel"]) * 10)
 			if id == mi_id and int(ev["nivel"]) >= 3:
@@ -548,10 +594,11 @@ func _procesar_evento(ev: Dictionary) -> void:
 				v["carga"] = null
 		"mensaje":
 			if id == mi_id or ev.get("para_todos", false):
-				hud.mensaje(Datos.texto(str(ev["clave"])), 1.5)
+				hud.mensaje(Datos.texto(str(ev["clave"]), ev.get("args", [])), 1.5)
 
 
-const COLOR_NATURALEZA := {"fuego": Color(1.0, 0.55, 0.15), "rayo": Color(0.55, 0.88, 1.0), "agua": Color(0.4, 0.68, 1.0), "": Color(1.0, 0.97, 0.9)}
+const COLOR_NATURALEZA := {"fuego": Color(1.0, 0.55, 0.15), "rayo": Color(0.55, 0.88, 1.0), "agua": Color(0.4, 0.68, 1.0),
+	"fuego_negro": Color(0.75, 0.45, 1.0), "": Color(1.0, 0.97, 0.9)}
 
 
 func _evento_impacto(ev: Dictionary) -> void:
@@ -571,8 +618,12 @@ func _evento_impacto(ev: Dictionary) -> void:
 		"bola_fuego":
 			if involucra_me and int(ev["nivel"]) >= 2:
 				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)) * 0.7)
-		"bala_agua":
+		"bala_agua", "kirin", "amaterasu", "susanoo", "shinra_tensei", "flecha_susanoo":
 			pass
+		"rasengan":
+			tecnicas.impacto_esfera(pos, int(ev["nivel"]))
+			if involucra_me:
+				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)))
 		_:
 			var fuerte := cant > 10.0
 			efectos.golpe_fisico(pos, fuerte)
@@ -625,7 +676,7 @@ func prueba_humo(frame: int) -> void:
 		50: _on_accion("bola_fuego")
 		90: transporte.enviar({"t": Protocolo.C_NIVEL, "valor": 3})
 		95: _on_accion("chidori")
-		150: _on_accion("bola_fuego")
+		150: _on_accion("kirin")
 		200: _on_accion("golpe")
 		210: _on_accion("golpe")
 		220: _on_accion("golpe")
@@ -643,3 +694,17 @@ func prueba_humo(frame: int) -> void:
 		375: pausa_impacto(0.05)
 		380: camara_lenta(0.3, 0.1)
 		390: hud.abrir_ajustes()
+		# Primer bloque del repertorio (modo prueba).
+		400: transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["rasengan", "amaterasu", "susanoo", "kirin"], "modo": "mangekyo", "prueba": true})
+		405: _on_accion("modo")
+		410: _on_accion("rasengan")
+		440: _on_accion("amaterasu")
+		470: _on_accion("susanoo")
+		520: transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["shinra_tensei", "", "", ""], "modo": "rinnegan", "prueba": true})
+		525: _on_accion("modo")
+		530: _on_accion("shinra_tensei")
+		560: transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["", "", "", ""], "modo": "ocho_puertas", "prueba": true})
+		565: _on_accion("modo")
+		570: _on_accion("golpe")
+		580: _on_accion("golpe")
+		590: _on_accion("golpe")

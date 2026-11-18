@@ -24,6 +24,7 @@ var deshabilitado := false
 var activo := false
 var es_cancelar: Callable   # (pos_global: Vector2) -> bool, la da el HUD
 var opacidad := 0.9
+var nivel := 0   # nivel efectivo (marcas ●○○ sobre el botón); 0 = no se muestra
 
 var _indice := -1
 var _inicio := Vector2.ZERO
@@ -176,6 +177,12 @@ func _draw() -> void:
 		draw_line(c, c + Vector2(cos(a_fin), sin(a_fin)) * ri, Color(1, 1, 1, 0.7), 2.0)
 		var t := ("%.1f" % recarga) if recarga < 10.0 else str(int(recarga))
 		Estilo.texto(self, Vector2(0, c.y + r * 0.22), t, int(r * 0.62), Color.WHITE, r * 2, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_ui(), 7)
+	# Nivel efectivo: tres marcas arriba.
+	if nivel > 0:
+		for k in 3:
+			var p := c + Vector2((k - 1) * 9.0, -r + 6.0)
+			draw_circle(p, 3.6, Color(0, 0, 0, 0.8))
+			draw_circle(p, 2.6, Color(1.0, 0.85, 0.3) if k < nivel else Color(0.35, 0.35, 0.38))
 	# Costo de chakra (placa inferior).
 	if costo > 0.0:
 		var txt := str(int(ceil(costo)))

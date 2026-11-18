@@ -17,15 +17,16 @@ signal reinicio_pedido()
 signal camara_arrastre(relativo: Vector2)
 
 # id, color, radio base, ángulo en el arco (grados, 180 = izquierda, 270 = arriba), anillo (0 centro, 1 interior, 2 exterior), apuntable
+# Botones fijos: id, color, radio base, ángulo en el arco (180 = izquierda, 270 = arriba), anillo (0 centro, 1 interior, 2 exterior)
 const BOTONES := [
-	["golpe", Color(0.62, 0.42, 0.26), 80.0, 0.0, 0, false],
-	["esquivar", Color(0.22, 0.52, 0.44), 50.0, 171.0, 1, false],
-	["bola_fuego", Color(0.85, 0.32, 0.08), 58.0, 210.0, 1, true],
-	["chidori", Color(0.16, 0.42, 0.88), 58.0, 250.0, 1, true],
-	["saltar", Color(0.38, 0.4, 0.52), 46.0, 293.0, 1, false],
-	["sharingan", Color(0.55, 0.05, 0.08), 48.0, 222.0, 2, false],
-	["fijar", Color(0.3, 0.32, 0.38), 42.0, 262.0, 2, false],
+	["golpe", Color(0.62, 0.42, 0.26), 80.0, 0.0, 0],
+	["esquivar", Color(0.22, 0.52, 0.44), 48.0, 174.0, 1],
+	["saltar", Color(0.38, 0.4, 0.52), 44.0, 292.0, 1],
+	["fijar", Color(0.3, 0.32, 0.38), 40.0, 287.0, 2],
 ]
+# Ranuras del repertorio: 4 jutsus activos y el modo.
+const RANURAS := [[56.0, 211.0, 1], [56.0, 251.0, 1], [50.0, 198.0, 2], [50.0, 226.0, 2]]
+const RANURA_MODO := [48.0, 256.0, 2]
 
 var raiz: Control
 var joystick: JoystickVirtual
@@ -56,9 +57,31 @@ var _margen := Rect2()     # márgenes del área segura: position = (izq, arriba
 var nivel := 1
 var sharingan_activo := false
 var fijado := false
+var modo_id := ""
 
 
-func construir() -> void:
+static func color_de(id: String) -> Color:
+	var cat := str(Datos.jutsu(id).get("categoria", ""))
+	var c := Datos.color(str(Repertorio.categorias().get(cat, {}).get("color", "#808080")))
+	return c.darkened(0.35)
+
+
+func _crear_boton(id: String, color: Color, radio: float, angulo: float, anillo: int, apuntable: bool) -> void:
+	var bt := BotonJutsu.new()
+	bt.configurar(id, color, radio, apuntable)
+	bt.set_meta("radio_base", radio)
+	bt.set_meta("angulo", angulo)
+	bt.set_meta("anillo", anillo)
+	bt.es_cancelar = _sobre_cancelar
+	bt.tocado.connect(_on_tocado)
+	bt.apuntando.connect(_on_apuntando)
+	bt.soltado.connect(_on_soltado)
+	bt.cancelado.connect(_on_cancelado)
+	raiz.add_child(bt)
+	botones[id] = bt
+
+
+func construir(rep: Dictionary = {}) -> void:
 	layer = 10
 	Ajustes.cargar()
 	raiz = Control.new()
@@ -98,18 +121,19 @@ void fragment() {
 	raiz.add_child(_cancelar_zona)
 
 	for b in BOTONES:
-		var bt := BotonJutsu.new()
-		bt.configurar(b[0], b[1], b[2], b[5])
-		bt.set_meta("radio_base", b[2])
-		bt.set_meta("angulo", b[3])
-		bt.set_meta("anillo", b[4])
-		bt.es_cancelar = _sobre_cancelar
-		bt.tocado.connect(_on_tocado)
-		bt.apuntando.connect(_on_apuntando)
-		bt.soltado.connect(_on_soltado)
-		bt.cancelado.connect(_on_cancelado)
-		raiz.add_child(bt)
-		botones[b[0]] = bt
+		_crear_boton(b[0], b[1], b[2], b[3], b[4], false)
+	# Botones generados según el repertorio elegido en el menú.
+	var activos: Array = rep.get("activos", [])
+	for i in RANURAS.size():
+		var id := str(activos[i]) if i < activos.size() else ""
+		if id == "":
+			continue
+		var r: Array = RANURAS[i]
+		_crear_boton(id, color_de(id), r[0], r[1], r[2], bool(Datos.jutsu(id).get("apuntable", false)))
+	var modo := str(rep.get("modo", ""))
+	if modo != "":
+		_crear_boton(modo, color_de(modo), RANURA_MODO[0], RANURA_MODO[1], RANURA_MODO[2], false)
+		modo_id = modo
 
 	retrato = Retrato.new()
 	raiz.add_child(retrato)
@@ -123,7 +147,8 @@ void fragment() {
 	_clima.modulate = Color(0.75, 0.85, 1.0, 0.9)
 
 	# Botones pequeños arriba a la derecha: nivel (depuración), reaparecer, ajustes y menú.
-	_boton_nivel = _boton_texto(Datos.texto("hud_nivel", [nivel]), func(): _ciclar_nivel())
+	nivel = 0
+	_boton_nivel = _boton_texto(Datos.texto("hud_nivel_auto"), func(): _ciclar_nivel())
 	_boton_texto(Datos.texto("hud_reaparecer"), func(): reaparecer_pedido.emit())
 	_boton_texto(Datos.texto("hud_ajustes"), func(): abrir_ajustes())
 	_boton_texto(Datos.texto("hud_salir"), func(): salir_pedido.emit())
@@ -303,16 +328,17 @@ func _dibujar_cancelar() -> void:
 	Estilo.texto(_cancelar_zona, Vector2(0, c.y + r * 0.72), Datos.texto("hud_cancelar"), 18, Color.WHITE, r * 2, HORIZONTAL_ALIGNMENT_CENTER)
 
 
+## Depuración: Auto (maestría) → N1 → N2 → N3 → Auto.
 func _ciclar_nivel() -> void:
-	nivel = nivel % 3 + 1
-	_boton_nivel.text = Datos.texto("hud_nivel", [nivel])
+	nivel = (nivel + 1) % 4
+	poner_nivel(nivel)
 	nivel_pedido.emit(nivel)
-	mensaje(Datos.texto("msg_nivel", [nivel]))
+	mensaje(Datos.texto("msg_nivel", [nivel]) if nivel > 0 else Datos.texto("hud_nivel_auto"))
 
 
 func poner_nivel(n: int) -> void:
 	nivel = n
-	_boton_nivel.text = Datos.texto("hud_nivel", [nivel])
+	_boton_nivel.text = Datos.texto("hud_nivel", [nivel]) if nivel > 0 else Datos.texto("hud_nivel_auto")
 
 
 func abrir_ajustes() -> void:
@@ -328,9 +354,12 @@ func actualizar(j: Dictionary, enemigo: Dictionary) -> void:
 	retrato.fijar("vida", j["vida"], j["vida_max"])
 	retrato.fijar("chakra", j["chakra"], j["chakra_max"])
 	retrato.fijar("estamina", j["estamina"], j["estamina_max"])
-	sharingan_activo = bool(j["sharingan"])
+	var modo_activo := bool(j.get("modo_activo", false))
+	sharingan_activo = modo_activo and str(j.get("modo", "")) in Tecnicas.OJOS
 	retrato.sharingan = sharingan_activo
 	var rec: Dictionary = j["recargas"]
+	var niveles: Dictionary = j.get("niveles", {})
+	var efectos: Dictionary = j.get("efectos", {})
 	var attrs: Dictionary = Datos.personaje(str(j["plantilla"])).get("atributos", {})
 	for id in botones.keys():
 		var b: BotonJutsu = botones[id]
@@ -340,15 +369,17 @@ func actualizar(j: Dictionary, enemigo: Dictionary) -> void:
 		var total := float(Datos.jutsu(id).get("recarga", 1.0))
 		var sin_recurso := false
 		var costo := 0.0
-		if id in ["bola_fuego", "chidori"]:
-			costo = Combate.costo_chakra(id, int(j["nivel"]), attrs)
-			sin_recurso = float(j["chakra"]) < costo
-		elif id == "sharingan":
-			costo = Combate.costo_chakra(id, 1, attrs) if not sharingan_activo else 0.0
-			sin_recurso = not sharingan_activo and float(j["chakra"]) < costo
-		elif id == "esquivar":
+		var activo := false
+		if id == "esquivar":
 			sin_recurso = float(j["estamina"]) < float(Datos.jutsu(id).get("costo_estamina", 0))
-		b.actualizar(float(rec.get(id, 0.0)), total, sin_recurso, id == "sharingan" and sharingan_activo, costo)
+		elif niveles.has(id):
+			var es_modo: bool = id == modo_id
+			activo = (es_modo and modo_activo) or (id == "susanoo" and efectos.has("susanoo"))
+			if not activo:
+				costo = Combate.costo_chakra(id, int(niveles[id]), attrs)
+				sin_recurso = float(j["chakra"]) < costo
+			b.nivel = int(niveles[id])
+		b.actualizar(float(rec.get(id, 0.0)), total, sin_recurso, activo, costo)
 	if enemigo.is_empty():
 		_enemigo["visible"] = false
 	else:

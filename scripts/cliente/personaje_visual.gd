@@ -281,6 +281,12 @@ func reproducir_forzado(nombre: String, mezcla := 0.05) -> void:
 	reproducir(nombre, mezcla)
 
 
+## Ojos según el modo ocular activo (0 = normales).
+func poner_ojos(patron: int) -> void:
+	(_mat_ojos_normal as ShaderMaterial).set_shader_parameter("patron", float(maxi(patron, 1)))
+	poner_sharingan(patron > 0)
+
+
 func poner_sharingan(activo: bool) -> void:
 	if activo == sharingan:
 		return

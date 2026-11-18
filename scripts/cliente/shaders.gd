@@ -338,6 +338,27 @@ void fragment() {
 }
 """
 
+## Figura espectral (Susanoo, auras): fresnel aditivo con ruido que sube y parpadeo.
+const ESPECTRAL := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, blend_add, fog_disabled;
+uniform vec4 color : source_color = vec4(0.55, 0.35, 1.0, 1.0);
+uniform float intensidad = 1.4;
+uniform float opacidad = 1.0;
+varying vec3 wpos;
+RUIDO
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+void fragment() {
+	float fres = pow(1.0 - clamp(abs(dot(NORMAL, VIEW)), 0.0, 1.0), 1.6);
+	float n = fbm3(wpos * 1.8 + vec3(0.0, -TIME * 1.6, TIME * 0.3));
+	float a = clamp(fres * 1.3 + n * 0.45 - 0.1, 0.0, 1.0);
+	ALBEDO = color.rgb * intensidad * (0.7 + n * 0.6);
+	ALPHA = a * opacidad * (0.85 + 0.15 * sin(TIME * 23.0));
+}
+"""
+
 ## Capa de nubes en movimiento, con destello de relámpago.
 const NUBES := """
 shader_type spatial;
@@ -387,6 +408,7 @@ const OJO := """
 shader_type spatial;
 render_mode unshaded, cull_back, fog_disabled;
 uniform float activo = 0.0;
+uniform float patron = 1.0;   // 1 tomoe, 2 caleidoscopio, 3 anillos, 4 blanco con venas
 uniform vec4 iris_normal : source_color = vec4(0.08, 0.07, 0.07, 1.0);
 void fragment() {
 	vec2 p = UV * 2.0 - 1.0;
@@ -397,24 +419,42 @@ void fragment() {
 	vec3 c = vec3(0.95, 0.95, 0.97);
 	vec2 q = vec2(p.x, p.y) / 0.9;
 	float r = length(q);
-	vec3 iris = mix(iris_normal.rgb, vec3(0.85, 0.02, 0.04), activo);
+	float ang = atan(q.y, q.x);
+	int pt = int(patron + 0.5);
+	vec3 activo_col = pt == 3 ? vec3(0.62, 0.52, 0.86) : (pt == 4 ? vec3(0.9, 0.88, 0.96) : vec3(0.85, 0.02, 0.04));
+	vec3 iris = mix(iris_normal.rgb, activo_col, activo);
+	if (pt == 4 && activo > 0.5) {
+		// Venas alrededor del ojo.
+		c = mix(c, vec3(0.75, 0.72, 0.85), 0.4 + 0.3 * sin(ang * 9.0));
+	}
 	if (r < 0.75) {
 		c = iris;
 		if (activo > 0.5) {
-			// anillo y 3 tomoe girando
-			if (abs(r - 0.42) < 0.035) { c = vec3(0.05, 0.0, 0.0); }
-			float ang = atan(q.y, q.x) + TIME * 1.5;
-			for (int i = 0; i < 3; i++) {
-				float a = ang + float(i) * 2.094;
-				vec2 t = vec2(cos(a), sin(a)) * 0.42;
-				vec2 rp = vec2(cos(ang + float(i) * 2.094 - 0.35), sin(ang + float(i) * 2.094 - 0.35)) * 0.45;
-				if (length(q - t) < 0.12 || (length(q - rp) < 0.07)) { c = vec3(0.03, 0.0, 0.0); }
+			if (pt == 1) {
+				if (abs(r - 0.42) < 0.035) { c = vec3(0.05, 0.0, 0.0); }
+				float a0 = ang + TIME * 1.5;
+				for (int i = 0; i < 3; i++) {
+					float a = a0 + float(i) * 2.094;
+					vec2 t = vec2(cos(a), sin(a)) * 0.42;
+					vec2 rp = vec2(cos(a - 0.35), sin(a - 0.35)) * 0.45;
+					if (length(q - t) < 0.12 || length(q - rp) < 0.07) { c = vec3(0.03, 0.0, 0.0); }
+				}
+			} else if (pt == 2) {
+				// Caleidoscopio: tres aspas curvas que giran.
+				float a2 = ang + TIME * 0.8 + r * 2.5;
+				float aspa = abs(sin(a2 * 1.5));
+				if (aspa > 0.75 && r > 0.12) { c = vec3(0.03, 0.0, 0.0); }
+			} else if (pt == 3) {
+				// Anillos concéntricos.
+				if (fract(r * 5.0) < 0.18) { c = vec3(0.15, 0.08, 0.25); }
+			} else {
+				c = vec3(0.88, 0.86, 0.94);
 			}
 		}
-		if (r < 0.16) { c = vec3(0.01); }
+		if (r < 0.16 && !(pt == 4 && activo > 0.5)) { c = vec3(0.01); }
 		if (r > 0.68) { c *= 0.6; }
 	}
-	ALBEDO = c * (1.0 + activo * 1.6);
+	ALBEDO = c * (1.0 + activo * (pt == 4 ? 0.6 : 1.6));
 }
 """
 
@@ -460,6 +500,7 @@ static func shader(clave: String) -> Shader:
 		"niebla": return _shader(clave, NIEBLA)
 		"ojo": return _shader(clave, OJO)
 		"agua": return _shader(clave, AGUA)
+		"espectral": return _shader(clave, ESPECTRAL)
 		"cascada": return _shader(clave, CASCADA)
 		"indicador": return _shader(clave, INDICADOR)
 	push_error("Shader desconocido " + clave)
