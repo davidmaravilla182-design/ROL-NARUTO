@@ -6,7 +6,18 @@ static var _cache: Dictionary = {}
 static var _textura_suave: Texture2D = null
 
 
-static func solido(c: Color, rugosidad := 0.8, metalico := 0.0) -> StandardMaterial3D:
+## Contorno que reciben los materiales sólidos creados a continuación (lo fija quien construye:
+## personajes o escenario, según la calidad gráfica). 0 = sin contorno.
+static var grosor_contorno := 0.0
+
+
+## Material sólido con cel shading (bandas, rim) y, si corresponde, contorno negro.
+static func solido(c: Color, rugosidad := 0.8, metalico := 0.0) -> Material:
+	return Shaders.toon(c, grosor_contorno > 0.0, grosor_contorno, metalico, rugosidad, 0.0 if rugosidad > 0.5 else 0.6)
+
+
+## Material PBR normal (para el suelo mojado y superficies que deben reflejar).
+static func pbr(c: Color, rugosidad := 0.8, metalico := 0.0) -> StandardMaterial3D:
 	var clave := "s_%s_%.2f_%.2f" % [c.to_html(), rugosidad, metalico]
 	if _cache.has(clave):
 		return _cache[clave]

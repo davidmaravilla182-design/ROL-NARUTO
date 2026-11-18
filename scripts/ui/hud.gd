@@ -1,38 +1,45 @@
 class_name Hud
 extends CanvasLayer
-## Interfaz del juego: barras, botones táctiles con recarga, joystick, cámara,
-## sellos de manos, mensajes y botones de depuración. Todo texto viene de /data/textos.json.
+## Interfaz del juego: retrato con barras, botones en arco alrededor del golpe
+## (toque = auto-apuntado, mantener y arrastrar = apuntado manual), zona de cancelar,
+## fijar objetivo, joystick, cámara, sellos, mensajes, ajustes y depuración.
+## Todo texto viene de /data/textos.json.
 
 signal accion(id: String)
+signal apuntar(id: String, arrastre: Vector2, cancelar: bool)
+signal soltar(id: String, arrastre: Vector2)
+signal cancelar(id: String)
+signal fijar_pedido()
 signal nivel_pedido(nivel: int)
 signal reaparecer_pedido()
 signal salir_pedido()
+signal reinicio_pedido()
 signal camara_arrastre(relativo: Vector2)
 
+# id, color, radio base, ángulo en el arco (grados, 180 = izquierda, 270 = arriba), anillo (0 centro, 1 interior, 2 exterior), apuntable
 const BOTONES := [
-	# id, clave de texto, color, radio, desplazamiento desde el centro del botón principal
-	["golpe", "boton_golpe", Color(0.55, 0.42, 0.3), 74.0, Vector2(0, 0)],
-	["bola_fuego", "boton_bola_fuego", Color(0.85, 0.35, 0.1), 58.0, Vector2(-40, -185)],
-	["chidori", "boton_chidori", Color(0.2, 0.5, 0.9), 58.0, Vector2(-180, -115)],
-	["esquivar", "boton_esquivar", Color(0.3, 0.55, 0.45), 52.0, Vector2(-200, 45)],
-	["saltar", "boton_saltar", Color(0.4, 0.4, 0.5), 48.0, Vector2(70, -150)],
-	["sharingan", "boton_sharingan", Color(0.6, 0.08, 0.1), 50.0, Vector2(-150, -265)],
+	["golpe", Color(0.62, 0.42, 0.26), 80.0, 0.0, 0, false],
+	["esquivar", Color(0.22, 0.52, 0.44), 50.0, 171.0, 1, false],
+	["bola_fuego", Color(0.85, 0.32, 0.08), 58.0, 210.0, 1, true],
+	["chidori", Color(0.16, 0.42, 0.88), 58.0, 250.0, 1, true],
+	["saltar", Color(0.38, 0.4, 0.52), 46.0, 293.0, 1, false],
+	["sharingan", Color(0.55, 0.05, 0.08), 48.0, 222.0, 2, false],
+	["fijar", Color(0.3, 0.32, 0.38), 42.0, 262.0, 2, false],
 ]
 
 var raiz: Control
 var joystick: JoystickVirtual
 var area_camara: AreaCamara
 var botones: Dictionary = {}
-var barra_vida: Barra
-var barra_chakra: Barra
-var barra_estamina: Barra
-var barra_enemigo: Barra
-var _nombre_enemigo: Label
+var retrato: Retrato
+var _enemigo_panel: Control
+var _enemigo := {"nombre": "", "vida": 1.0, "max": 1.0, "mostrado": 1.0, "visible": false}
 var _boton_nivel: Button
 var _mensaje: Label
 var _mensaje_t := 0.0
-var _banner: Label
-var _banner_sub: Label
+var _banner: Control
+var _banner_txt := ""
+var _banner_sub := ""
 var _overlay: ColorRect
 var _overlay_mat: ShaderMaterial
 var _overlay_val := 0.0
@@ -40,17 +47,24 @@ var _sellos_panel: Control
 var _sellos: Array = []
 var _sellos_t := 0.0
 var _sellos_dur := 1.0
+var _cancelar_zona: Control
+var _cancelar_activo := false
+var _cancelar_sobre := false
+var _fps: Label
 var _clima: Label
+var _margen := Rect2()     # márgenes del área segura: position = (izq, arriba), size = (der, abajo)
 var nivel := 1
 var sharingan_activo := false
+var fijado := false
 
 
 func construir() -> void:
 	layer = 10
+	Ajustes.cargar()
 	raiz = Control.new()
 	raiz.set_anchors_preset(Control.PRESET_FULL_RECT)
 	raiz.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	raiz.theme = crear_tema()
+	raiz.theme = Estilo.tema()
 	add_child(raiz)
 
 	# Viñeta roja del modo ocular.
@@ -62,8 +76,9 @@ func construir() -> void:
 uniform float intensidad = 0.0;
 void fragment() {
 	vec2 uv = UV - vec2(0.5);
-	float v = smoothstep(0.32, 0.78, length(uv * vec2(1.3, 1.0)));
-	COLOR = vec4(0.75, 0.0, 0.04, v * 0.45 * intensidad);
+	float v = smoothstep(0.3, 0.8, length(uv * vec2(1.3, 1.0)));
+	float lineas = 0.85 + 0.15 * sin(UV.y * 900.0 + TIME * 4.0);
+	COLOR = vec4(0.7, 0.0, 0.04, v * 0.5 * intensidad * lineas);
 }"""
 	_overlay_mat = ShaderMaterial.new()
 	_overlay_mat.shader = sh
@@ -76,72 +91,61 @@ void fragment() {
 	joystick = JoystickVirtual.new()
 	raiz.add_child(joystick)
 
+	_cancelar_zona = Control.new()
+	_cancelar_zona.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cancelar_zona.draw.connect(_dibujar_cancelar)
+	_cancelar_zona.visible = false
+	raiz.add_child(_cancelar_zona)
+
 	for b in BOTONES:
-		var bt := BotonAccion.new()
-		bt.configurar(b[0], Datos.texto(b[1]), b[2], b[3])
-		bt.set_meta("desplazamiento", b[4])
-		bt.pulsado.connect(func(i): accion.emit(i))
+		var bt := BotonJutsu.new()
+		bt.configurar(b[0], b[1], b[2], b[5])
+		bt.set_meta("radio_base", b[2])
+		bt.set_meta("angulo", b[3])
+		bt.set_meta("anillo", b[4])
+		bt.es_cancelar = _sobre_cancelar
+		bt.tocado.connect(_on_tocado)
+		bt.apuntando.connect(_on_apuntando)
+		bt.soltado.connect(_on_soltado)
+		bt.cancelado.connect(_on_cancelado)
 		raiz.add_child(bt)
 		botones[b[0]] = bt
 
-	barra_vida = _barra(Datos.texto("hud_vida"), Color(0.8, 0.15, 0.15), Vector2(24, 18))
-	barra_chakra = _barra(Datos.texto("hud_chakra"), Color(0.2, 0.45, 0.95), Vector2(24, 56))
-	barra_estamina = _barra(Datos.texto("hud_estamina"), Color(0.25, 0.75, 0.3), Vector2(24, 94))
-	barra_estamina.size.y = 26
-	barra_enemigo = _barra("", Color(0.75, 0.2, 0.15), Vector2.ZERO)
-	_nombre_enemigo = _etiqueta("", 22, HORIZONTAL_ALIGNMENT_CENTER)
+	retrato = Retrato.new()
+	raiz.add_child(retrato)
 
-	_clima = _etiqueta(Datos.texto("hud_lluvia"), 18, HORIZONTAL_ALIGNMENT_LEFT)
+	_enemigo_panel = Control.new()
+	_enemigo_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_enemigo_panel.draw.connect(_dibujar_enemigo)
+	raiz.add_child(_enemigo_panel)
+
+	_clima = _etiqueta(Datos.texto("hud_lluvia"), 20, HORIZONTAL_ALIGNMENT_LEFT)
 	_clima.modulate = Color(0.75, 0.85, 1.0, 0.9)
 
-	# Depuración: nivel de poder, reaparecer y volver al menú.
+	# Botones pequeños arriba a la derecha: nivel (depuración), reaparecer, ajustes y menú.
 	_boton_nivel = _boton_texto(Datos.texto("hud_nivel", [nivel]), func(): _ciclar_nivel())
-	_boton_texto(Datos.texto("hud_reaparecer"), func(): reaparecer_pedido.emit()).name = "BotonReaparecer"
-	_boton_texto(Datos.texto("hud_salir"), func(): salir_pedido.emit()).name = "BotonSalir"
+	_boton_texto(Datos.texto("hud_reaparecer"), func(): reaparecer_pedido.emit())
+	_boton_texto(Datos.texto("hud_ajustes"), func(): abrir_ajustes())
+	_boton_texto(Datos.texto("hud_salir"), func(): salir_pedido.emit())
 
 	_sellos_panel = Control.new()
 	_sellos_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_sellos_panel.draw.connect(_dibujar_sellos)
 	raiz.add_child(_sellos_panel)
 
-	_mensaje = _etiqueta("", 30, HORIZONTAL_ALIGNMENT_CENTER)
-	_banner = _etiqueta("", 52, HORIZONTAL_ALIGNMENT_CENTER)
-	_banner_sub = _etiqueta("", 26, HORIZONTAL_ALIGNMENT_CENTER)
+	_mensaje = _etiqueta("", 34, HORIZONTAL_ALIGNMENT_CENTER)
+	_mensaje.add_theme_font_override("font", Estilo.fuente_titulo())
+	_banner = Control.new()
+	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_banner.draw.connect(_dibujar_banner)
 	_banner.visible = false
-	_banner_sub.visible = false
+	raiz.add_child(_banner)
+
+	_fps = _etiqueta("", 20, HORIZONTAL_ALIGNMENT_LEFT)
+	_fps.modulate = Color(0.7, 1.0, 0.7)
 
 	get_viewport().size_changed.connect(_reordenar)
-	_reordenar()
-
-
-static func crear_tema() -> Theme:
-	var t := Theme.new()
-	t.default_font_size = 24
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0.1, 0.12, 0.16, 0.8)
-	normal.border_color = Color(1, 1, 1, 0.5)
-	normal.set_border_width_all(2)
-	normal.set_corner_radius_all(10)
-	normal.set_content_margin_all(12)
-	var hover := normal.duplicate()
-	hover.bg_color = Color(0.18, 0.2, 0.26, 0.9)
-	var pressed := normal.duplicate()
-	pressed.bg_color = Color(0.5, 0.1, 0.1, 0.9)
-	t.set_stylebox("normal", "Button", normal)
-	t.set_stylebox("hover", "Button", hover)
-	t.set_stylebox("pressed", "Button", pressed)
-	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
-	t.set_color("font_outline_color", "Label", Color(0, 0, 0, 0.9))
-	t.set_constant("outline_size", "Label", 6)
-	return t
-
-
-func _barra(txt: String, c: Color, pos: Vector2) -> Barra:
-	var b := Barra.new()
-	b.configurar(txt, c, Vector2(380, 32))
-	b.position = pos
-	raiz.add_child(b)
-	return b
+	aplicar_ajustes()
 
 
 func _etiqueta(txt: String, tam: int, alin: HorizontalAlignment) -> Label:
@@ -158,49 +162,145 @@ func _boton_texto(txt: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = txt
 	b.add_theme_font_size_override("font_size", 22)
-	b.custom_minimum_size = Vector2(130, 56)
+	b.custom_minimum_size = Vector2(126, 54)
 	b.focus_mode = Control.FOCUS_NONE
 	b.pressed.connect(cb)
-	b.set_meta("depuracion", true)
+	b.pressed.connect(func(): Ajustes.vibrar(15))
+	b.set_meta("superior", true)
 	raiz.add_child(b)
 	return b
 
 
-func _reordenar() -> void:
+## Aplica tamaño/transparencia de botones y recalcula el diseño.
+func aplicar_ajustes() -> void:
+	for id in botones.keys():
+		var b: BotonJutsu = botones[id]
+		b.fijar_radio(float(b.get_meta("radio_base")) * Ajustes.tamano_botones)
+		b.opacidad = Ajustes.opacidad_botones
+	_fps.visible = Ajustes.mostrar_fps
+	_reordenar()
+
+
+## Márgenes de la zona segura (cámara perforada, bordes curvos) en coordenadas de la interfaz.
+func _calcular_margenes() -> void:
 	var t := raiz.get_viewport_rect().size
-	area_camara.position = Vector2(t.x * 0.5, 0)
-	area_camara.size = Vector2(t.x * 0.5, t.y)
+	var minimo := 18.0
+	var izq := minimo
+	var der := minimo
+	var arr := minimo
+	var aba := minimo
+	if DisplayServer.get_name() != "headless":
+		var seguro := Rect2(DisplayServer.get_display_safe_area())
+		var ventana := Vector2(DisplayServer.window_get_size())
+		if seguro.size.x > 0 and ventana.x > 0:
+			var esc := t / ventana
+			izq = maxf(minimo, seguro.position.x * esc.x)
+			arr = maxf(minimo, seguro.position.y * esc.y)
+			der = maxf(minimo, (ventana.x - seguro.end.x) * esc.x)
+			aba = maxf(minimo, (ventana.y - seguro.end.y) * esc.y)
+	# Bordes curvos: un poco más de aire a los lados.
+	_margen = Rect2(Vector2(izq + 6, arr), Vector2(der + 6, aba))
+
+
+func _reordenar() -> void:
+	_calcular_margenes()
+	var t := raiz.get_viewport_rect().size
+	var izq := _margen.position.x
+	var arr := _margen.position.y
+	var der := _margen.size.x
+	var aba := _margen.size.y
+	area_camara.position = Vector2(t.x * 0.45, 0)
+	area_camara.size = Vector2(t.x * 0.55, t.y)
 	joystick.position = Vector2(0, t.y * 0.3)
 	joystick.size = Vector2(t.x * 0.45, t.y * 0.7)
-	joystick.colocar_reposo(Vector2(170, joystick.size.y - 150))
-	var principal := Vector2(t.x - 120, t.y - 115)
+	joystick.colocar_reposo(Vector2(izq + 150, joystick.size.y - aba - 130))
+	# Arco de botones alrededor del golpe (esquina inferior derecha).
+	var s := Ajustes.tamano_botones
+	var g: BotonJutsu = botones["golpe"]
+	var centro := Vector2(t.x - der - g.radio - 18 * s, t.y - aba - g.radio - 14 * s)
 	for id in botones.keys():
-		var b: BotonAccion = botones[id]
-		b.centrar_en(principal + (b.get_meta("desplazamiento") as Vector2))
-	barra_enemigo.size = Vector2(minf(360, t.x * 0.28), 30)
-	barra_enemigo.position = Vector2(minf((t.x - barra_enemigo.size.x) * 0.5, t.x - 3 * 138 - 30 - barra_enemigo.size.x), 44)
-	_nombre_enemigo.position = Vector2(barra_enemigo.position.x, 8)
-	_nombre_enemigo.size = Vector2(barra_enemigo.size.x, 32)
-	_clima.position = Vector2(26, 128)
-	# Botones de depuración arriba a la derecha.
-	var x := t.x - 16
-	var deps: Array = []
+		var b: BotonJutsu = botones[id]
+		var anillo := int(b.get_meta("anillo"))
+		if anillo == 0:
+			b.centrar_en(centro)
+			continue
+		var r := (g.radio + b.radio + 38 * s) if anillo == 1 else (g.radio + 215 * s)
+		var a := deg_to_rad(float(b.get_meta("angulo")))
+		var p := centro + Vector2(cos(a), sin(a)) * r
+		p.x = minf(p.x, t.x - der - b.radio - 4)
+		b.centrar_en(p)
+	# Zona de cancelar: a la izquierda del arco.
+	var rc := 58.0 * s
+	_cancelar_zona.size = Vector2(rc * 2, rc * 2)
+	_cancelar_zona.position = centro + Vector2(-g.radio - 330 * s, -g.radio - 150 * s) - Vector2(rc, rc)
+	_cancelar_zona.set_meta("radio", rc)
+	retrato.position = Vector2(izq, arr)
+	var ancho_e := minf(380, t.x * 0.28)
+	_enemigo_panel.size = Vector2(ancho_e, 64)
+	_enemigo_panel.position = Vector2((t.x - ancho_e) * 0.5, arr)
+	_clima.position = Vector2(izq + 4, arr + 130)
+	_fps.position = Vector2(izq + 4, arr + 156)
+	var x := t.x - der
+	var sup: Array = []
 	for n in raiz.get_children():
-		if n is Button and n.has_meta("depuracion"):
-			deps.append(n)
-	deps.reverse()
-	for b in deps:
-		x -= 138
-		b.position = Vector2(x, 14)
-		b.size = Vector2(130, 56)
-	_sellos_panel.position = Vector2(t.x * 0.5 - 300, t.y * 0.66)
-	_sellos_panel.size = Vector2(600, 90)
-	_mensaje.position = Vector2(0, t.y * 0.22)
-	_mensaje.size = Vector2(t.x, 40)
-	_banner.position = Vector2(0, t.y * 0.36)
-	_banner.size = Vector2(t.x, 70)
-	_banner_sub.position = Vector2(0, t.y * 0.36 + 72)
-	_banner_sub.size = Vector2(t.x, 40)
+		if n is Button and n.has_meta("superior"):
+			sup.append(n)
+	sup.reverse()
+	for b in sup:
+		x -= 134
+		b.position = Vector2(x, arr)
+		b.size = Vector2(126, 54)
+	# Si el panel enemigo choca con el retrato o los botones, va debajo de los botones superiores.
+	var libre_izq := retrato.position.x + retrato.size.x + 10
+	if _enemigo_panel.position.x < libre_izq or _enemigo_panel.position.x + ancho_e > x - 8:
+		_enemigo_panel.position = Vector2(t.x - der - ancho_e, arr + 64)
+	_sellos_panel.position = Vector2(t.x * 0.5 - 320, t.y * 0.64)
+	_sellos_panel.size = Vector2(640, 110)
+	_mensaje.position = Vector2(0, t.y * 0.24)
+	_mensaje.size = Vector2(t.x, 50)
+	_banner.position = Vector2(t.x * 0.5 - 340, t.y * 0.34)
+	_banner.size = Vector2(680, 130)
+
+
+func _sobre_cancelar(pos_global: Vector2) -> bool:
+	var c := _cancelar_zona.position + _cancelar_zona.size * 0.5
+	return pos_global.distance_to(c) <= float(_cancelar_zona.get_meta("radio", 58.0)) * 1.25
+
+
+func _on_tocado(id: String) -> void:
+	if id == "fijar":
+		fijar_pedido.emit()
+	else:
+		accion.emit(id)
+
+
+func _on_apuntando(id: String, arrastre: Vector2, sobre: bool) -> void:
+	_cancelar_activo = true
+	_cancelar_sobre = sobre
+	_cancelar_zona.visible = true
+	_cancelar_zona.queue_redraw()
+	apuntar.emit(id, arrastre, sobre)
+
+
+func _on_soltado(id: String, arrastre: Vector2) -> void:
+	_cancelar_zona.visible = false
+	soltar.emit(id, arrastre)
+
+
+func _on_cancelado(id: String) -> void:
+	_cancelar_zona.visible = false
+	cancelar.emit(id)
+	mensaje(Datos.texto("msg_cancelado"), 0.8)
+
+
+func _dibujar_cancelar() -> void:
+	var r := float(_cancelar_zona.get_meta("radio", 58.0))
+	var c := Vector2(r, r)
+	var col := Color(0.85, 0.1, 0.12, 0.9) if _cancelar_sobre else Color(0.2, 0.22, 0.26, 0.8)
+	_cancelar_zona.draw_circle(c, r * (1.12 if _cancelar_sobre else 1.0), col)
+	_cancelar_zona.draw_arc(c, r, 0, TAU, 40, Color(1, 1, 1, 0.8), 3.0, true)
+	Iconos.cancelar(_cancelar_zona, c - Vector2(0, 8), r * 0.5)
+	Estilo.texto(_cancelar_zona, Vector2(0, c.y + r * 0.72), Datos.texto("hud_cancelar"), 18, Color.WHITE, r * 2, HORIZONTAL_ALIGNMENT_CENTER)
 
 
 func _ciclar_nivel() -> void:
@@ -215,33 +315,63 @@ func poner_nivel(n: int) -> void:
 	_boton_nivel.text = Datos.texto("hud_nivel", [nivel])
 
 
+func abrir_ajustes() -> void:
+	var m := MenuAjustes.new()
+	raiz.add_child(m)
+	m.construir()
+	m.cambiado.connect(aplicar_ajustes)
+	m.reinicio_pedido.connect(func(): reinicio_pedido.emit())
+
+
 ## Refresca barras y botones con la instantánea del servidor.
 func actualizar(j: Dictionary, enemigo: Dictionary) -> void:
-	barra_vida.fijar(j["vida"], j["vida_max"])
-	barra_chakra.fijar(j["chakra"], j["chakra_max"])
-	barra_estamina.fijar(j["estamina"], j["estamina_max"])
+	retrato.fijar("vida", j["vida"], j["vida_max"])
+	retrato.fijar("chakra", j["chakra"], j["chakra_max"])
+	retrato.fijar("estamina", j["estamina"], j["estamina_max"])
 	sharingan_activo = bool(j["sharingan"])
+	retrato.sharingan = sharingan_activo
 	var rec: Dictionary = j["recargas"]
 	var attrs: Dictionary = Datos.personaje(str(j["plantilla"])).get("atributos", {})
 	for id in botones.keys():
-		var b: BotonAccion = botones[id]
+		var b: BotonJutsu = botones[id]
+		if id == "fijar":
+			b.actualizar(0.0, 1.0, false, fijado, 0.0)
+			continue
 		var total := float(Datos.jutsu(id).get("recarga", 1.0))
 		var sin_recurso := false
+		var costo := 0.0
 		if id in ["bola_fuego", "chidori"]:
-			sin_recurso = float(j["chakra"]) < Combate.costo_chakra(id, int(j["nivel"]), attrs)
+			costo = Combate.costo_chakra(id, int(j["nivel"]), attrs)
+			sin_recurso = float(j["chakra"]) < costo
 		elif id == "sharingan":
-			sin_recurso = not sharingan_activo and float(j["chakra"]) < Combate.costo_chakra(id, 1, attrs)
+			costo = Combate.costo_chakra(id, 1, attrs) if not sharingan_activo else 0.0
+			sin_recurso = not sharingan_activo and float(j["chakra"]) < costo
 		elif id == "esquivar":
 			sin_recurso = float(j["estamina"]) < float(Datos.jutsu(id).get("costo_estamina", 0))
-		b.actualizar(float(rec.get(id, 0.0)), total, sin_recurso, id == "sharingan" and sharingan_activo)
+		b.actualizar(float(rec.get(id, 0.0)), total, sin_recurso, id == "sharingan" and sharingan_activo, costo)
 	if enemigo.is_empty():
-		barra_enemigo.visible = false
-		_nombre_enemigo.visible = false
+		_enemigo["visible"] = false
 	else:
-		barra_enemigo.visible = true
-		_nombre_enemigo.visible = true
-		_nombre_enemigo.text = str(Datos.personaje(str(enemigo["plantilla"])).get("nombre", ""))
-		barra_enemigo.fijar(enemigo["vida"], enemigo["vida_max"])
+		_enemigo["visible"] = true
+		_enemigo["nombre"] = str(Datos.personaje(str(enemigo["plantilla"])).get("nombre", ""))
+		_enemigo["vida"] = float(enemigo["vida"])
+		_enemigo["max"] = float(enemigo["vida_max"])
+
+
+func _dibujar_enemigo() -> void:
+	if not _enemigo["visible"]:
+		return
+	var r := Rect2(Vector2.ZERO, _enemigo_panel.size)
+	Estilo.dibujar_marco(_enemigo_panel, r, 0.8, false)
+	Estilo.texto(_enemigo_panel, Vector2(14, 26), str(_enemigo["nombre"]), 20, Estilo.PAPEL, r.size.x - 28, HORIZONTAL_ALIGNMENT_LEFT, Estilo.fuente_titulo(), 5)
+	var barra := Rect2(Vector2(14, 34), Vector2(r.size.x - 28, 18))
+	_enemigo_panel.draw_rect(barra, Color(0.02, 0.02, 0.03, 0.9))
+	var frac := clampf(float(_enemigo["vida"]) / maxf(float(_enemigo["max"]), 1.0), 0.0, 1.0)
+	_enemigo_panel.draw_rect(Rect2(barra.position, Vector2(barra.size.x * float(_enemigo["mostrado"]), barra.size.y)), Color(1, 0.9, 0.8, 0.5))
+	_enemigo_panel.draw_rect(Rect2(barra.position, Vector2(barra.size.x * frac, barra.size.y)), Color(0.82, 0.16, 0.14))
+	_enemigo_panel.draw_rect(Rect2(barra.position, Vector2(barra.size.x * frac, barra.size.y * 0.4)), Color(1, 0.6, 0.5, 0.35))
+	_enemigo_panel.draw_rect(barra, Estilo.ACERO_BORDE, false, 1.5)
+	Estilo.texto(_enemigo_panel, Vector2(barra.position.x, barra.position.y + 15), "%d / %d" % [int(ceil(float(_enemigo["vida"]))), int(_enemigo["max"])], 17, Color.WHITE, barra.size.x - 6, HORIZONTAL_ALIGNMENT_RIGHT)
 
 
 func mostrar_sellos(lista: Array, duracion: float) -> void:
@@ -258,10 +388,17 @@ func mensaje(txt: String, segundos := 1.8) -> void:
 
 
 func banner(txt: String, sub := "") -> void:
-	_banner.text = txt
-	_banner_sub.text = sub
+	_banner_txt = txt
+	_banner_sub = sub
 	_banner.visible = txt != ""
-	_banner_sub.visible = sub != ""
+	_banner.queue_redraw()
+
+
+func _dibujar_banner() -> void:
+	var r := Rect2(Vector2.ZERO, _banner.size)
+	Estilo.dibujar_pergamino(_banner, r, 0.95)
+	Estilo.texto(_banner, Vector2(0, 66), _banner_txt, 48, Color(0.55, 0.06, 0.08), r.size.x, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_titulo(), 0)
+	Estilo.texto(_banner, Vector2(0, 108), _banner_sub, 24, Color(0.2, 0.15, 0.12), r.size.x, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_ui(), 0)
 
 
 func _process(delta: float) -> void:
@@ -273,6 +410,12 @@ func _process(delta: float) -> void:
 		_overlay_val = move_toward(_overlay_val, objetivo, delta * 3.0)
 		_overlay_mat.set_shader_parameter("intensidad", _overlay_val)
 	_overlay.visible = _overlay_val > 0.001
+	if _enemigo["visible"]:
+		var frac := clampf(float(_enemigo["vida"]) / maxf(float(_enemigo["max"]), 1.0), 0.0, 1.0)
+		_enemigo["mostrado"] = maxf(frac, move_toward(float(_enemigo["mostrado"]), frac, delta * 0.5))
+	_enemigo_panel.queue_redraw()
+	if _fps.visible:
+		_fps.text = "FPS %d" % Engine.get_frames_per_second()
 	if not _sellos.is_empty():
 		_sellos_t += delta
 		_sellos_panel.queue_redraw()
@@ -286,11 +429,10 @@ func _dibujar_sellos() -> void:
 	if _sellos.is_empty():
 		return
 	var n := _sellos.size()
-	var tam := 74.0
-	var sep := 12.0
+	var tam := 72.0
+	var sep := 14.0
 	var ancho := n * tam + (n - 1) * sep
 	var x0 := (_sellos_panel.size.x - ancho) * 0.5
-	var f := raiz.get_theme_default_font()
 	var progreso := _sellos_t / _sellos_dur * n
 	var alfa := clampf(1.0 - (_sellos_t - _sellos_dur) / 0.5, 0.0, 1.0)
 	for i in n:
@@ -298,14 +440,16 @@ func _dibujar_sellos() -> void:
 		var datos: Dictionary = Datos.mundo.get("sellos", {}).get(id, {})
 		var col := Datos.color(str(datos.get("color", "#cccccc")))
 		var hecho := progreso >= float(i)
-		var r := Rect2(Vector2(x0 + i * (tam + sep), 0), Vector2(tam, tam))
-		var fondo := col if hecho else col.darkened(0.7)
-		fondo.a = 0.9 * alfa
-		_sellos_panel.draw_rect(r, fondo)
-		_sellos_panel.draw_rect(r, Color(1, 1, 1, (0.9 if hecho else 0.3) * alfa), false, 3.0)
-		# Glifo: inicial grande del sello
+		var actual := hecho and progreso < float(i + 1)
+		var c := Vector2(x0 + i * (tam + sep) + tam * 0.5, tam * 0.5)
+		var r := tam * 0.5 * (1.15 if actual else 1.0)
+		# Placa de rombo metálico.
+		var rombo := PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)])
+		var fondo := col if hecho else col.darkened(0.75)
+		_sellos_panel.draw_colored_polygon(rombo, Color(fondo.r, fondo.g, fondo.b, 0.92 * alfa))
+		var cerrado := rombo.duplicate()
+		cerrado.append(rombo[0])
+		_sellos_panel.draw_polyline(cerrado, Color(1, 1, 1, (0.95 if hecho else 0.3) * alfa), 3.0, true)
 		var nombre := str(datos.get("nombre", id))
-		_sellos_panel.draw_string_outline(f, Vector2(r.position.x, r.position.y + 50), nombre.substr(0, 1), HORIZONTAL_ALIGNMENT_CENTER, tam, 44, 6, Color(0, 0, 0, alfa))
-		_sellos_panel.draw_string(f, Vector2(r.position.x, r.position.y + 50), nombre.substr(0, 1), HORIZONTAL_ALIGNMENT_CENTER, tam, 44, Color(1, 1, 1, alfa))
-		_sellos_panel.draw_string_outline(f, Vector2(r.position.x - 10, r.position.y + tam + 22), nombre, HORIZONTAL_ALIGNMENT_CENTER, tam + 20, 18, 5, Color(0, 0, 0, alfa))
-		_sellos_panel.draw_string(f, Vector2(r.position.x - 10, r.position.y + tam + 22), nombre, HORIZONTAL_ALIGNMENT_CENTER, tam + 20, 18, Color(1, 1, 1, alfa))
+		Estilo.texto(_sellos_panel, Vector2(c.x - tam * 0.5, c.y + 15), nombre.substr(0, 1), 38, Color(1, 1, 1, alfa), tam, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_titulo(), 6)
+		Estilo.texto(_sellos_panel, Vector2(c.x - tam * 0.5 - 10, tam + 26), nombre, 19, Color(1, 1, 1, alfa), tam + 20, HORIZONTAL_ALIGNMENT_CENTER)

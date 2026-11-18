@@ -11,6 +11,7 @@ static var jutsus: Dictionary = {}
 static var personajes: Dictionary = {}
 static var escenario: Dictionary = {}
 static var textos: Dictionary = {}
+static var graficos: Dictionary = {}
 static var _cargado := false
 
 
@@ -23,6 +24,7 @@ static func cargar(forzar := false) -> void:
 	personajes = leer_json("personajes.json")
 	escenario = leer_json("escenario.json")
 	textos = leer_json("textos.json")
+	graficos = leer_json("graficos.json")
 	_cargado = true
 
 

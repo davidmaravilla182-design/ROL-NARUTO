@@ -12,6 +12,8 @@ const MAX_MARCAS := 24
 
 var camara: CamaraTercera
 var escenario: Escenario
+var sonidos: Sonidos
+var _mult_particulas := 1.0
 var _marcas: Array = []
 var _segmento_malla: BoxMesh
 
@@ -19,6 +21,7 @@ var _segmento_malla: BoxMesh
 func _ready() -> void:
 	_segmento_malla = BoxMesh.new()
 	_segmento_malla.size = Vector3(1, 1, 1)
+	_mult_particulas = float(Ajustes.g("particulas", 1.0))
 
 
 # ------------------------------------------------------------ utilidades
@@ -26,7 +29,7 @@ func _ready() -> void:
 ## Crea un sistema de partículas GPU configurable.
 func particulas(cfg: Dictionary) -> GPUParticles3D:
 	var p := GPUParticles3D.new()
-	p.amount = maxi(int(cfg.get("cantidad", 20)), 1)
+	p.amount = maxi(int(float(cfg.get("cantidad", 20)) * _mult_particulas), 1)
 	p.lifetime = float(cfg.get("vida", 0.6))
 	p.one_shot = bool(cfg.get("una_vez", false))
 	p.explosiveness = float(cfg.get("explosividad", 0.0))
@@ -106,9 +109,10 @@ func luz_temporal(pos: Vector3, color: Color, energia: float, rango: float, dura
 
 
 func _borrar_en(n: Node, segundos: float) -> void:
-	get_tree().create_timer(segundos).timeout.connect(func():
-		if is_instance_valid(n):
-			n.queue_free())
+	# Tween ligado a este nodo: si la escena se descarga, se cancela sin errores.
+	var tw := create_tween()
+	tw.tween_interval(segundos)
+	tw.tween_callback(n.queue_free)
 
 
 func sacudir_desde(pos: Vector3, fuerza: float) -> void:
@@ -146,7 +150,7 @@ func marca_suelo(pos: Vector3, radio: float, color: Color, grietas := false) -> 
 			g.mesh = _segmento_malla
 			g.material_override = mat_g
 			g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			g.scale = Vector3(rng.randf_range(0.04, 0.1) * (1.0 + radio * 0.1), 0.01, largo)
+			g.scale = Vector3(rng.randf_range(0.03, 0.06), 0.01, largo * 0.8)
 			g.rotation = Vector3(0, a, 0)
 			g.position = Vector3(sin(a), 0, cos(a)) * largo * 0.5 + Vector3(0, 0.004, 0)
 			nodo.add_child(g)
@@ -194,6 +198,29 @@ func rayo_zigzag(padre: Node3D, desde: Vector3, hasta: Vector3, grosor: float, m
 
 # ------------------------------------------------------------ proyectiles
 
+func _sonido(nombre: String, vol := 0.0, tono := 1.0) -> void:
+	if sonidos != null:
+		sonidos.tocar(nombre, vol, tono)
+
+
+## Esfera de fuego con shader de ruido (núcleo brillante, cuerpo naranja, borde rojo).
+func esfera_fuego(radio: float, intensidad := 3.0) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = radio
+	sm.height = radio * 2.0
+	sm.radial_segments = 24
+	sm.rings = 12
+	mi.mesh = sm
+	var mat := Shaders.material("fuego")
+	mat.set_shader_parameter("intensidad", intensidad)
+	mat.set_shader_parameter("escala_ruido", 1.0 / maxf(radio, 0.1))
+	mat.set_shader_parameter("desplazamiento", 0.22)
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return mi
+
+
 ## Visual de un proyectil del servidor. Devuelve el nodo que el cliente moverá.
 func crear_proyectil(datos: Dictionary) -> Node3D:
 	var jutsu := str(datos["jutsu"])
@@ -204,47 +231,60 @@ func crear_proyectil(datos: Dictionary) -> Node3D:
 	add_child(nodo)
 	nodo.global_position = datos["pos"]
 	if jutsu == "bola_fuego":
-		var exterior := Materiales.esfera(radio, Materiales.transparente(Color(1.0, 0.35, 0.05, 0.55), true), 12)
-		nodo.add_child(exterior)
-		var nucleo := Materiales.esfera(radio * 0.7, Materiales.emisivo(COLOR_FUEGO_NUCLEO, 3.0 + nivel), 10)
+		var cuerpo := esfera_fuego(radio, 1.5 + nivel * 0.25)
+		nodo.add_child(cuerpo)
+		var nucleo := Materiales.esfera(radio * 0.45, Materiales.emisivo(COLOR_FUEGO_NUCLEO, 2.5 + nivel * 0.5), 12)
 		nodo.add_child(nucleo)
+		if Ajustes.g("distorsion_calor", false):
+			var calor := MeshInstance3D.new()
+			var sm := SphereMesh.new()
+			sm.radius = radio * 1.6
+			sm.height = radio * 3.2
+			sm.radial_segments = 16
+			sm.rings = 8
+			calor.mesh = sm
+			calor.material_override = Shaders.material("calor")
+			calor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			nodo.add_child(calor)
 		var llamas := particulas({
-			"cantidad": int(nd.get("particulas", 40)), "vida": 0.45 + nivel * 0.15, "radio": radio * 0.9,
-			"vel_min": 0.5, "vel_max": 1.5 + nivel, "dispersion": 180.0, "gravedad": Vector3(0, 2.5, 0),
-			"tam_min": radio * 0.7, "tam_max": radio * 1.4, "color": Color(1.0, 0.5, 0.12, 0.6), "color_fin": Color(0.6, 0.08, 0.0, 0.0),
+			"cantidad": int(nd.get("particulas", 40)), "vida": 0.4 + nivel * 0.15, "radio": radio * 0.8,
+			"vel_min": 0.5, "vel_max": 1.5 + nivel, "dispersion": 180.0, "gravedad": Vector3(0, 3.0, 0),
+			"tam_min": radio * 0.5, "tam_max": radio * 1.1, "color": Color(1.0, 0.55, 0.15, 0.55), "color_fin": Color(0.6, 0.08, 0.0, 0.0),
 		})
 		nodo.add_child(llamas)
 		llamas.emitting = true
-		if nivel >= 2:
-			var humo := particulas({
-				"cantidad": int(nd.get("particulas", 40)) / 3, "vida": 1.2, "radio": radio,
-				"vel_min": 0.2, "vel_max": 1.0, "gravedad": Vector3(0, 1.5, 0), "tam_min": radio, "tam_max": radio * 2.0,
-				"color": Color(0.15, 0.13, 0.12, 0.45), "aditivo": false,
-			})
-			nodo.add_child(humo)
-			humo.emitting = true
-		if nivel >= 3:
-			var brasas := particulas({
-				"cantidad": 80, "vida": 1.0, "radio": radio, "vel_min": 2.0, "vel_max": 6.0,
-				"gravedad": Vector3(0, -4, 0), "tam_min": 0.05, "tam_max": 0.12, "color": Color(1, 0.8, 0.3), "escala_fin": 0.2,
-			})
-			nodo.add_child(brasas)
-			brasas.emitting = true
+		var humo := particulas({
+			"cantidad": maxi(int(nd.get("particulas", 40)) / 3, 10), "vida": 1.4, "radio": radio,
+			"vel_min": 0.2, "vel_max": 1.0, "gravedad": Vector3(0, 1.8, 0), "tam_min": radio * 0.9, "tam_max": radio * 2.0,
+			"color": Color(0.12, 0.1, 0.1, 0.4), "aditivo": false, "escala_inicio": 0.4, "escala_fin": 1.0,
+		})
+		nodo.add_child(humo)
+		humo.emitting = true
+		var brasas := particulas({
+			"cantidad": 20 + nivel * 30, "vida": 0.9, "radio": radio, "vel_min": 1.5, "vel_max": 4.0 + nivel * 2.0,
+			"gravedad": Vector3(0, -3, 0), "tam_min": 0.04, "tam_max": 0.09, "color": Color(1, 0.75, 0.3), "escala_fin": 0.2,
+		})
+		nodo.add_child(brasas)
+		brasas.emitting = true
 		var luz := OmniLight3D.new()
 		luz.light_color = COLOR_FUEGO
 		luz.light_energy = float(nd.get("luz", 3.0))
 		luz.omni_range = float(nd.get("luz_rango", 6.0))
 		nodo.add_child(luz)
 		nodo.set_meta("pulso", nucleo)
+		_sonido("fuego", -2.0 + nivel * 2.0, 1.2 - nivel * 0.15)
 	else:
-		var gota := Materiales.esfera(radio, Materiales.emisivo(COLOR_AGUA, 0.7), 8)
+		var gota := Materiales.esfera(radio, Materiales.emisivo(COLOR_AGUA, 0.9), 10)
 		nodo.add_child(gota)
+		var brillo := Materiales.esfera(radio * 1.4, Materiales.transparente(Color(0.5, 0.75, 1.0, 0.25), true), 10)
+		nodo.add_child(brillo)
 		var estela := particulas({
 			"cantidad": int(nd.get("particulas", 20)), "vida": 0.3, "radio": radio * 0.5,
 			"vel_min": 0.1, "vel_max": 0.6, "tam_min": radio * 0.5, "tam_max": radio * 0.8, "color": Color(0.4, 0.65, 1.0, 0.35),
 		})
 		nodo.add_child(estela)
 		estela.emitting = true
+		_sonido("agua", -8.0, 1.5)
 	return nodo
 
 
@@ -255,45 +295,54 @@ func explosion(ev: Dictionary) -> void:
 	var pos: Vector3 = ev["pos"]
 	var r := float(ev["radio"])
 	if jutsu == "bola_fuego":
+		# Bola de fuego que se expande y se apaga (shader de ruido).
+		var bola := esfera_fuego(r * 0.4, 1.8 + nivel * 0.3)
+		add_child(bola)
+		bola.global_position = pos
+		var mat: ShaderMaterial = bola.material_override
+		var tw := create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(bola, "scale", Vector3.ONE * 2.2, 0.55 + nivel * 0.15).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_EXPO)
+		tw.tween_method(func(v): mat.set_shader_parameter("opacidad", v), 1.0, 0.0, 0.6 + nivel * 0.2).set_delay(0.1)
+		tw.chain().tween_callback(bola.queue_free)
 		var cant := int(nd.get("particulas", 40))
-		rafaga(pos, {"cantidad": cant * 2, "vida": 0.5 + nivel * 0.25, "radio": r * 0.3, "vel_min": r * 1.2, "vel_max": r * 3.0,
-			"frenado": r * 2.0, "tam_min": r * 0.4, "tam_max": r * 0.9, "color": Color(1.0, 0.55, 0.15, 0.6), "color_fin": Color(0.7, 0.1, 0.0, 0.0)})
-		rafaga(pos, {"cantidad": cant, "vida": 1.6 + nivel * 0.4, "radio": r * 0.5, "vel_min": 0.5, "vel_max": r * 0.8,
-			"gravedad": Vector3(0, 2.0, 0), "tam_min": r * 0.6, "tam_max": r * 1.2, "color": Color(0.12, 0.1, 0.1, 0.55), "aditivo": false, "explosividad": 0.6})
-		if nivel >= 2:
-			rafaga(pos, {"cantidad": cant, "vida": 1.2, "radio": r * 0.2, "vel_min": 4.0, "vel_max": 10.0 + nivel * 4.0,
-				"gravedad": Vector3(0, -9, 0), "tam_min": 0.06, "tam_max": 0.15, "color": Color(1, 0.75, 0.3), "escala_fin": 0.3})
+		rafaga(pos, {"cantidad": cant, "vida": 0.5 + nivel * 0.2, "radio": r * 0.3, "vel_min": r * 1.0, "vel_max": r * 2.4,
+			"frenado": r * 2.0, "tam_min": r * 0.3, "tam_max": r * 0.6, "color": Color(1.0, 0.5, 0.12, 0.45), "color_fin": Color(0.6, 0.08, 0.0, 0.0)})
+		rafaga(pos, {"cantidad": cant, "vida": 1.8 + nivel * 0.5, "radio": r * 0.5, "vel_min": 0.5, "vel_max": r * 0.7,
+			"gravedad": Vector3(0, 2.0, 0), "tam_min": r * 0.5, "tam_max": r * 1.1, "color": Color(0.1, 0.09, 0.09, 0.5), "aditivo": false,
+			"explosividad": 0.6, "escala_inicio": 0.3, "escala_fin": 1.0})
+		rafaga(pos, {"cantidad": 20 + cant / 2, "vida": 1.3, "radio": r * 0.2, "vel_min": 4.0, "vel_max": 9.0 + nivel * 4.0,
+			"gravedad": Vector3(0, -9, 0), "tam_min": 0.05, "tam_max": 0.12, "color": Color(1, 0.75, 0.3), "escala_fin": 0.3})
 		if nivel >= 3:
-			# Anillo de fuego que se expande por el suelo y llamas que quedan ardiendo.
 			var suelo: Vector3 = ev["suelo"]
-			rafaga(suelo + Vector3(0, 0.3, 0), {"cantidad": 200, "vida": 0.9, "radio": 0.5, "direccion": Vector3(1, 0, 0), "dispersion": 180.0,
-				"vel_min": 10.0, "vel_max": 16.0, "frenado": 10.0, "tam_min": 1.0, "tam_max": 2.0, "color": Color(1.0, 0.5, 0.1, 0.9)})
+			rafaga(suelo + Vector3(0, 0.3, 0), {"cantidad": 160, "vida": 0.9, "radio": 0.5, "direccion": Vector3(1, 0, 0), "dispersion": 180.0,
+				"vel_min": 10.0, "vel_max": 16.0, "frenado": 10.0, "tam_min": 0.8, "tam_max": 1.6, "color": Color(1.0, 0.5, 0.1, 0.6)})
 			for i in 6:
 				var a := TAU * i / 6.0
-				var fp := suelo + Vector3(cos(a), 0, sin(a)) * r * 0.45
-				var fuego := particulas({"cantidad": 24, "vida": 0.7, "radio": 0.5, "vel_min": 0.5, "vel_max": 1.5,
-					"gravedad": Vector3(0, 3, 0), "tam_min": 0.5, "tam_max": 1.0, "color": Color(1, 0.5, 0.1, 0.8)})
-				add_child(fuego)
-				fuego.global_position = fp
-				fuego.emitting = true
-				_borrar_en(fuego, 5.0)
-				get_tree().create_timer(4.0).timeout.connect(func():
-					if is_instance_valid(fuego):
-						fuego.emitting = false)
+				var llama := esfera_fuego(0.6, 2.5)
+				add_child(llama)
+				llama.global_position = suelo + Vector3(cos(a), 0.3, sin(a)) * r * 0.45
+				llama.scale = Vector3(1.0, 1.8, 1.0)
+				var tw2 := create_tween()
+				tw2.tween_interval(3.0)
+				tw2.tween_property(llama, "scale", Vector3(0.01, 0.01, 0.01), 1.0)
+				tw2.tween_callback(llama.queue_free)
 			if escenario != null:
-				escenario.destello(COLOR_FUEGO, 3.0, 0.7)
-		luz_temporal(pos, COLOR_FUEGO, float(nd.get("luz", 3.0)) * 2.0, float(nd.get("luz_rango", 6.0)) * 1.3, 0.5 + nivel * 0.25)
+				escenario.destello(COLOR_FUEGO, 2.0, 0.8)
+		luz_temporal(pos, COLOR_FUEGO, float(nd.get("luz", 3.0)) * 1.6, float(nd.get("luz_rango", 6.0)) * 1.3, 0.5 + nivel * 0.3)
 		sacudir_desde(pos, float(nd.get("sacudida", 0.3)))
 		marca_suelo(ev["suelo"], float(nd.get("marca", 1.0)) * float(ev.get("escala", 1.0)), Color(0.05, 0.03, 0.02, 0.85))
+		_sonido("explosion", -6.0 + nivel * 3.0, 1.15 - nivel * 0.12)
 	else:
 		rafaga(pos, {"cantidad": 24, "vida": 0.5, "radio": 0.2, "vel_min": 2.0, "vel_max": 5.0, "gravedad": Vector3(0, -9, 0),
-			"tam_min": 0.08, "tam_max": 0.2, "color": Color(0.6, 0.8, 1.0, 0.9)})
+			"tam_min": 0.05, "tam_max": 0.12, "color": Color(0.6, 0.8, 1.0, 0.8)})
 		sacudir_desde(pos, float(nd.get("sacudida", 0.1)))
+		_sonido("chapoteo", -4.0, 0.8)
 
 
 # ------------------------------------------------------------ rayo (embiste)
 
-## Carga del rayo en la mano: chispas, arcos y luz que crecen con el nivel.
+## Carga del rayo en la mano: rayos ramificados, chispas, luz y sonido de "pájaros".
 func crear_carga_rayo(pv: PersonajeVisual, nivel: int) -> Node3D:
 	var nd := Datos.nivel_jutsu("chidori", nivel)
 	var nodo := CargaRayo.new()
@@ -309,40 +358,70 @@ func crear_carga_rayo(pv: PersonajeVisual, nivel: int) -> Node3D:
 	return nodo
 
 
+## Rayos ramificados que se ven un instante y desaparecen.
+func rayos_fugaces(pares: Array, grosor: float, duracion: float, ramas := 2) -> void:
+	var r := Rayos.new()
+	add_child(r)
+	for par in pares:
+		r.agregar_rayo(par[0], par[1], grosor, ramas, 0.28)
+	if camara != null:
+		r.dibujar(camara.global_position)
+	var tw := create_tween()
+	tw.tween_interval(duracion * 0.5)
+	tw.tween_callback(func():
+		r.limpiar()
+		for par in pares:
+			r.agregar_rayo(par[0], par[1], grosor * 0.7, ramas, 0.32)
+		if camara != null and is_instance_valid(r):
+			r.dibujar(camara.global_position))
+	tw.tween_interval(duracion * 0.5)
+	tw.tween_callback(r.queue_free)
+
+
 func impacto_rayo(pos: Vector3, nivel: int) -> void:
 	var nd := Datos.nivel_jutsu("chidori", nivel)
-	rafaga(pos, {"cantidad": int(nd.get("particulas", 50)) * 2, "vida": 0.35 + nivel * 0.1, "radio": 0.2, "vel_min": 6.0, "vel_max": 14.0 + nivel * 6.0,
-		"frenado": 8.0, "tam_min": 0.05, "tam_max": 0.12, "color": COLOR_RAYO_NUCLEO, "color_fin": Color(0.3, 0.6, 1.0, 0.0), "estirado": true, "tam_quad": Vector2(0.4, 2.5)})
+	rafaga(pos, {"cantidad": int(nd.get("particulas", 50)), "vida": 0.35 + nivel * 0.1, "radio": 0.2, "vel_min": 6.0, "vel_max": 12.0 + nivel * 5.0,
+		"frenado": 8.0, "tam_min": 0.04, "tam_max": 0.09, "color": COLOR_RAYO_NUCLEO, "color_fin": Color(0.3, 0.6, 1.0, 0.0), "estirado": true, "tam_quad": Vector2(0.4, 2.5)})
 	luz_temporal(pos, COLOR_RAYO, float(nd.get("luz", 3.0)) * 2.5, float(nd.get("luz_rango", 8.0)), 0.4 + nivel * 0.15)
 	sacudir_desde(pos, float(nd.get("sacudida", 0.4)))
 	marca_suelo(Vector3(pos.x, 0, pos.z), float(nd.get("marca", 1.0)), Color(0.06, 0.08, 0.14, 0.85), true)
-	var mat := Materiales.emisivo(COLOR_RAYO_NUCLEO, 6.0)
-	var n := 2 + nivel * 2
-	for i in n:
-		var dir := Vector3(randf_range(-1, 1), randf_range(-0.2, 1), randf_range(-1, 1)).normalized()
-		var segs := rayo_zigzag(self, pos, pos + dir * (1.0 + nivel * 1.2), 0.03 + nivel * 0.015, mat, 5, 0.25 * nivel)
-		for s in segs:
-			_borrar_en(s, 0.18)
+	var pares: Array = []
+	for i in 2 + nivel * 2:
+		var dir := Vector3(randf_range(-1, 1), randf_range(-0.3, 1), randf_range(-1, 1)).normalized()
+		pares.append([pos, pos + dir * (1.2 + nivel * 1.3)])
+	rayos_fugaces(pares, 0.025 + nivel * 0.008, 0.22, nivel)
 	if escenario != null:
-		escenario.destello(COLOR_RAYO, 2.0 + nivel * 2.5, 0.25 + nivel * 0.15)
+		escenario.destello(COLOR_RAYO, 1.5 + nivel * 1.3, 0.25 + nivel * 0.15)
+	_sonido("golpe", 0.0, 0.7)
 
 
 ## Cadena de rayo entre los puntos (enemigos sobre charcos).
 func cadena(puntos: Array, nivel: int) -> void:
-	var mat := Materiales.emisivo(COLOR_RAYO_NUCLEO, 7.0)
+	var pares: Array = []
 	for i in puntos.size() - 1:
-		var a: Vector3 = puntos[i]
+		pares.append([puntos[i], puntos[i + 1]])
 		var b: Vector3 = puntos[i + 1]
-		for k in 2:
-			var segs := rayo_zigzag(self, a, b, 0.05 + nivel * 0.015, mat, 8, 0.45)
-			for s in segs:
-				_borrar_en(s, 0.3 + k * 0.1)
 		luz_temporal(b, COLOR_RAYO, 6.0, 8.0, 0.5)
-		rafaga(b, {"cantidad": 40, "vida": 0.3, "radio": 0.3, "vel_min": 4.0, "vel_max": 9.0, "tam_min": 0.05, "tam_max": 0.1,
+		rafaga(b, {"cantidad": 30, "vida": 0.3, "radio": 0.3, "vel_min": 4.0, "vel_max": 9.0, "tam_min": 0.04, "tam_max": 0.08,
 			"color": COLOR_RAYO_NUCLEO, "estirado": true, "tam_quad": Vector2(0.3, 2.0)})
-		# Salpicadura del charco electrificado
-		rafaga(Vector3(b.x, 0.1, b.z), {"cantidad": 30, "vida": 0.5, "radio": 0.6, "direccion": Vector3.UP, "dispersion": 40.0,
-			"vel_min": 2.0, "vel_max": 5.0, "gravedad": Vector3(0, -12, 0), "tam_min": 0.08, "tam_max": 0.16, "color": Color(0.6, 0.85, 1.0, 0.9)})
+		chapoteo(Vector3(b.x, 0, b.z), 1.5)
+	rayos_fugaces(pares, 0.06 + nivel * 0.015, 0.4, 2)
+
+
+## Salpicadura de agua (pisar charcos, caídas, cadena eléctrica).
+func chapoteo(pos: Vector3, fuerza := 1.0) -> void:
+	rafaga(Vector3(pos.x, 0.08, pos.z), {"cantidad": int(10 * fuerza) + 4, "vida": 0.45, "radio": 0.15 * fuerza, "direccion": Vector3.UP, "dispersion": 35.0,
+		"vel_min": 1.5 * fuerza, "vel_max": 3.5 * fuerza, "gravedad": Vector3(0, -14, 0), "tam_min": 0.04, "tam_max": 0.08,
+		"color": Color(0.75, 0.85, 1.0, 0.7), "aditivo": false, "escala_fin": 0.6})
+	# Anillo de onda que se expande.
+	var anillo := Materiales.disco(0.3, Materiales.transparente(Color(0.8, 0.9, 1.0, 0.35), true), 16)
+	add_child(anillo)
+	anillo.global_position = Vector3(pos.x, 0.03, pos.z)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(anillo, "scale", Vector3(3, 1, 3) * fuerza, 0.5)
+	tw.tween_property(anillo, "transparency", 1.0, 0.5)
+	tw.chain().tween_callback(anillo.queue_free)
 
 
 # ------------------------------------------------------------ varios
@@ -359,24 +438,29 @@ func polvo(pos: Vector3, cantidad := 16) -> void:
 		"vel_min": 0.8, "vel_max": 2.0, "gravedad": Vector3(0, -2, 0), "tam_min": 0.3, "tam_max": 0.5, "color": Color(0.6, 0.65, 0.7, 0.35), "aditivo": false})
 
 
-## Número de daño flotante.
-func numero(pos: Vector3, cantidad: float, color: Color, extra := "") -> void:
+## Número de daño flotante. Color según la naturaleza; más grande con ventaja.
+func numero(pos: Vector3, cantidad: float, color: Color, mult := 1.0) -> void:
 	var l := Label3D.new()
-	l.text = str(int(round(cantidad))) + extra
+	l.text = str(int(round(cantidad)))
+	if mult > 1.01:
+		l.text += "!"
+	l.font = Estilo.fuente_titulo()
 	l.modulate = color
-	l.outline_modulate = Color(0, 0, 0, 0.9)
-	l.outline_size = 10
-	l.font_size = 64
+	l.outline_modulate = Color(0.05, 0.02, 0.02, 1.0)
+	l.outline_size = 14
+	l.font_size = 72 if mult > 1.01 else (44 if mult < 0.99 else 56)
 	l.pixel_size = 0.006
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	l.no_depth_test = true
-	l.fixed_size = false
+	l.render_priority = 10
 	add_child(l)
 	l.global_position = pos + Vector3(randf_range(-0.3, 0.3), 0.8, randf_range(-0.3, 0.3))
+	l.scale = Vector3.ONE * 0.4
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(l, "global_position:y", l.global_position.y + 1.2, 0.9)
-	tw.tween_property(l, "modulate:a", 0.0, 0.9).set_delay(0.3)
+	tw.tween_property(l, "scale", Vector3.ONE * (1.25 if mult > 1.01 else 1.0), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(l, "global_position:y", l.global_position.y + 1.3, 0.9).set_ease(Tween.EASE_OUT)
+	tw.tween_property(l, "modulate:a", 0.0, 0.5).set_delay(0.55)
 	tw.chain().tween_callback(l.queue_free)
 
 

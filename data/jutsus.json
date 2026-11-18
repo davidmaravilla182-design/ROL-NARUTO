@@ -4,27 +4,110 @@
     "nombre": "Gran Bola de Fuego",
     "tipo": "proyectil",
     "naturaleza": "fuego",
-    "sellos": ["serpiente", "carnero", "mono", "jabali", "caballo", "tigre"],
+    "sellos": [
+      "serpiente",
+      "carnero",
+      "mono",
+      "jabali",
+      "caballo",
+      "tigre"
+    ],
     "tiempo_sellos": 0.95,
     "recarga": 4.0,
     "alcance": 30.0,
     "niveles": [
-      { "costo": 14.0, "dano": 20.0, "velocidad": 17.0, "radio": 0.6, "radio_explosion": 2.4, "sacudida": 0.25, "luz": 3.0, "luz_rango": 7.0, "particulas": 40, "marca": 1.8 },
-      { "costo": 24.0, "dano": 36.0, "velocidad": 15.0, "radio": 1.3, "radio_explosion": 4.5, "sacudida": 0.55, "luz": 6.0, "luz_rango": 14.0, "particulas": 120, "marca": 3.6 },
-      { "costo": 40.0, "dano": 60.0, "velocidad": 12.0, "radio": 2.8, "radio_explosion": 8.0, "sacudida": 1.0, "luz": 12.0, "luz_rango": 30.0, "particulas": 320, "marca": 7.5 }
+      {
+        "costo": 14.0,
+        "dano": 20.0,
+        "velocidad": 17.0,
+        "radio": 0.6,
+        "radio_explosion": 2.4,
+        "sacudida": 0.25,
+        "luz": 2.5,
+        "luz_rango": 7.0,
+        "particulas": 40,
+        "marca": 1.8
+      },
+      {
+        "costo": 24.0,
+        "dano": 36.0,
+        "velocidad": 15.0,
+        "radio": 1.3,
+        "radio_explosion": 4.5,
+        "sacudida": 0.55,
+        "luz": 4.0,
+        "luz_rango": 13.0,
+        "particulas": 120,
+        "marca": 3.6
+      },
+      {
+        "costo": 40.0,
+        "dano": 60.0,
+        "velocidad": 12.0,
+        "radio": 2.8,
+        "radio_explosion": 8.0,
+        "sacudida": 1.0,
+        "luz": 6.0,
+        "luz_rango": 24.0,
+        "particulas": 320,
+        "marca": 7.5
+      }
     ]
   },
   "chidori": {
     "nombre": "Chidori",
     "tipo": "embiste",
     "naturaleza": "rayo",
-    "sellos": ["buey", "liebre", "mono"],
+    "sellos": [
+      "buey",
+      "liebre",
+      "mono"
+    ],
     "tiempo_sellos": 0.35,
     "recarga": 5.0,
     "niveles": [
-      { "costo": 18.0, "dano": 26.0, "carga": 0.6, "distancia": 8.0, "velocidad": 26.0, "radio_golpe": 1.1, "cadena_saltos": 1, "sacudida": 0.35, "luz": 3.0, "luz_rango": 8.0, "particulas": 50, "marca": 1.5 },
-      { "costo": 28.0, "dano": 42.0, "carga": 0.9, "distancia": 12.0, "velocidad": 32.0, "radio_golpe": 1.3, "cadena_saltos": 2, "sacudida": 0.7, "luz": 7.0, "luz_rango": 20.0, "particulas": 140, "marca": 3.0 },
-      { "costo": 45.0, "dano": 68.0, "carga": 1.2, "distancia": 17.0, "velocidad": 40.0, "radio_golpe": 1.6, "cadena_saltos": 4, "sacudida": 1.0, "luz": 14.0, "luz_rango": 90.0, "particulas": 360, "marca": 5.0 }
+      {
+        "costo": 18.0,
+        "dano": 26.0,
+        "carga": 0.6,
+        "distancia": 8.0,
+        "velocidad": 26.0,
+        "radio_golpe": 1.1,
+        "cadena_saltos": 1,
+        "sacudida": 0.35,
+        "luz": 2.5,
+        "luz_rango": 8.0,
+        "particulas": 50,
+        "marca": 1.5
+      },
+      {
+        "costo": 28.0,
+        "dano": 42.0,
+        "carga": 0.9,
+        "distancia": 12.0,
+        "velocidad": 32.0,
+        "radio_golpe": 1.3,
+        "cadena_saltos": 2,
+        "sacudida": 0.7,
+        "luz": 4.5,
+        "luz_rango": 18.0,
+        "particulas": 140,
+        "marca": 3.0
+      },
+      {
+        "costo": 45.0,
+        "dano": 68.0,
+        "carga": 1.2,
+        "distancia": 17.0,
+        "velocidad": 40.0,
+        "radio_golpe": 1.6,
+        "cadena_saltos": 4,
+        "sacudida": 1.0,
+        "luz": 7.0,
+        "luz_rango": 70.0,
+        "particulas": 360,
+        "marca": 5.0
+      }
     ]
   },
   "sharingan": {
@@ -43,9 +126,33 @@
     "costo_estamina": 5.0,
     "recarga": 0.0,
     "pasos": [
-      { "dano": 7.0, "alcance": 2.0, "angulo": 80.0, "duracion": 0.3, "impacto": 0.12, "empuje": 1.2, "derriba": false },
-      { "dano": 7.0, "alcance": 2.0, "angulo": 80.0, "duracion": 0.3, "impacto": 0.12, "empuje": 1.2, "derriba": false },
-      { "dano": 12.0, "alcance": 2.3, "angulo": 100.0, "duracion": 0.45, "impacto": 0.2, "empuje": 4.0, "derriba": true }
+      {
+        "dano": 7.0,
+        "alcance": 2.0,
+        "angulo": 80.0,
+        "duracion": 0.3,
+        "impacto": 0.12,
+        "empuje": 1.2,
+        "derriba": false
+      },
+      {
+        "dano": 7.0,
+        "alcance": 2.0,
+        "angulo": 80.0,
+        "duracion": 0.3,
+        "impacto": 0.12,
+        "empuje": 1.2,
+        "derriba": false
+      },
+      {
+        "dano": 12.0,
+        "alcance": 2.3,
+        "angulo": 100.0,
+        "duracion": 0.45,
+        "impacto": 0.2,
+        "empuje": 4.0,
+        "derriba": true
+      }
     ]
   },
   "esquivar": {
@@ -68,12 +175,28 @@
     "nombre": "Bala de Agua",
     "tipo": "proyectil",
     "naturaleza": "agua",
-    "sellos": ["tigre", "pajaro"],
+    "sellos": [
+      "tigre",
+      "pajaro"
+    ],
     "tiempo_sellos": 0.5,
     "recarga": 2.6,
     "alcance": 26.0,
     "niveles": [
-      { "costo": 8.0, "dano": 5.5, "velocidad": 14.0, "radio": 0.3, "radio_explosion": 0.8, "rafaga": 2, "intervalo_rafaga": 0.2, "sacudida": 0.2, "luz": 0.0, "luz_rango": 0.0, "particulas": 20, "marca": 0.0 }
+      {
+        "costo": 8.0,
+        "dano": 5.5,
+        "velocidad": 14.0,
+        "radio": 0.3,
+        "radio_explosion": 0.8,
+        "rafaga": 2,
+        "intervalo_rafaga": 0.2,
+        "sacudida": 0.2,
+        "luz": 0.0,
+        "luz_rango": 0.0,
+        "particulas": 20,
+        "marca": 0.0
+      }
     ]
   }
 }

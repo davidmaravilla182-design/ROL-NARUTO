@@ -17,20 +17,20 @@ static func vestir(pv: PersonajeVisual, aspecto: Dictionary, aldea: Dictionary, 
 	# --- Banda en la frente con placa metálica y el símbolo de la aldea (líneas verticales).
 	var cabeza := pv.hueso("Cabeza")
 	var banda := Materiales.cilindro(0.127, 0.127, 0.055, Materiales.solido(c_banda, 0.9), 10)
-	banda.position = Vector3(0, 0.17, 0.0)
+	banda.position = Vector3(0, 0.19, 0.0)
 	cabeza.add_child(banda)
 	var placa := Materiales.caja(Vector3(0.13, 0.055, 0.012), metal)
-	placa.position = Vector3(0, 0.17, 0.128)
+	placa.position = Vector3(0, 0.19, 0.127)
 	cabeza.add_child(placa)
 	var lineas := int(aldea.get("simbolo_lineas", 4))
 	for i in lineas:
 		var l := Materiales.caja(Vector3(0.007, 0.036, 0.004), grabado)
 		var x := (float(i) - (lineas - 1) * 0.5) * 0.02
-		l.position = Vector3(x, 0.17, 0.135)
+		l.position = Vector3(x, 0.19, 0.134)
 		cabeza.add_child(l)
 	for lado in [-1.0, 1.0]:
 		var cola := Materiales.caja(Vector3(0.025, 0.11, 0.012), Materiales.solido(c_banda, 0.9))
-		cola.position = Vector3(0.025 * lado, 0.12, -0.13)
+		cola.position = Vector3(0.025 * lado, 0.15, -0.13)
 		cola.rotation_degrees = Vector3(-20, 0, 12 * lado)
 		cabeza.add_child(cola)
 

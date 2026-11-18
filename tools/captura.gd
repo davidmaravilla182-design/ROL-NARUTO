@@ -47,7 +47,15 @@ func _initialize() -> void:
 		[16.0, func(): _guardar("14_sharingan_aviso")],
 		[16.5, func(): _guardar("15_sharingan_b")],
 		[17.0, func(): _guardar("16_sharingan_c")],
-		[17.5, func(): quit(0)],
+		[17.6, func(): _enemigo(false); _listo(Vector3(0, 0, 8)); juego._ciclar_objetivo()],
+		[18.4, func(): _guardar("17_objetivo_fijado")],
+		[18.5, func(): juego._on_apuntar("bola_fuego", Vector2(70, -90), false)],
+		[18.9, func(): _guardar("18_apuntado_bola")],
+		[19.0, func(): juego._on_apuntar("chidori", Vector2(-80, -60), false); juego.hud._on_apuntando("chidori", Vector2(-80, -60), false)],
+		[19.4, func(): _guardar("19_apuntado_rayo")],
+		[19.5, func(): juego.hud.cancelar.emit("chidori"); juego.hud._on_cancelado("chidori"); juego.hud.abrir_ajustes()],
+		[20.0, func(): _guardar("20_ajustes")],
+		[20.1, func(): quit(0)],
 	]
 
 

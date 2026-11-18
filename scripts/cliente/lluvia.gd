@@ -11,7 +11,7 @@ func construir() -> void:
 	var area := float(conf.get("area", 22.0))
 
 	var gotas := GPUParticles3D.new()
-	gotas.amount = int(conf.get("gotas", 1400))
+	gotas.amount = int(Ajustes.g("gotas", conf.get("gotas", 1400)))
 	gotas.lifetime = 0.75
 	gotas.preprocess = 1.0
 	gotas.local_coords = false
@@ -41,7 +41,7 @@ func construir() -> void:
 	add_child(gotas)
 
 	var salp := GPUParticles3D.new()
-	salp.amount = int(conf.get("salpicaduras", 220))
+	salp.amount = int(Ajustes.g("salpicaduras", conf.get("salpicaduras", 220)))
 	salp.lifetime = 0.28
 	salp.local_coords = false
 	salp.position = Vector3(0, 0.04, 0)

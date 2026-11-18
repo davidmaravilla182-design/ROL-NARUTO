@@ -14,6 +14,13 @@ var camara: CamaraTercera
 var efectos: Efectos
 var lluvia: Lluvia
 var hud: Hud
+var sonidos: Sonidos
+var indicadores: Indicadores
+var objetivo_fijado := -1
+var _apuntado_activo := ""
+var _t_pasos := 0.0
+var _hitstop_hasta := 0
+var _lento_hasta := 0
 
 var mi_id := -1
 var _visuales: Dictionary = {}     # id entidad -> {nodo, tipo, destino, yaw, estado, carga}
@@ -27,8 +34,16 @@ var _anuncio_fin := ""
 
 func _ready() -> void:
 	Datos.cargar()
+	Ajustes.cargar()
 	_registrar_teclas()
 	mapa = Mapa.generar()
+	Engine.time_scale = 1.0
+	get_viewport().scaling_3d_scale = float(Ajustes.g("escala_3d", 1.0))
+	Engine.max_fps = int(Ajustes.g("fps_objetivo", 60))
+
+	sonidos = Sonidos.new()
+	sonidos.name = "Sonidos"
+	add_child(sonidos)
 
 	escenario = Escenario.new()
 	escenario.name = "Escenario"
@@ -38,12 +53,19 @@ func _ready() -> void:
 	camara = CamaraTercera.new()
 	camara.name = "Camara"
 	add_child(camara)
+	escenario.camara = camara
+	escenario.sonidos = sonidos
 
 	efectos = Efectos.new()
 	efectos.name = "Efectos"
 	efectos.camara = camara
 	efectos.escenario = escenario
+	efectos.sonidos = sonidos
 	add_child(efectos)
+
+	indicadores = Indicadores.new()
+	indicadores.name = "Indicadores"
+	add_child(indicadores)
 
 	lluvia = Lluvia.new()
 	lluvia.name = "Lluvia"
@@ -56,10 +78,15 @@ func _ready() -> void:
 	add_child(hud)
 	hud.construir()
 	hud.accion.connect(_on_accion)
+	hud.apuntar.connect(_on_apuntar)
+	hud.soltar.connect(_on_soltar)
+	hud.cancelar.connect(func(_id): _apuntado_activo = ""; indicadores.ocultar_apuntado())
+	hud.fijar_pedido.connect(_ciclar_objetivo)
+	hud.reinicio_pedido.connect(func(): get_tree().reload_current_scene())
 	hud.nivel_pedido.connect(func(n): transporte.enviar({"t": Protocolo.C_NIVEL, "valor": n}))
 	hud.reaparecer_pedido.connect(func(): transporte.enviar({"t": Protocolo.C_REAPARECER}))
 	hud.salir_pedido.connect(func(): get_tree().change_scene_to_file(ESCENA_MENU))
-	hud.camara_arrastre.connect(func(r): camara.girar(r))
+	hud.camara_arrastre.connect(func(r): camara.girar(r * Ajustes.sensibilidad))
 
 	# Modo offline: servidor autoritativo en el mismo proceso, misma interfaz que en red.
 	servidor = ServidorJuego.new()
@@ -102,13 +129,160 @@ func _unhandled_input(ev: InputEvent) -> void:
 			_on_accion(a)
 
 
+## Toque rápido: auto-apuntado al objetivo fijado o al enemigo más cercano frente a la cámara;
+## si no hay ninguno, hacia donde mira la cámara. La dirección viaja en el comando.
 func _on_accion(id: String) -> void:
-	transporte.enviar({"t": Protocolo.C_ACCION, "id": id})
+	var cmd := {"t": Protocolo.C_ACCION, "id": id}
+	if id in ["bola_fuego", "chidori", "golpe"]:
+		var alcance := _alcance(id)
+		var obj := _objetivo_auto(alcance)
+		var dir := _dir_camara()
+		if obj >= 0:
+			var p := _pos_entidad(obj) - _pos_entidad(mi_id)
+			dir = Vector2(p.x, p.z).normalized()
+		cmd["dir"] = dir
+		cmd["objetivo"] = obj
+	transporte.enviar(cmd)
+
+
+func _alcance(id: String) -> float:
+	match id:
+		"bola_fuego": return float(Datos.jutsu("bola_fuego").get("alcance", 25.0))
+		"chidori": return float(Datos.nivel_jutsu("chidori", hud.nivel).get("distancia", 10.0)) + 3.0
+	return 3.5
+
+
+func _dir_camara() -> Vector2:
+	var f := camara.adelante_plano()
+	return Vector2(f.x, f.z).normalized()
+
+
+## Arrastre en pantalla -> dirección en el suelo (relativa a la cámara).
+func _dir_arrastre(arrastre: Vector2) -> Vector2:
+	var adelante := camara.adelante_plano()
+	var derecha := Vector3(-adelante.z, 0, adelante.x)
+	var m := derecha * arrastre.x + adelante * (-arrastre.y)
+	return Vector2(m.x, m.z).normalized()
+
+
+## Objetivo para el auto-apuntado: el fijado si es válido; si no, el más cercano frente a la cámara.
+func _objetivo_auto(alcance: float) -> int:
+	if objetivo_fijado >= 0 and _vivo(objetivo_fijado):
+		return objetivo_fijado
+	var yo := _pos_entidad(mi_id)
+	var f := camara.adelante_plano()
+	var mejor := -1
+	var mejor_p := INF
+	for e in _estado.get("entidades", []):
+		var eid := int(e["id"])
+		if eid == mi_id or str(e["estado"]) == "muerto" or e["tipo"] == "jugador":
+			continue
+		var d: Vector3 = (e["pos"] as Vector3) - yo
+		d.y = 0
+		var dist := d.length()
+		if dist > alcance or dist < 0.01:
+			continue
+		var ang := rad_to_deg(f.angle_to(d / dist))
+		if ang > 65.0:
+			continue
+		var puntaje := dist + ang * 0.12 + (5.0 if e["tipo"] == "muneco" else 0.0)
+		if puntaje < mejor_p:
+			mejor_p = puntaje
+			mejor = eid
+	return mejor
+
+
+func _vivo(eid: int) -> bool:
+	for e in _estado.get("entidades", []):
+		if int(e["id"]) == eid:
+			return str(e["estado"]) != "muerto"
+	return false
+
+
+func _on_apuntar(id: String, arrastre: Vector2, cancelar: bool) -> void:
+	_apuntado_activo = id
+	var dir := _dir_arrastre(arrastre)
+	var yo := _pos_entidad(mi_id)
+	if id == "bola_fuego":
+		var nd := Datos.nivel_jutsu("bola_fuego", hud.nivel)
+		var ancho := float(nd.get("radio", 0.6)) * 2.0 * 0.9 + 0.4
+		indicadores.mostrar_apuntado(yo, Vector3(dir.x, 0, dir.y), minf(_alcance(id), 22.0), ancho, Color(1.0, 0.45, 0.1), false, cancelar)
+	else:
+		var nd2 := Datos.nivel_jutsu("chidori", hud.nivel)
+		indicadores.mostrar_apuntado(yo, Vector3(dir.x, 0, dir.y), float(nd2.get("distancia", 10.0)), 1.1, Color(0.4, 0.75, 1.0), true, cancelar)
+
+
+## Soltar tras arrastrar: dispara en la dirección exacta del dedo (sin asistencia).
+func _on_soltar(id: String, arrastre: Vector2) -> void:
+	_apuntado_activo = ""
+	indicadores.ocultar_apuntado()
+	var dir := _dir_arrastre(arrastre)
+	transporte.enviar({"t": Protocolo.C_ACCION, "id": id, "dir": dir, "objetivo": -1, "exacto": true})
+
+
+## Fijar objetivo: el primer toque fija el más cercano; los siguientes rotan entre
+## los objetivos cercanos y, tras el último, se libera.
+func _ciclar_objetivo() -> void:
+	var yo := _pos_entidad(mi_id)
+	var lista: Array = []
+	for e in _estado.get("entidades", []):
+		if int(e["id"]) == mi_id or e["tipo"] == "jugador" or str(e["estado"]) == "muerto":
+			continue
+		var d := ((e["pos"] as Vector3) - yo).length()
+		if d < 30.0:
+			lista.append([d, int(e["id"]), e])
+	lista.sort_custom(func(a, b): return a[0] < b[0])
+	var ids: Array = []
+	for x in lista:
+		ids.append(x[1])
+	if ids.is_empty():
+		objetivo_fijado = -1
+		hud.mensaje(Datos.texto("msg_sin_objetivo"), 1.0)
+	elif objetivo_fijado < 0 or not (objetivo_fijado in ids):
+		objetivo_fijado = ids[0]
+	else:
+		var i := ids.find(objetivo_fijado)
+		objetivo_fijado = ids[i + 1] if i + 1 < ids.size() else -1
+	hud.fijado = objetivo_fijado >= 0
+	if objetivo_fijado >= 0:
+		var plantilla := ""
+		for x in lista:
+			if x[1] == objetivo_fijado:
+				plantilla = str(x[2]["plantilla"])
+		hud.mensaje(Datos.texto("msg_fijado", [Datos.personaje(plantilla).get("nombre", "")]), 1.0)
+	elif not ids.is_empty():
+		hud.mensaje(Datos.texto("msg_sin_fijar"), 1.0)
+	indicadores.objetivo = _visuales[objetivo_fijado]["nodo"] if _visuales.has(objetivo_fijado) else null
+
+
+## Pausa de impacto (hitstop): congela un instante solo lo visual; el servidor sigue en tiempo real.
+func pausa_impacto(segundos: float) -> void:
+	_hitstop_hasta = Time.get_ticks_msec() + int(segundos * 1000.0)
+	Engine.time_scale = 0.03
+
+
+func camara_lenta(escala: float, segundos: float) -> void:
+	_lento_hasta = Time.get_ticks_msec() + int(segundos * 1000.0)
+	if Time.get_ticks_msec() >= _hitstop_hasta:
+		Engine.time_scale = escala
+	set_meta("escala_lenta", escala)
+
+
+func _actualizar_tiempo() -> void:
+	var ahora := Time.get_ticks_msec()
+	if ahora < _hitstop_hasta:
+		Engine.time_scale = 0.03
+	elif ahora < _lento_hasta:
+		Engine.time_scale = float(get_meta("escala_lenta", 0.3))
+	elif Engine.time_scale != 1.0:
+		Engine.time_scale = 1.0
 
 
 # ------------------------------------------------------------ entrada
 
 func _process(delta: float) -> void:
+	_actualizar_tiempo()
+	_seguir_objetivo(delta)
 	var j := hud.joystick.vector
 	var teclado := Input.get_vector("mover_izq", "mover_der", "mover_arriba", "mover_abajo")
 	if teclado.length() > 0.1:
@@ -129,6 +303,23 @@ func _process(delta: float) -> void:
 		_ultimo_mov = mov
 		transporte.enviar({"t": Protocolo.C_ENTRADA, "mov": mov, "mira": mira})
 	_interpolar(delta)
+
+
+## Con objetivo fijado, la cámara gira para mantener al enemigo delante.
+func _seguir_objetivo(delta: float) -> void:
+	if objetivo_fijado < 0:
+		return
+	if not _vivo(objetivo_fijado) or not _visuales.has(objetivo_fijado):
+		objetivo_fijado = -1
+		hud.fijado = false
+		indicadores.objetivo = null
+		return
+	var d := _pos_entidad(objetivo_fijado) - _pos_entidad(mi_id)
+	if Vector2(d.x, d.z).length() < 0.5:
+		return
+	var yaw_deseado := atan2(-d.x, -d.z)
+	camara.yaw = lerp_angle(camara.yaw, yaw_deseado, minf(1.0, delta * 5.0))
+	camara.pitch = lerpf(camara.pitch, -0.36, minf(1.0, delta * 2.0))
 
 
 func _interpolar(delta: float) -> void:
@@ -208,6 +399,21 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 	var estado := str(e["estado"])
 	var cambio := estado != str(v["estado"])
 	v["estado"] = estado
+	# Salpicaduras al pisar charcos y al aterrizar en ellos.
+	if v["tipo"] != "muneco":
+		var en_suelo := bool(e["en_suelo"])
+		if bool(e["en_charco"]) and en_suelo:
+			if not bool(v.get("suelo", true)):
+				efectos.chapoteo(nuevo, 1.6)
+				sonidos.tocar("chapoteo", -4.0)
+			elif float(v["vel"]) > 1.5:
+				v["t_paso"] = float(v.get("t_paso", 0.0)) - 1.0 / 30.0
+				if float(v["t_paso"]) <= 0.0:
+					v["t_paso"] = 0.3
+					efectos.chapoteo(nuevo, 0.7)
+					if int(e["id"]) == mi_id:
+						sonidos.tocar("chapoteo", -14.0, 1.3)
+		v["suelo"] = en_suelo
 	if v["tipo"] == "muneco":
 		var mu: MunecoVisual = v["nodo"]
 		mu.poner_caido(estado == "muerto")
@@ -275,7 +481,9 @@ func _actualizar_proyectiles(lista: Array) -> void:
 					(c as GPUParticles3D).emitting = false
 				elif c is MeshInstance3D or c is OmniLight3D:
 					c.visible = false
-			get_tree().create_timer(1.0).timeout.connect(n.queue_free)
+			var tw := create_tween()
+			tw.tween_interval(1.0)
+			tw.tween_callback(n.queue_free)
 			_proyectiles.erase(id)
 
 
@@ -296,6 +504,9 @@ func _procesar_evento(ev: Dictionary) -> void:
 				var nd := Datos.nivel_jutsu("bola_fuego", int(ev["nivel"]))
 				efectos.luz_temporal(ev["pos"], Efectos.COLOR_FUEGO, float(nd.get("luz", 3.0)) * 1.5, float(nd.get("luz_rango", 6.0)), 0.3)
 				efectos.sacudir_desde(ev["pos"], float(nd.get("sacudida", 0.2)) * 0.4)
+				if id == mi_id and int(ev["nivel"]) >= 3:
+					var imp: Dictionary = Datos.graficos.get("impacto", {})
+					camara_lenta(float(imp.get("camara_lenta_escala", 0.3)), float(imp.get("camara_lenta_duracion", 0.45)))
 		"chidori_carga":
 			if _visuales.has(id) and _visuales[id]["nodo"] is PersonajeVisual:
 				var anterior = _visuales[id]["carga"]
@@ -304,6 +515,9 @@ func _procesar_evento(ev: Dictionary) -> void:
 				_visuales[id]["carga"] = efectos.crear_carga_rayo(_visuales[id]["nodo"], int(ev["nivel"]))
 		"chidori_embiste":
 			efectos.polvo(ev["desde"], 10 + int(ev["nivel"]) * 10)
+			if id == mi_id and int(ev["nivel"]) >= 3:
+				var imp2: Dictionary = Datos.graficos.get("impacto", {})
+				camara_lenta(float(imp2.get("camara_lenta_escala", 0.3)), float(imp2.get("camara_lenta_duracion", 0.45)) * 0.7)
 		"impacto":
 			_evento_impacto(ev)
 		"explosion":
@@ -337,34 +551,42 @@ func _procesar_evento(ev: Dictionary) -> void:
 				hud.mensaje(Datos.texto(str(ev["clave"])), 1.5)
 
 
+const COLOR_NATURALEZA := {"fuego": Color(1.0, 0.55, 0.15), "rayo": Color(0.55, 0.88, 1.0), "agua": Color(0.4, 0.68, 1.0), "": Color(1.0, 0.97, 0.9)}
+
+
 func _evento_impacto(ev: Dictionary) -> void:
 	var pos: Vector3 = ev["pos"]
 	var jutsu := str(ev["jutsu"])
 	var cant := float(ev["cantidad"])
-	var color := Color.WHITE
+	var nat := str(Datos.jutsu(jutsu).get("naturaleza", "")) if jutsu != "golpe" else ""
+	var color: Color = COLOR_NATURALEZA.get(nat, Color.WHITE)
+	var imp: Dictionary = Datos.graficos.get("impacto", {})
+	var involucra_me := int(ev["atacante"]) == mi_id or int(ev["entidad"]) == mi_id
 	match jutsu:
-		"bola_fuego":
-			color = Color(1.0, 0.6, 0.2)
 		"chidori":
-			color = Color(0.6, 0.9, 1.0)
 			if not ev["cadena"]:
 				efectos.impacto_rayo(pos, int(ev["nivel"]))
+				if involucra_me:
+					pausa_impacto(float(imp.get("pausa_rayo", 0.09)))
+		"bola_fuego":
+			if involucra_me and int(ev["nivel"]) >= 2:
+				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)) * 0.7)
 		"bala_agua":
-			color = Color(0.5, 0.75, 1.0)
+			pass
 		_:
-			efectos.golpe_fisico(pos, cant > 10.0)
-	var extra := ""
+			var fuerte := cant > 10.0
+			efectos.golpe_fisico(pos, fuerte)
+			sonidos.tocar("golpe", -2.0 if fuerte else -6.0, 0.8 if fuerte else 1.1)
+			if fuerte and involucra_me:
+				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)))
 	var mult := float(ev["naturaleza_mult"])
-	if mult > 1.01:
-		extra = " ▲"
-	elif mult < 0.99:
-		extra = " ▼"
-	efectos.numero(pos, cant, color, extra)
+	efectos.numero(pos, cant, color, mult)
 	var objetivo := int(ev["entidad"])
 	if _visuales.has(objetivo) and _visuales[objetivo]["nodo"] is MunecoVisual:
 		(_visuales[objetivo]["nodo"] as MunecoVisual).golpeado()
 	if objetivo == mi_id:
-		camara.sacudir(0.25)
+		camara.sacudir(0.3)
+		Ajustes.vibrar(40)
 	if int(ev["atacante"]) == mi_id and mult > 1.01:
 		hud.mensaje(Datos.texto("msg_ventaja"), 1.0)
 
@@ -412,3 +634,12 @@ func prueba_humo(frame: int) -> void:
 		300: transporte.enviar({"t": Protocolo.C_REAPARECER})
 		320: transporte.enviar({"t": Protocolo.C_NIVEL, "valor": 2})
 		325: _on_accion("chidori")
+		340: _ciclar_objetivo()
+		345: _on_apuntar("bola_fuego", Vector2(40, -80), false)
+		350: _on_soltar("bola_fuego", Vector2(40, -80))
+		360: _on_apuntar("chidori", Vector2(-60, -40), true)
+		365: hud.cancelar.emit("chidori")
+		370: _ciclar_objetivo()
+		375: pausa_impacto(0.05)
+		380: camara_lenta(0.3, 0.1)
+		390: hud.abrir_ajustes()

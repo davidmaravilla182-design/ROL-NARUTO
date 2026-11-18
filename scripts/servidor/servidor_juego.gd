@@ -284,7 +284,9 @@ func _accion_jutsu(e: EntidadServidor, id: String) -> void:
 func _process(delta: float) -> void:
 	if not auto_procesar:
 		return
-	_acumulado += minf(delta, 0.25)
+	# Tiempo real: la pausa de impacto / cámara lenta del cliente (Engine.time_scale) no frena el servidor.
+	var real := delta / Engine.time_scale if Engine.time_scale > 0.001 else delta
+	_acumulado += minf(real, 0.25)
 	while _acumulado >= dt_tick:
 		_acumulado -= dt_tick
 		paso(dt_tick)

@@ -5,7 +5,10 @@
     "tipo": "jugador",
     "clan": "uchiha",
     "aldea": "lluvia",
-    "naturalezas": ["fuego", "rayo"],
+    "naturalezas": [
+      "fuego",
+      "rayo"
+    ],
     "atributos": {
       "ninjutsu": 5,
       "taijutsu": 2,
@@ -16,17 +19,24 @@
       "estamina": 2,
       "sellos": 5
     },
-    "jutsus": ["golpe", "bola_fuego", "chidori", "sharingan", "esquivar", "saltar"],
+    "jutsus": [
+      "golpe",
+      "bola_fuego",
+      "chidori",
+      "sharingan",
+      "esquivar",
+      "saltar"
+    ],
     "aspecto": {
-      "piel": "#e8c4a0",
-      "pelo": "#141418",
-      "ojos": "#1a1a1a",
-      "camisa": "#1d2333",
-      "pantalon": "#252a3a",
-      "chaleco": "#3d4a3a",
-      "banda": "#2b3550",
-      "vendas": "#ddd6c4",
-      "sandalias": "#2a2a30",
+      "piel": "#f1cfae",
+      "pelo": "#1a1f2e",
+      "ojos": "#151212",
+      "camisa": "#1a2140",
+      "pantalon": "#1f2438",
+      "chaleco": "#56644e",
+      "banda": "#26304f",
+      "vendas": "#ece6d6",
+      "sandalias": "#262a36",
       "emblema_espalda": true,
       "mascara": false,
       "peinado": "puntas"
@@ -37,7 +47,9 @@
     "tipo": "enemigo",
     "clan": "sin_clan",
     "aldea": "lluvia",
-    "naturalezas": ["agua"],
+    "naturalezas": [
+      "agua"
+    ],
     "atributos": {
       "ninjutsu": 4,
       "taijutsu": 3,
@@ -48,7 +60,11 @@
       "estamina": 4,
       "sellos": 3
     },
-    "jutsus": ["golpe", "bala_agua", "esquivar"],
+    "jutsus": [
+      "golpe",
+      "bala_agua",
+      "esquivar"
+    ],
     "ia": {
       "distancia_preferida": 9.0,
       "rango_disparo": 17.0,
@@ -59,14 +75,14 @@
       "pausa_reaccion": 0.35
     },
     "aspecto": {
-      "piel": "#d9b896",
-      "pelo": "#4a4f5a",
+      "piel": "#dcbb98",
+      "pelo": "#5d6676",
       "ojos": "#202020",
-      "camisa": "#4b5260",
-      "pantalon": "#3a3f4a",
-      "chaleco": "#6a7078",
-      "banda": "#2b3550",
-      "vendas": "#c8c2b0",
+      "camisa": "#3e4656",
+      "pantalon": "#323947",
+      "chaleco": "#747c88",
+      "banda": "#26304f",
+      "vendas": "#d2ccbb",
       "sandalias": "#2a2a30",
       "emblema_espalda": false,
       "mascara": true,
@@ -79,8 +95,14 @@
     "naturalezas": [],
     "vida_fija": 250.0,
     "atributos": {
-      "ninjutsu": 0, "taijutsu": 0, "genjutsu": 0, "inteligencia": 0,
-      "fuerza": 0, "velocidad": 0, "estamina": 0, "sellos": 0
+      "ninjutsu": 0,
+      "taijutsu": 0,
+      "genjutsu": 0,
+      "inteligencia": 0,
+      "fuerza": 0,
+      "velocidad": 0,
+      "estamina": 0,
+      "sellos": 0
     },
     "jutsus": []
   }

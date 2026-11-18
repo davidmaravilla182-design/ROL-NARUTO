@@ -1,11 +1,17 @@
 extends SceneTree
-## Prueba de humo: carga el menú y la partida, simula unos segundos con
-## comandos reales y termina. Cualquier error de script hace fallar la verificación.
+## Prueba de humo: carga el menú y la partida en las tres calidades gráficas,
+## simula unos segundos con comandos reales (toque, arrastre, cancelar, fijar objetivo,
+## pausa de impacto, ajustes) y termina. Cualquier error de script hace fallar la verificación.
 ## Ejecutar: godot --headless --path . -s res://tests/humo.gd
 
-var escenas := ["res://escenas/menu.tscn", "res://escenas/juego.tscn"]
+var pasos := [
+	["res://escenas/menu.tscn", ""],
+	["res://escenas/juego.tscn", "alta"],
+	["res://escenas/juego.tscn", "media"],
+	["res://escenas/juego.tscn", "baja"],
+]
 var _frames := 0
-var _fase := 0
+var _indice := 0
 var _actual: Node = null
 
 
@@ -17,31 +23,32 @@ func _cargar(i: int) -> void:
 	if _actual != null:
 		_actual.queue_free()
 		_actual = null
-	if i >= escenas.size():
+	if i >= pasos.size():
+		Engine.time_scale = 1.0
 		print("HUMO: correcto")
 		quit(0)
 		return
-	if not ResourceLoader.exists(escenas[i]):
-		print("HUMO: se omite %s (no existe)" % escenas[i])
-		_cargar(i + 1)
-		return
-	var ps: PackedScene = load(escenas[i])
+	var ruta: String = pasos[i][0]
+	if pasos[i][1] != "":
+		Ajustes.cargar()
+		Ajustes.calidad = pasos[i][1]
+	var ps: PackedScene = load(ruta)
 	if ps == null:
-		printerr("HUMO: no se pudo cargar ", escenas[i])
+		printerr("HUMO: no se pudo cargar ", ruta)
 		quit(1)
 		return
 	_actual = ps.instantiate()
 	root.add_child(_actual)
-	print("HUMO: escena cargada ", escenas[i])
-	_fase = i
+	print("HUMO: escena cargada ", ruta, " ", pasos[i][1])
+	_indice = i
 	_frames = 0
 
 
 func _process(_delta: float) -> bool:
 	_frames += 1
-	if _fase == 1 and _actual != null and _actual.has_method("prueba_humo"):
+	if _actual != null and _actual.has_method("prueba_humo"):
 		_actual.prueba_humo(_frames)
-	var limite := 30 if _fase == 0 else 400
+	var limite := 30 if _indice == 0 else (420 if _indice == 1 else 90)
 	if _frames >= limite:
-		_cargar(_fase + 1)
+		_cargar(_indice + 1)
 	return false

@@ -4,24 +4,25 @@ extends Node3D
 ## fijadas con BoneAttachment3D, ropa (Vestimenta) y animaciones (Animaciones).
 ## Solo dibuja: su estado lo decide el servidor.
 
+# Proporciones estilizadas (anime): piernas largas, cintura estrecha, cabeza algo mayor.
 const HUESOS := [
-	["Caderas", "", Vector3(0, 0.95, 0)],
+	["Caderas", "", Vector3(0, 1.0, 0)],
 	["Columna", "Caderas", Vector3(0, 0.1, 0)],
-	["Pecho", "Columna", Vector3(0, 0.2, 0)],
-	["Cuello", "Pecho", Vector3(0, 0.27, 0)],
+	["Pecho", "Columna", Vector3(0, 0.18, 0)],
+	["Cuello", "Pecho", Vector3(0, 0.25, 0)],
 	["Cabeza", "Cuello", Vector3(0, 0.07, 0)],
-	["BrazoI", "Pecho", Vector3(0.22, 0.22, 0)],
+	["BrazoI", "Pecho", Vector3(0.2, 0.2, 0)],
 	["AntebrazoI", "BrazoI", Vector3(0, -0.27, 0)],
 	["ManoI", "AntebrazoI", Vector3(0, -0.24, 0)],
-	["BrazoD", "Pecho", Vector3(-0.22, 0.22, 0)],
+	["BrazoD", "Pecho", Vector3(-0.2, 0.2, 0)],
 	["AntebrazoD", "BrazoD", Vector3(0, -0.27, 0)],
 	["ManoD", "AntebrazoD", Vector3(0, -0.24, 0)],
-	["PiernaI", "Caderas", Vector3(0.1, -0.04, 0)],
-	["RodillaI", "PiernaI", Vector3(0, -0.42, 0)],
-	["PieI", "RodillaI", Vector3(0, -0.42, 0)],
-	["PiernaD", "Caderas", Vector3(-0.1, -0.04, 0)],
-	["RodillaD", "PiernaD", Vector3(0, -0.42, 0)],
-	["PieD", "RodillaD", Vector3(0, -0.42, 0)],
+	["PiernaI", "Caderas", Vector3(0.095, -0.04, 0)],
+	["RodillaI", "PiernaI", Vector3(0, -0.45, 0)],
+	["PieI", "RodillaI", Vector3(0, -0.46, 0)],
+	["PiernaD", "Caderas", Vector3(-0.095, -0.04, 0)],
+	["RodillaD", "PiernaD", Vector3(0, -0.45, 0)],
+	["PieD", "RodillaD", Vector3(0, -0.46, 0)],
 ]
 
 var esqueleto: Skeleton3D
@@ -29,7 +30,6 @@ var anim: AnimationPlayer
 var _adjuntos: Dictionary = {}
 var _ojos: Array[MeshInstance3D] = []
 var _mat_ojos_normal: Material
-var _mat_ojos_sharingan: Material
 var _luz_ojos: OmniLight3D
 var anim_actual := ""
 var sharingan := false
@@ -41,6 +41,8 @@ func construir(plantilla_id: String) -> void:
 	var aldea := Datos.aldea(str(d.get("aldea", "")))
 	var clan: Dictionary = Datos.mundo.get("clanes", {}).get(str(d.get("clan", "")), {})
 
+	var contorno_previo := Materiales.grosor_contorno
+	Materiales.grosor_contorno = 0.011 if Ajustes.g("contorno_personajes", true) else 0.0
 	esqueleto = Skeleton3D.new()
 	esqueleto.name = "Esqueleto"
 	add_child(esqueleto)
@@ -59,6 +61,7 @@ func construir(plantilla_id: String) -> void:
 
 	_construir_cuerpo(aspecto)
 	Vestimenta.vestir(self, aspecto, aldea, clan)
+	Materiales.grosor_contorno = contorno_previo
 
 	anim = AnimationPlayer.new()
 	anim.name = "Animador"
@@ -78,70 +81,100 @@ func _construir_cuerpo(a: Dictionary) -> void:
 	var piel := Materiales.solido(Datos.color(str(a.get("piel", "#e8c4a0"))), 0.7)
 	var camisa := Materiales.solido(Datos.color(str(a.get("camisa", "#1d2333"))), 0.9)
 	var pantalon := Materiales.solido(Datos.color(str(a.get("pantalon", "#252a3a"))), 0.9)
-	var pelo := Materiales.solido(Datos.color(str(a.get("pelo", "#141418"))), 0.6)
+	var pelo := Materiales.solido(Datos.color(str(a.get("pelo", "#141418"))), 0.45)
+	var oscuro := Materiales.solido(Color(0.08, 0.06, 0.07), 0.6)
 
-	_pieza("Caderas", Materiales.caja(Vector3(0.31, 0.16, 0.19), pantalon), Vector3(0, -0.01, 0))
-	_pieza("Columna", Materiales.caja(Vector3(0.29, 0.2, 0.18), camisa), Vector3(0, 0.1, 0))
-	_pieza("Pecho", Materiales.caja(Vector3(0.36, 0.26, 0.2), camisa), Vector3(0, 0.12, 0))
-	_pieza("Cuello", Materiales.cilindro(0.05, 0.055, 0.1, piel, 6), Vector3(0, 0.03, 0))
+	_pieza("Caderas", Materiales.caja(Vector3(0.28, 0.15, 0.17), pantalon), Vector3(0, -0.01, 0))
+	_pieza("Columna", Materiales.caja(Vector3(0.25, 0.2, 0.16), camisa), Vector3(0, 0.1, 0))
+	var pecho := Materiales.caja(Vector3(0.34, 0.25, 0.19), camisa)
+	_pieza("Pecho", pecho, Vector3(0, 0.12, 0))
+	_pieza("Cuello", Materiales.cilindro(0.045, 0.05, 0.1, piel, 6), Vector3(0, 0.03, 0))
 
-	# Cabeza low-poly
-	var cabeza := Materiales.esfera(0.12, piel, 8)
-	cabeza.scale = Vector3(1.0, 1.15, 1.05)
-	_pieza("Cabeza", cabeza, Vector3(0, 0.13, 0))
-	var nariz := Materiales.caja(Vector3(0.025, 0.04, 0.03), piel)
-	_pieza("Cabeza", nariz, Vector3(0, 0.1, 0.125))
-	_mat_ojos_normal = Materiales.solido(Datos.color(str(a.get("ojos", "#1a1a1a"))), 0.3)
-	_mat_ojos_sharingan = Materiales.emisivo(Color(1.0, 0.05, 0.05), 4.0)
+	# Cabeza: algo mayor y con mentón afilado (estilo anime).
+	var craneo := Materiales.esfera(0.125, piel, 10)
+	craneo.scale = Vector3(0.96, 1.08, 1.0)
+	_pieza("Cabeza", craneo, Vector3(0, 0.15, 0))
+	var menton := Materiales.cilindro(0.09, 0.03, 0.1, piel, 6)
+	menton.rotation_degrees = Vector3(180, 0, 0)
+	menton.scale = Vector3(1.0, 1.0, 0.85)
+	_pieza("Cabeza", menton, Vector3(0, 0.06, 0.02))
+	var nariz := Materiales.caja(Vector3(0.018, 0.035, 0.025), piel)
+	_pieza("Cabeza", nariz, Vector3(0, 0.12, 0.122))
+	var boca := Materiales.caja(Vector3(0.04, 0.006, 0.01), oscuro)
+	_pieza("Cabeza", boca, Vector3(0, 0.075, 0.112))
+
+	# Ojos con shader: iris oscuro que se vuelve rojo con tomoe al activar el modo ocular.
+	_mat_ojos_normal = Shaders.material("ojo")
+	_mat_ojos_normal.set_shader_parameter("iris_normal", Datos.color(str(a.get("ojos", "#1a1a1a"))))
 	for lado in [-1.0, 1.0]:
-		var ojo := Materiales.caja(Vector3(0.038, 0.02, 0.012), _mat_ojos_normal)
-		_pieza("Cabeza", ojo, Vector3(0.045 * lado, 0.135, 0.118))
+		var ojo := MeshInstance3D.new()
+		var q := QuadMesh.new()
+		q.size = Vector2(0.052, 0.034)
+		ojo.mesh = q
+		ojo.material_override = _mat_ojos_normal
+		ojo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ojo.rotation_degrees = Vector3(0, 14 * lado, 0)
+		_pieza("Cabeza", ojo, Vector3(0.045 * lado, 0.142, 0.118))
 		_ojos.append(ojo)
-		var ceja := Materiales.caja(Vector3(0.045, 0.01, 0.01), pelo)
-		ceja.rotation_degrees = Vector3(0, 0, -10 * lado)
-		_pieza("Cabeza", ceja, Vector3(0.045 * lado, 0.158, 0.12))
-		var oreja := Materiales.caja(Vector3(0.02, 0.05, 0.035), piel)
-		_pieza("Cabeza", oreja, Vector3(0.122 * lado, 0.12, 0.0))
+		var ceja := Materiales.caja(Vector3(0.05, 0.011, 0.012), pelo)
+		ceja.rotation_degrees = Vector3(0, 14 * lado, -12 * lado)
+		_pieza("Cabeza", ceja, Vector3(0.047 * lado, 0.168, 0.12))
+		var oreja := Materiales.caja(Vector3(0.018, 0.05, 0.035), piel)
+		_pieza("Cabeza", oreja, Vector3(0.12 * lado, 0.13, 0.0))
 	_luz_ojos = OmniLight3D.new()
 	_luz_ojos.light_color = Color(1, 0.1, 0.1)
-	_luz_ojos.omni_range = 0.6
+	_luz_ojos.omni_range = 0.7
 	_luz_ojos.light_energy = 0.0
-	_luz_ojos.position = Vector3(0, 0.14, 0.2)
+	_luz_ojos.position = Vector3(0, 0.14, 0.22)
 	hueso("Cabeza").add_child(_luz_ojos)
 	_pelo(a, pelo)
 
-	# Brazos y piernas
+	# Brazos y piernas más finos y largos.
 	for lado in ["I", "D"]:
-		_pieza("Brazo" + lado, Materiales.capsula(0.058, 0.3, camisa), Vector3(0, -0.13, 0))
-		_pieza("Antebrazo" + lado, Materiales.capsula(0.048, 0.27, piel), Vector3(0, -0.12, 0))
-		_pieza("Mano" + lado, Materiales.caja(Vector3(0.065, 0.09, 0.045), piel), Vector3(0, -0.05, 0.005))
-		_pieza("Pierna" + lado, Materiales.capsula(0.078, 0.46, pantalon), Vector3(0, -0.21, 0))
-		_pieza("Rodilla" + lado, Materiales.capsula(0.062, 0.42, pantalon), Vector3(0, -0.2, 0))
-		_pieza("Pie" + lado, Materiales.caja(Vector3(0.085, 0.05, 0.2), piel), Vector3(0, -0.025, 0.04))
+		_pieza("Brazo" + lado, Materiales.capsula(0.052, 0.3, camisa), Vector3(0, -0.13, 0))
+		_pieza("Antebrazo" + lado, Materiales.capsula(0.043, 0.26, piel), Vector3(0, -0.12, 0))
+		_pieza("Mano" + lado, Materiales.caja(Vector3(0.06, 0.085, 0.04), piel), Vector3(0, -0.05, 0.005))
+		_pieza("Pierna" + lado, Materiales.capsula(0.072, 0.48, pantalon), Vector3(0, -0.22, 0))
+		_pieza("Rodilla" + lado, Materiales.capsula(0.056, 0.46, pantalon), Vector3(0, -0.22, 0))
+		_pieza("Pie" + lado, Materiales.caja(Vector3(0.08, 0.05, 0.2), piel), Vector3(0, -0.025, 0.04))
 
 
 func _pelo(a: Dictionary, mat: Material) -> void:
-	var casco := Materiales.esfera(0.13, mat, 8)
-	casco.scale = Vector3(1.02, 0.95, 1.08)
-	_pieza("Cabeza", casco, Vector3(0, 0.17, -0.02))
+	var casco := Materiales.esfera(0.135, mat, 8)
+	casco.scale = Vector3(1.0, 0.92, 1.08)
+	_pieza("Cabeza", casco, Vector3(0, 0.19, -0.025))
+	# Cada pico: [punto de la base, dirección hacia donde apunta, largo, grosor].
+	var picos: Array = []
 	if str(a.get("peinado", "")) == "puntas":
-		# Puntas hacia atrás y flequillo a los lados (estilo low-poly).
-		var puntas := [
-			[Vector3(0, 0.24, -0.08), Vector3(-120, 0, 0), 0.16],
-			[Vector3(0.07, 0.2, -0.1), Vector3(-130, 0, -25), 0.14],
-			[Vector3(-0.07, 0.2, -0.1), Vector3(-130, 0, 25), 0.14],
-			[Vector3(0.04, 0.12, -0.12), Vector3(-150, 0, -15), 0.13],
-			[Vector3(-0.04, 0.12, -0.12), Vector3(-150, 0, 15), 0.13],
-			[Vector3(0, 0.27, 0.0), Vector3(-80, 0, 0), 0.1],
-		]
-		for p in puntas:
-			var cono := Materiales.cilindro(0.0, 0.045, p[2], mat, 5)
-			cono.rotation_degrees = p[1]
-			_pieza("Cabeza", cono, p[0])
-		for lado in [-1.0, 1.0]:
-			var mechon := Materiales.cilindro(0.0, 0.03, 0.15, mat, 4)
-			mechon.rotation_degrees = Vector3(170, 0, 8 * lado)
-			_pieza("Cabeza", mechon, Vector3(0.095 * lado, 0.13, 0.08))
+		# Corona de picos hacia atrás y arriba, en abanico.
+		for i in 7:
+			var t := float(i) / 6.0
+			var lado := lerpf(-1.0, 1.0, t)
+			var largo := 0.2 + 0.07 * (1.0 - absf(lado))
+			picos.append([Vector3(lado * 0.085, 0.25 - absf(lado) * 0.05, -0.06), Vector3(lado * 0.55, 0.55, -1.0), largo, 0.05])
+		# Segunda fila, más baja, hacia atrás.
+		for i in 5:
+			var t2 := float(i) / 4.0
+			var lado2 := lerpf(-1.0, 1.0, t2)
+			picos.append([Vector3(lado2 * 0.09, 0.15, -0.1), Vector3(lado2 * 0.6, 0.1, -1.0), 0.17, 0.045])
+		# Flequillo sobre la frente y mechones a los lados de la cara.
+		for x in [-0.075, -0.03, 0.015, 0.06]:
+			picos.append([Vector3(x, 0.24, 0.08), Vector3(x * 3.0, -1.0, 0.45), 0.13, 0.03])
+		for lado3 in [-1.0, 1.0]:
+			picos.append([Vector3(0.105 * lado3, 0.19, 0.05), Vector3(0.15 * lado3, -1.0, 0.1), 0.15, 0.03])
+	else:
+		for i in 6:
+			var t3 := float(i) / 5.0
+			picos.append([Vector3(lerpf(-0.08, 0.08, t3), 0.25, -0.03), Vector3(lerpf(-0.4, 0.4, t3), 1.0, -0.6), 0.08, 0.04])
+	for p in picos:
+		var dir: Vector3 = (p[1] as Vector3).normalized()
+		var largo_p: float = p[2]
+		var cono := Materiales.cilindro(0.0, p[3], largo_p, mat, 4)
+		# Orientar el eje +Y del cono hacia "dir" y apoyar la base en el cráneo.
+		var eje := Vector3.UP.cross(dir)
+		if eje.length() > 0.001:
+			cono.basis = Basis(eje.normalized(), Vector3.UP.angle_to(dir))
+		_pieza("Cabeza", cono, (p[0] as Vector3) + dir * largo_p * 0.45)
 
 
 func _pieza(nombre_hueso: String, mi: Node3D, pos: Vector3) -> void:
@@ -169,9 +202,7 @@ func poner_sharingan(activo: bool) -> void:
 	if activo == sharingan:
 		return
 	sharingan = activo
-	for o in _ojos:
-		o.material_override = _mat_ojos_sharingan if activo else null
-		o.scale = Vector3(1.0, 1.3, 1.0) if activo else Vector3.ONE
+	(_mat_ojos_normal as ShaderMaterial).set_shader_parameter("activo", 1.0 if activo else 0.0)
 	_luz_ojos.light_energy = 1.5 if activo else 0.0
 
 

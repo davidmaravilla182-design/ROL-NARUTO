@@ -15,17 +15,26 @@ var _destello_energia := 0.0
 var _sol_energia_base := 0.55
 var _ambiente_base := 0.55
 var _colores: Dictionary
+var sonidos: Sonidos
+var camara: Camera3D
+var _nubes_mat: ShaderMaterial
+var _rayo_cielo: Rayos
+var _t_relampago := 6.0
+var _relampago := 0.0
 
 
 func construir(p_mapa: Mapa) -> void:
 	mapa = p_mapa
 	_colores = Datos.escenario.get("colores", {})
+	Materiales.grosor_contorno = 0.03 if Ajustes.g("contorno_escenario", false) else 0.0
 	_entorno()
 	_suelo()
 	_charcos()
 	_torres()
 	_campo_entrenamiento()
 	_fondo_lejano()
+	_atmosfera()
+	Materiales.grosor_contorno = 0.0
 
 
 func _c(clave: String) -> Color:
@@ -54,12 +63,20 @@ func _entorno() -> void:
 	entorno.fog_enabled = true
 	entorno.fog_light_color = _c("niebla")
 	entorno.fog_light_energy = 0.9
-	entorno.fog_density = 0.016
-	entorno.fog_sky_affect = 0.6
-	entorno.glow_enabled = true
-	entorno.glow_intensity = 0.7
-	entorno.glow_bloom = 0.05
-	entorno.glow_hdr_threshold = 1.0
+	entorno.fog_density = 0.014
+	entorno.fog_sky_affect = 0.5
+	# Niebla por altura: más densa a ras de suelo.
+	entorno.fog_height = 3.0
+	entorno.fog_height_density = 0.06
+	entorno.glow_enabled = bool(Ajustes.g("glow", true))
+	entorno.glow_intensity = 0.9
+	entorno.glow_strength = 1.05
+	entorno.glow_bloom = 0.08
+	entorno.glow_hdr_threshold = 0.95
+	entorno.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+	entorno.adjustment_enabled = true
+	entorno.adjustment_contrast = 1.08
+	entorno.adjustment_saturation = 1.12
 	var we := WorldEnvironment.new()
 	we.environment = entorno
 	add_child(we)
@@ -68,7 +85,7 @@ func _entorno() -> void:
 	sol.rotation_degrees = Vector3(-58, 35, 0)
 	sol.light_color = Color(0.78, 0.84, 0.95)
 	sol.light_energy = _sol_energia_base
-	sol.shadow_enabled = true
+	sol.shadow_enabled = bool(Ajustes.g("sombras", true))
 	sol.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	sol.directional_shadow_max_distance = 30.0
 	add_child(sol)
@@ -84,10 +101,12 @@ func _entorno() -> void:
 
 
 func _suelo() -> void:
+	# Placas de metal mojado: poco rugoso y algo metálico para reflejar la sonda.
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = _c("suelo")
-	mat.roughness = 0.32
-	mat.metallic = 0.15
+	mat.roughness = 0.34
+	mat.metallic = 0.3
+	mat.metallic_specular = 0.45
 	var suelo := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
 	pm.size = Vector2(180, 180)
@@ -112,18 +131,16 @@ func _suelo() -> void:
 
 
 func _charcos() -> void:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = _c("charco")
-	mat.roughness = 0.02
-	mat.metallic = 0.7
-	mat.metallic_specular = 1.0
+	var mat := Shaders.material("charco")
+	mat.set_shader_parameter("color", _c("charco"))
+	mat.set_shader_parameter("fuerza", 1.0 if Ajustes.g("ondas_charcos", true) else 0.0)
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	var cm := CylinderMesh.new()
 	cm.top_radius = 1.0
 	cm.bottom_radius = 1.0
 	cm.height = 0.01
-	cm.radial_segments = 14
+	cm.radial_segments = 20
 	cm.rings = 1
 	cm.cap_bottom = false
 	cm.material = mat
@@ -150,6 +167,7 @@ func _torres() -> void:
 	var pasarelas: Array = []
 	var barandas: Array = []
 	var cajas: Array = []
+	var lamparas: Array = []
 	for o in mapa.obstaculos:
 		var c: Vector2 = o["centro"]
 		var m: Vector2 = o["medio"]
@@ -195,6 +213,11 @@ func _torres() -> void:
 				_: p += Vector3(off * m.x, 0, -m.y - 0.25)
 			var r := rng.randf_range(0.15, 0.35)
 			tuberias.append(Transform3D(Basis.from_scale(Vector3(r, alto, r)), p))
+			# Anillos de luz cálida en las tuberías.
+			var yl := rng.randf_range(2.5, 6.0)
+			while yl < alto - 2.0:
+				lamparas.append(Transform3D(Basis.from_scale(Vector3(r * 2.3, 0.12, r * 2.3)), Vector3(p.x, yl, p.z)))
+				yl += rng.randf_range(6.0, 12.0)
 	# Pasarelas y tuberías horizontales entre torres
 	for pa in mapa.pasarelas:
 		var a: Dictionary = mapa.obstaculos[int(pa["a"])]
@@ -218,11 +241,11 @@ func _torres() -> void:
 			var r2 := rng.randf_range(0.25, 0.5)
 			tuberias.append(Transform3D(tb.scaled_local(Vector3(r2, largo, r2)), medio + Vector3(0, rng.randf_range(-3.0, -1.2), 0) + base.x * rng.randf_range(-0.5, 0.5)))
 
-	var metal := Materiales.solido(_c("torre"), 0.45, 0.65)
-	var metal_osc := Materiales.solido(_c("torre_oscura"), 0.5, 0.6)
-	var mat_banda := Materiales.solido(_c("torre").lightened(0.1), 0.35, 0.8)
-	var mat_ventana := Materiales.emisivo(_c("ventana"), 1.6)
-	var mat_tuberia := Materiales.solido(_c("tuberia"), 0.4, 0.7)
+	var metal := Materiales.solido(_c("torre"), 0.3, 0.7)
+	var metal_osc := Materiales.solido(_c("torre_oscura"), 0.35, 0.65)
+	var mat_banda := Materiales.solido(_c("torre").lightened(0.12), 0.25, 0.85)
+	var mat_ventana := Materiales.emisivo(_c("ventana"), 2.4)
+	var mat_tuberia := Materiales.solido(_c("tuberia"), 0.3, 0.75)
 	var mat_pasarela := Materiales.solido(_c("pasarela"), 0.5, 0.6)
 	var mat_caja := Materiales.solido(Color(0.35, 0.22, 0.18), 0.6, 0.5)
 	_mmi(_mm_caja(cuerpos, metal), true)
@@ -232,6 +255,7 @@ func _torres() -> void:
 	_mmi(_mm_caja(pasarelas, mat_pasarela), true)
 	_mmi(_mm_caja(barandas, mat_banda), false)
 	_mmi(_mm_caja(cajas, mat_caja), true)
+	_mmi(_mm_caja(lamparas, Materiales.emisivo(Color(1.0, 0.62, 0.28), 3.0)), false)
 	var mm_t := MultiMesh.new()
 	mm_t.transform_format = MultiMesh.TRANSFORM_3D
 	var cil := CylinderMesh.new()
@@ -299,6 +323,77 @@ func _fondo_lejano() -> void:
 	_mmi(_mm_caja(ts, Materiales.solido(_c("torre_oscura").darkened(0.2), 0.6, 0.5)), false)
 
 
+## Nubes en movimiento, bancos de niebla por capas, sonda de reflejos, luces cálidas y relámpagos.
+func _atmosfera() -> void:
+	if Ajustes.g("nubes", true):
+		_nubes_mat = Shaders.material("nubes")
+		var nubes := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(560, 560)
+		pm.subdivide_width = 0
+		pm.material = _nubes_mat
+		nubes.mesh = pm
+		nubes.position = Vector3(0, 75, 0)
+		nubes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(nubes)
+	# Capas de niebla: anillos de bancos verticales a distintas distancias.
+	var capas := int(Ajustes.g("capas_niebla", 2))
+	for capa in capas:
+		var radio := 24.0 + capa * 16.0
+		var n := 10 + capa * 4
+		for i in n:
+			var a := TAU * (float(i) + 0.5 * capa) / n
+			var mat := Shaders.material("niebla")
+			mat.set_shader_parameter("color", _c("niebla").lightened(0.05 * capa))
+			mat.set_shader_parameter("opacidad", 0.28 + capa * 0.08)
+			mat.set_shader_parameter("velocidad", 0.015 + capa * 0.008)
+			mat.set_shader_parameter("semilla", float(i * 7 + capa * 31))
+			var q := QuadMesh.new()
+			q.size = Vector2(radio * TAU / n * 1.6, 9.0 + capa * 5.0)
+			q.material = mat
+			var mi := MeshInstance3D.new()
+			mi.mesh = q
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(mi)
+			mi.position = Vector3(cos(a) * radio, q.size.y * 0.42, sin(a) * radio)
+			mi.rotation.y = -a + PI * 0.5
+	if Ajustes.g("sonda_reflejos", true):
+		var sonda := ReflectionProbe.new()
+		sonda.size = Vector3(80, 40, 80)
+		sonda.position = Vector3(0, 6, 0)
+		sonda.origin_offset = Vector3(0, -4, 0)
+		sonda.box_projection = true
+		sonda.update_mode = ReflectionProbe.UPDATE_ONCE
+		sonda.intensity = 1.0
+		sonda.max_distance = 90.0
+		sonda.ambient_mode = ReflectionProbe.AMBIENT_DISABLED
+		add_child(sonda)
+	# Luces cálidas al pie de las torres más cercanas al campo.
+	var cercanas: Array = []
+	for o in mapa.obstaculos:
+		if o["tipo"] == "torre":
+			cercanas.append(o)
+	cercanas.sort_custom(func(x, y): return (x["centro"] as Vector2).length() < (y["centro"] as Vector2).length())
+	for i in mini(int(Ajustes.g("luces_ventanas", 3)), cercanas.size()):
+		var o: Dictionary = cercanas[i]
+		var c: Vector2 = o["centro"]
+		var hacia := -c.normalized()
+		var p := Vector2(c.x, c.y) + hacia * ((o["medio"] as Vector2).length() + 0.6)
+		var l := OmniLight3D.new()
+		l.light_color = Color(1.0, 0.62, 0.3)
+		l.light_energy = 2.2
+		l.omni_range = 9.0
+		l.position = Vector3(p.x, 3.2, p.y)
+		add_child(l)
+		var farol := Materiales.caja(Vector3(0.5, 0.35, 0.5), Materiales.emisivo(Color(1.0, 0.65, 0.3), 3.5))
+		farol.position = l.position + Vector3(0, 0.3, 0)
+		add_child(farol)
+	_rayo_cielo = Rayos.new()
+	_rayo_cielo.color = Color(0.7, 0.8, 1.0)
+	_rayo_cielo.intensidad = 4.0
+	add_child(_rayo_cielo)
+
+
 func _mm_caja(ts: Array, mat: Material) -> MultiMesh:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -333,19 +428,51 @@ func destello(color: Color, energia: float, duracion: float) -> void:
 	_destello_t = duracion
 
 
+func _relampago_cielo() -> void:
+	var a := randf() * TAU
+	var d := randf_range(55.0, 95.0)
+	var arriba := Vector3(cos(a) * d, 72.0, sin(a) * d)
+	var abajo := arriba + Vector3(randf_range(-12, 12), -randf_range(45.0, 65.0), randf_range(-12, 12))
+	_rayo_cielo.limpiar()
+	_rayo_cielo.agregar_rayo(arriba, abajo, 0.45, 3, 0.18, 6)
+	_relampago = 1.0
+	destello(Color(0.75, 0.82, 1.0), 4.0, 0.35)
+	if sonidos != null:
+		var retraso := d / 60.0
+		var tw := create_tween()
+		tw.tween_interval(retraso)
+		tw.tween_callback(sonidos.tocar.bind("trueno", -4.0, randf_range(0.8, 1.1)))
+
+
 func _process(delta: float) -> void:
+	# Relámpagos ocasionales en el cielo.
+	if Ajustes.g("relampagos", true) and _rayo_cielo != null:
+		_t_relampago -= delta
+		if _t_relampago <= 0.0:
+			var conf: Dictionary = Datos.graficos.get("relampago", {})
+			_t_relampago = randf_range(float(conf.get("intervalo_min", 9.0)), float(conf.get("intervalo_max", 20.0)))
+			_relampago_cielo()
+		if _relampago > 0.0:
+			_relampago = maxf(_relampago - delta * 2.5, 0.0)
+			# Parpadeo doble típico del relámpago.
+			var parp := _relampago * (0.6 + 0.4 * sin(_relampago * 40.0))
+			if _nubes_mat != null:
+				_nubes_mat.set_shader_parameter("relampago", parp)
+			if camara != null:
+				_rayo_cielo.dibujar(camara.global_position)
+			_rayo_cielo.visible = _relampago > 0.45
 	if _destello_t > 0.0:
 		_destello_t = maxf(_destello_t - delta, 0.0)
 		var k := _destello_t / maxf(_destello_dur, 0.001)
 		var parpadeo := 0.75 + randf() * 0.25
 		_luz_global.light_color = _destello_color
-		_luz_global.light_energy = _destello_energia * k * parpadeo
-		sol.light_energy = _sol_energia_base + _destello_energia * 0.4 * k
-		entorno.ambient_light_energy = _ambiente_base + _destello_energia * 0.3 * k
+		_luz_global.light_energy = _destello_energia * 0.5 * k * parpadeo
+		sol.light_energy = _sol_energia_base + _destello_energia * 0.2 * k
+		entorno.ambient_light_energy = _ambiente_base + _destello_energia * 0.12 * k
 		# La niebla toma el color del destello: todo el escenario se tiñe.
-		var mezcla := clampf(_destello_energia * 0.12 * k * parpadeo, 0.0, 0.85)
+		var mezcla := clampf(_destello_energia * 0.1 * k * parpadeo, 0.0, 0.55)
 		entorno.fog_light_color = _c("niebla").lerp(_destello_color, mezcla)
-		entorno.fog_light_energy = 0.9 + mezcla * 1.5
+		entorno.fog_light_energy = 0.9 + mezcla * 0.8
 	elif _luz_global.light_energy != 0.0:
 		_luz_global.light_energy = 0.0
 		sol.light_energy = _sol_energia_base
