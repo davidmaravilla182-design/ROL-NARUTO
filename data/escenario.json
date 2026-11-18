@@ -1,36 +1,337 @@
 {
-  "_nota": "Parámetros de la generación procedural del sector de la aldea. La misma semilla produce el mismo mapa en servidor y cliente.",
-  "semilla": 1337,
-  "tamano": 90.0,
-  "limite_juego": 38.0,
-  "campo_entrenamiento": { "centro": [0.0, 0.0], "radio": 16.0 },
-  "inicio_jugador": [0.0, 10.0],
-  "inicio_enemigo": [0.0, -12.0],
-  "munecos": [[-4.0, -2.0], [0.0, -4.0], [4.0, -2.0]],
-  "charcos_fijos": [
-    [-4.0, -2.0, 1.8], [0.0, -4.0, 1.6], [4.0, -2.0, 1.8], [-8.0, 6.0, 2.5], [9.0, 5.0, 2.2], [2.0, -14.0, 2.8]
+ "_nota": "Parámetros de la generación procedural del sector de la aldea. La misma semilla produce el mismo mapa en servidor y cliente.",
+ "semilla": 1337,
+ "tamano": 90.0,
+ "limite_juego": 38.0,
+ "campo_entrenamiento": {
+  "centro": [
+   0.0,
+   0.0
   ],
-  "charcos_aleatorios": 14,
-  "torres": {
-    "cantidad": 22,
-    "radio_minimo": 21.0,
-    "radio_maximo": 42.0,
-    "ancho": [4.0, 8.0],
-    "alto": [14.0, 42.0],
-    "separacion": 2.0
+  "radio": 16.0
+ },
+ "inicio_jugador": [
+  0.0,
+  10.0
+ ],
+ "inicio_enemigo": [
+  0.0,
+  -12.0
+ ],
+ "munecos": [
+  [
+   -4.0,
+   -2.0
+  ],
+  [
+   0.0,
+   -4.0
+  ],
+  [
+   4.0,
+   -2.0
+  ]
+ ],
+ "charcos_fijos": [
+  [
+   -4.0,
+   -2.0,
+   1.8
+  ],
+  [
+   0.0,
+   -4.0,
+   1.6
+  ],
+  [
+   4.0,
+   -2.0,
+   1.8
+  ],
+  [
+   -8.0,
+   6.0,
+   2.5
+  ],
+  [
+   9.0,
+   5.0,
+   2.2
+  ],
+  [
+   2.0,
+   -14.0,
+   2.8
+  ]
+ ],
+ "charcos_aleatorios": 14,
+ "torres": {
+  "cantidad": 0,
+  "radio_minimo": 21.0,
+  "radio_maximo": 42.0,
+  "ancho": [
+   4.0,
+   8.0
+  ],
+  "alto": [
+   14.0,
+   42.0
+  ],
+  "separacion": 2.0
+ },
+ "obstaculos_campo": 4,
+ "colores": {
+  "suelo": "#2a2e33",
+  "charco": "#0d1218",
+  "torre": "#3b4048",
+  "torre_oscura": "#2a2e35",
+  "tuberia": "#5a5048",
+  "pasarela": "#454a52",
+  "ventana": "#ffb866",
+  "cielo_arriba": "#262838",
+  "cielo_horizonte": "#4a4b60",
+  "niebla": "#4a4c62"
+ },
+ "lluvia": {
+  "gotas": 1400,
+  "salpicaduras": 220,
+  "area": 22.0
+ },
+ "_nota_trazado": "Trazado del sector (v0.3): piezas del kit de Blender con posición [x, z] y giro en grados. El servidor usa sus huellas como colisiones.",
+ "trazado": {
+  "huellas": {
+   "edificio": [
+    8.0,
+    7.0,
+    10.8
+   ],
+   "silo": [
+    8.6,
+    8.6,
+    24.0
+   ],
+   "tanque": [
+    3.6,
+    3.6,
+    6.4
+   ],
+   "silo_lejano": [
+    8.0,
+    8.0,
+    30.0
+   ],
+   "bloque_lejano": [
+    10.0,
+    10.0,
+    22.0
+   ]
   },
-  "obstaculos_campo": 5,
-  "colores": {
-    "suelo": "#2a2e33",
-    "charco": "#1a2430",
-    "torre": "#3b4048",
-    "torre_oscura": "#2a2e35",
-    "tuberia": "#5a5048",
-    "pasarela": "#454a52",
-    "ventana": "#ffcf7a",
-    "cielo_arriba": "#5d6670",
-    "cielo_horizonte": "#8a929b",
-    "niebla": "#7d8790"
+  "canal": {
+   "x_min": -80.0,
+   "x_max": 80.0,
+   "z_sur": -23.0,
+   "z_norte": -31.0,
+   "nivel_agua": -1.1
   },
-  "lluvia": { "gotas": 1400, "salpicaduras": 220, "area": 22.0 }
+  "puentes": [
+   -15.0,
+   15.0
+  ],
+  "piezas": [
+   {
+    "tipo": "edificio",
+    "pos": [
+     26.0,
+     -14.0
+    ],
+    "giro": 270
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     27.0,
+     -3.0
+    ],
+    "giro": 270
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     26.0,
+     13.0
+    ],
+    "giro": 270
+   },
+   {
+    "tipo": "silo",
+    "pos": [
+     36.0,
+     4.5
+    ],
+    "giro": 0
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     -26.0,
+     -13.0
+    ],
+    "giro": 90
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     -27.0,
+     4.0
+    ],
+    "giro": 90
+   },
+   {
+    "tipo": "silo",
+    "pos": [
+     -34.0,
+     16.0
+    ],
+    "giro": 40
+   },
+   {
+    "tipo": "tanque",
+    "pos": [
+     -24.0,
+     15.0
+    ],
+    "giro": 0
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     -12.0,
+     27.0
+    ],
+    "giro": 180
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     12.0,
+     26.0
+    ],
+    "giro": 180
+   },
+   {
+    "tipo": "silo",
+    "pos": [
+     0.0,
+     38.0
+    ],
+    "giro": 15
+   },
+   {
+    "tipo": "tanque",
+    "pos": [
+     21.0,
+     23.0
+    ],
+    "giro": 30
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     -30.0,
+     -38.0
+    ],
+    "giro": 0
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     -8.0,
+     -37.0
+    ],
+    "giro": 0
+   },
+   {
+    "tipo": "silo",
+    "pos": [
+     8.0,
+     -42.0
+    ],
+    "giro": 0
+   },
+   {
+    "tipo": "edificio",
+    "pos": [
+     26.0,
+     -38.0
+    ],
+    "giro": 0
+   },
+   {
+    "tipo": "silo",
+    "pos": [
+     -46.0,
+     -44.0
+    ],
+    "giro": 0
+   }
+  ],
+  "arcos": [
+   {
+    "pos": [
+     27.0,
+     5.0
+    ],
+    "giro": 90
+   },
+   {
+    "pos": [
+     -27.0,
+     -4.5
+    ],
+    "giro": 90
+   },
+   {
+    "pos": [
+     0.0,
+     26.5
+    ],
+    "giro": 0
+   }
+  ],
+  "tubos": [
+   {
+    "pos": [
+     -6.0,
+     -21.6
+    ],
+    "altura": 0.6,
+    "giro": 0
+   },
+   {
+    "pos": [
+     6.5,
+     -21.6
+    ],
+    "altura": 0.6,
+    "giro": 0
+   }
+  ],
+  "horizonte": {
+   "cantidad": 34,
+   "radio_min": 58.0,
+   "radio_max": 100.0,
+   "escala_min": 1.0,
+   "escala_max": 2.4
+  },
+  "cables": 14
+ },
+ "atmosfera": {
+  "sol_energia": 0.32,
+  "sol_color": "#b8b8e0",
+  "ambiente": 0.42,
+  "niebla_densidad": 0.02,
+  "niebla_altura_densidad": 0.08,
+  "exposicion": 1.05,
+  "glow_umbral": 0.8
+ }
 }

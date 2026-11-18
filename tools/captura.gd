@@ -22,40 +22,47 @@ func _initialize() -> void:
 		[0.5, func(): _guardar("00_menu"); menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
 		[0.7, func(): _enemigo(false)],
 		[1.5, func(): _guardar("01_inicio")],
-		[1.6, func(): _cam(PI, 2.6, -0.1, 1.3)],
-		[2.2, func(): _guardar("02_personaje_frente")],
-		[2.3, func(): _cam(0.0, 2.6, -0.1, 1.3)],
-		[2.9, func(): _guardar("03_personaje_espalda")],
-		[3.0, func(): _cam(0.0, 6.2, -0.32, 1.6); _accion("bola_fuego")],
-		[3.25, func(): _guardar("04_sellos")],
-		[3.75, func(): _guardar("05_bola_fuego_n1")],
-		[5.0, func(): _nivel(3); _listo(Vector3(0, 0, 10))],
-		[5.1, func(): _accion("bola_fuego")],
-		[5.9, func(): _guardar("06_bola_fuego_n3")],
-		[6.3, func(): _guardar("07_bola_fuego_n3_b")],
-		[7.0, func(): _guardar("08_explosion_n3")],
-		[9.0, func(): _listo(Vector3(-4, 0, 6))],
-		[9.1, func(): _accion("chidori")],
-		[9.4, func(): _guardar("09_chidori_carga_n3")],
-		[9.95, func(): _guardar("10_chidori_carga_n3_b")],
-		[10.25, func(): _guardar("11_chidori_embiste")],
-		[10.6, func(): _guardar("12_chidori_impacto")],
-		[12.0, func(): _nivel(1); _listo(Vector3(-4, 0, 6))],
-		[12.1, func(): _accion("chidori")],
-		[12.6, func(): _guardar("13_chidori_carga_n1")],
-		[14.0, func(): _listo(Vector3(0, 0, 4)); _accion("sharingan"); _enemigo(true)],
-		[16.0, func(): _guardar("14_sharingan_aviso")],
-		[16.5, func(): _guardar("15_sharingan_b")],
-		[17.0, func(): _guardar("16_sharingan_c")],
-		[17.6, func(): _enemigo(false); _listo(Vector3(0, 0, 8)); juego._ciclar_objetivo()],
-		[18.4, func(): _guardar("17_objetivo_fijado")],
-		[18.5, func(): juego._on_apuntar("bola_fuego", Vector2(70, -90), false)],
-		[18.9, func(): _guardar("18_apuntado_bola")],
-		[19.0, func(): juego._on_apuntar("chidori", Vector2(-80, -60), false); juego.hud._on_apuntando("chidori", Vector2(-80, -60), false)],
-		[19.4, func(): _guardar("19_apuntado_rayo")],
-		[19.5, func(): juego.hud.cancelar.emit("chidori"); juego.hud._on_cancelado("chidori"); juego.hud.abrir_ajustes()],
-		[20.0, func(): _guardar("20_ajustes")],
-		[20.1, func(): quit(0)],
+		[1.52, func(): _libre(Vector3(22, 5.5, -20.0), Vector3(-6, -2.0, -28.0))],
+		[2.0, func(): _guardar("01b_canal")],
+		[2.02, func(): _libre(Vector3(14, 16, 22), Vector3(-4, 2, -10))],
+		[2.6, func(): _guardar("01c_panoramica")],
+		[2.62, func(): _seguir(); _listo(Vector3(18, 0, 6)); _cam(-1.2, 7.0, -0.12, 1.8)],
+		[3.1, func(): _guardar("01d_calle")],
+		[3.12, func(): _listo(Vector3(0, 0, 10))],
+		[3.3, func(): _cam(PI, 2.6, -0.1, 1.3)],
+		[3.9, func(): _guardar("02_personaje_frente")],
+		[4.0, func(): _cam(0.0, 2.6, -0.1, 1.3)],
+		[4.6, func(): _guardar("03_personaje_espalda")],
+		[4.7, func(): _cam(0.0, 6.2, -0.32, 1.6); _accion("bola_fuego")],
+		[4.95, func(): _guardar("04_sellos")],
+		[5.45, func(): _guardar("05_bola_fuego_n1")],
+		[6.7, func(): _nivel(3); _listo(Vector3(0, 0, 10))],
+		[6.8, func(): _accion("bola_fuego")],
+		[7.6, func(): _guardar("06_bola_fuego_n3")],
+		[8.0, func(): _guardar("07_bola_fuego_n3_b")],
+		[8.7, func(): _guardar("08_explosion_n3")],
+		[10.7, func(): _listo(Vector3(-4, 0, 6))],
+		[10.8, func(): _accion("chidori")],
+		[11.1, func(): _guardar("09_chidori_carga_n3")],
+		[11.65, func(): _guardar("10_chidori_carga_n3_b")],
+		[11.95, func(): _guardar("11_chidori_embiste")],
+		[12.3, func(): _guardar("12_chidori_impacto")],
+		[13.7, func(): _nivel(1); _listo(Vector3(-4, 0, 6))],
+		[13.8, func(): _accion("chidori")],
+		[14.3, func(): _guardar("13_chidori_carga_n1")],
+		[15.7, func(): _listo(Vector3(0, 0, 4)); _accion("sharingan"); _enemigo(true)],
+		[17.7, func(): _guardar("14_sharingan_aviso")],
+		[18.2, func(): _guardar("15_sharingan_b")],
+		[18.7, func(): _guardar("16_sharingan_c")],
+		[19.3, func(): _enemigo(false); _listo(Vector3(0, 0, 8)); juego._ciclar_objetivo()],
+		[20.1, func(): _guardar("17_objetivo_fijado")],
+		[20.2, func(): juego._on_apuntar("bola_fuego", Vector2(70, -90), false)],
+		[20.6, func(): _guardar("18_apuntado_bola")],
+		[20.7, func(): juego._on_apuntar("chidori", Vector2(-80, -60), false); juego.hud._on_apuntando("chidori", Vector2(-80, -60), false)],
+		[21.1, func(): _guardar("19_apuntado_rayo")],
+		[21.2, func(): juego.hud.cancelar.emit("chidori"); juego.hud._on_cancelado("chidori"); juego.hud.abrir_ajustes()],
+		[21.7, func(): _guardar("20_ajustes")],
+		[21.8, func(): quit(0)],
 	]
 
 
@@ -69,6 +76,17 @@ func _cam(yaw: float, dist: float, pitch: float, alt: float) -> void:
 	juego.camara.distancia = dist
 	juego.camara.pitch = pitch
 	juego.camara.altura = alt
+
+
+## Cámara fija (deja de seguir al jugador) para vistas del escenario.
+func _libre(pos: Vector3, mirar: Vector3) -> void:
+	juego.camara.libre = true
+	juego.camara.global_position = pos
+	juego.camara.look_at(mirar, Vector3.UP)
+
+
+func _seguir() -> void:
+	juego.camara.libre = false
 
 
 func _accion(id: String) -> void:

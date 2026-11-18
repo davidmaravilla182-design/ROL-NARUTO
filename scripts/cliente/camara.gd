@@ -4,6 +4,7 @@ extends Camera3D
 ## El arrastre en la mitad derecha de la pantalla cambia yaw/pitch.
 
 var objetivo: Node3D
+var libre := false   # true: la cámara no sigue a nadie (vistas de depuración/capturas)
 var yaw := 0.0         # cámara en +Z mirando hacia -Z (detrás del jugador)
 var pitch := -0.32
 var distancia := 6.2
@@ -37,7 +38,7 @@ func adelante_plano() -> Vector3:
 
 
 func _process(delta: float) -> void:
-	if objetivo == null:
+	if objetivo == null or libre:
 		return
 	_t += delta
 	var meta := objetivo.global_position + Vector3(0, altura, 0)

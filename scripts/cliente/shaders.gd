@@ -277,6 +277,66 @@ void fragment() {
 }
 """
 
+## Agua del canal: corriente con ondas grandes de ruido + anillos de lluvia, muy reflectante y oscura.
+const AGUA := """
+shader_type spatial;
+render_mode cull_back;
+uniform vec4 color : source_color = vec4(0.05, 0.07, 0.1, 1.0);
+uniform vec2 flujo = vec2(0.35, 0.0);
+uniform float fuerza = 1.0;
+varying vec3 wpos;
+RUIDO
+float altura(vec2 p) {
+	float h = fbm3(vec3(p * 0.35 + flujo * TIME * 0.6, TIME * 0.15)) * 1.2;
+	vec2 celda = floor(p * 1.3);
+	for (int x = -1; x <= 1; x++) {
+		for (int y = -1; y <= 1; y++) {
+			vec2 c = celda + vec2(float(x), float(y));
+			vec2 rnd = hash22(c);
+			vec2 centro = (c + rnd) / 1.3;
+			float fase = fract(TIME * 0.9 + rnd.x * 5.1);
+			float d = length(p - centro);
+			float r = fase * 0.6;
+			h += sin((d - r) * 40.0) * smoothstep(0.08, 0.0, abs(d - r)) * (1.0 - fase) * 0.25;
+		}
+	}
+	return h;
+}
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+void fragment() {
+	vec2 p = wpos.xz;
+	float e = 0.05;
+	float h = altura(p);
+	vec3 n = normalize(vec3((h - altura(p + vec2(e, 0.0))) * 0.6 * fuerza, 1.0, (h - altura(p + vec2(0.0, e))) * 0.6 * fuerza));
+	NORMAL = normalize((VIEW_MATRIX * vec4(n, 0.0)).xyz);
+	ALBEDO = color.rgb;
+	METALLIC = 0.6;
+	ROUGHNESS = 0.05;
+	SPECULAR = 0.7;
+}
+"""
+
+## Cascada que cae de un desagüe: franjas de ruido que bajan y espuma abajo.
+const CASCADA := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, blend_mix, fog_disabled;
+uniform vec4 color : source_color = vec4(0.75, 0.82, 0.92, 1.0);
+uniform float velocidad = 2.5;
+RUIDO
+void fragment() {
+	float x = abs(UV.x - 0.5) * 2.0;
+	float n = ruido3(vec3(UV.x * 14.0, UV.y * 2.5 - TIME * velocidad, TIME * 0.3));
+	float n2 = ruido3(vec3(UV.x * 30.0, UV.y * 5.0 - TIME * velocidad * 1.4, 3.0));
+	float franjas = smoothstep(0.35, 0.75, n * 0.6 + n2 * 0.5);
+	float borde = 1.0 - smoothstep(0.55, 1.0, x + (1.0 - UV.y) * 0.0);
+	float espuma = smoothstep(0.75, 1.0, UV.y);
+	ALBEDO = color.rgb * (0.8 + franjas * 0.6 + espuma * 0.5);
+	ALPHA = clamp((0.25 + franjas * 0.6 + espuma * 0.5) * borde, 0.0, 0.9);
+}
+"""
+
 ## Capa de nubes en movimiento, con destello de relámpago.
 const NUBES := """
 shader_type spatial;
@@ -398,6 +458,8 @@ static func shader(clave: String) -> Shader:
 		"nubes": return _shader(clave, NUBES)
 		"niebla": return _shader(clave, NIEBLA)
 		"ojo": return _shader(clave, OJO)
+		"agua": return _shader(clave, AGUA)
+		"cascada": return _shader(clave, CASCADA)
 		"indicador": return _shader(clave, INDICADOR)
 	push_error("Shader desconocido " + clave)
 	return null

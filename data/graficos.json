@@ -1,70 +1,70 @@
 {
-  "_nota": "Preajustes de calidad gráfica. 'alta' es la calidad por defecto. Media y baja apuntan a 30+ fps en gama media.",
-  "por_defecto": "alta",
-  "calidades": {
-    "baja": {
-      "escala_3d": 0.7,
-      "sombras": false,
-      "contorno_personajes": true,
-      "contorno_escenario": false,
-      "sonda_reflejos": false,
-      "distorsion_calor": false,
-      "ondas_charcos": false,
-      "nubes": false,
-      "capas_niebla": 0,
-      "gotas": 600,
-      "salpicaduras": 80,
-      "particulas": 0.5,
-      "glow": false,
-      "luces_ventanas": 0,
-      "relampagos": true,
-      "fps_objetivo": 30
-    },
-    "media": {
-      "escala_3d": 0.85,
-      "sombras": true,
-      "contorno_personajes": true,
-      "contorno_escenario": false,
-      "sonda_reflejos": true,
-      "distorsion_calor": false,
-      "ondas_charcos": true,
-      "nubes": true,
-      "capas_niebla": 2,
-      "gotas": 1100,
-      "salpicaduras": 160,
-      "particulas": 0.75,
-      "glow": true,
-      "luces_ventanas": 2,
-      "relampagos": true,
-      "fps_objetivo": 30
-    },
-    "alta": {
-      "escala_3d": 1.0,
-      "sombras": true,
-      "contorno_personajes": true,
-      "contorno_escenario": true,
-      "sonda_reflejos": true,
-      "distorsion_calor": true,
-      "ondas_charcos": true,
-      "nubes": true,
-      "capas_niebla": 3,
-      "gotas": 1800,
-      "salpicaduras": 300,
-      "particulas": 1.0,
-      "glow": true,
-      "luces_ventanas": 5,
-      "relampagos": true,
-      "fps_objetivo": 60
-    }
+ "_nota": "Preajustes de calidad gráfica. 'alta' es la calidad por defecto. Media y baja apuntan a 30+ fps en gama media.",
+ "por_defecto": "alta",
+ "calidades": {
+  "baja": {
+   "escala_3d": 0.7,
+   "sombras": false,
+   "contorno_personajes": true,
+   "contorno_escenario": false,
+   "sonda_reflejos": false,
+   "distorsion_calor": false,
+   "ondas_charcos": false,
+   "nubes": false,
+   "capas_niebla": 0,
+   "gotas": 600,
+   "salpicaduras": 80,
+   "particulas": 0.5,
+   "glow": false,
+   "luces_ventanas": 0,
+   "relampagos": true,
+   "fps_objetivo": 30
   },
-  "impacto": {
-    "pausa_golpe_fuerte": 0.07,
-    "pausa_rayo": 0.09,
-    "camara_lenta_escala": 0.3,
-    "camara_lenta_duracion": 0.45
+  "media": {
+   "escala_3d": 0.85,
+   "sombras": true,
+   "contorno_personajes": true,
+   "contorno_escenario": false,
+   "sonda_reflejos": true,
+   "distorsion_calor": false,
+   "ondas_charcos": true,
+   "nubes": true,
+   "capas_niebla": 1,
+   "gotas": 1100,
+   "salpicaduras": 160,
+   "particulas": 0.75,
+   "glow": true,
+   "luces_ventanas": 2,
+   "relampagos": true,
+   "fps_objetivo": 30
   },
-  "relampago": {
-    "intervalo_min": 9.0,
-    "intervalo_max": 20.0
+  "alta": {
+   "escala_3d": 1.0,
+   "sombras": true,
+   "contorno_personajes": true,
+   "contorno_escenario": false,
+   "sonda_reflejos": true,
+   "distorsion_calor": true,
+   "ondas_charcos": true,
+   "nubes": true,
+   "capas_niebla": 2,
+   "gotas": 1800,
+   "salpicaduras": 300,
+   "particulas": 1.0,
+   "glow": true,
+   "luces_ventanas": 5,
+   "relampagos": true,
+   "fps_objetivo": 60
   }
+ },
+ "impacto": {
+  "pausa_golpe_fuerte": 0.07,
+  "pausa_rayo": 0.09,
+  "camara_lenta_escala": 0.3,
+  "camara_lenta_duracion": 0.45
+ },
+ "relampago": {
+  "intervalo_min": 9.0,
+  "intervalo_max": 20.0
+ }
 }

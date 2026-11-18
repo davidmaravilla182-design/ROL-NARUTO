@@ -30,11 +30,28 @@ func construir(p_mapa: Mapa) -> void:
 	_entorno()
 	_suelo()
 	_charcos()
-	_torres()
+	if mapa.piezas.is_empty():
+		_torres()
+		_fondo_lejano()
+	else:
+		_torres_cajas()
+		Trazado.construir(self, mapa)
 	_campo_entrenamiento()
-	_fondo_lejano()
 	_atmosfera()
 	Materiales.grosor_contorno = 0.0
+
+
+## Con trazado: solo las cajas sueltas del campo (cobertura) como contenedores de lámina.
+func _torres_cajas() -> void:
+	var ts: Array = []
+	for o in mapa.obstaculos:
+		if o["tipo"] == "caja":
+			var c: Vector2 = o["centro"]
+			var m: Vector2 = o["medio"]
+			ts.append(Transform3D(Basis.from_scale(Vector3(m.x * 2, float(o["alto"]), m.y * 2)), Vector3(c.x, float(o["alto"]) * 0.5, c.y)))
+	if ts.is_empty():
+		return
+	_mmi(_mm_caja(ts, Shaders.toon_tex("lamina", Color(0.95, 0.8, 0.8), Vector2.ONE, true, 0.5, 0.4, 0.6, Materiales.grosor_contorno)), true)
 
 
 func _c(clave: String) -> Color:
@@ -42,6 +59,9 @@ func _c(clave: String) -> Color:
 
 
 func _entorno() -> void:
+	var atm: Dictionary = Datos.escenario.get("atmosfera", {})
+	_sol_energia_base = float(atm.get("sol_energia", _sol_energia_base))
+	_ambiente_base = float(atm.get("ambiente", _ambiente_base))
 	var cielo_mat := ProceduralSkyMaterial.new()
 	cielo_mat.sky_top_color = _c("cielo_arriba")
 	cielo_mat.sky_horizon_color = _c("cielo_horizonte")
@@ -63,16 +83,17 @@ func _entorno() -> void:
 	entorno.fog_enabled = true
 	entorno.fog_light_color = _c("niebla")
 	entorno.fog_light_energy = 0.9
-	entorno.fog_density = 0.014
+	entorno.fog_density = float(atm.get("niebla_densidad", 0.014))
 	entorno.fog_sky_affect = 0.5
 	# Niebla por altura: más densa a ras de suelo.
 	entorno.fog_height = 3.0
-	entorno.fog_height_density = 0.06
+	entorno.fog_height_density = float(atm.get("niebla_altura_densidad", 0.06))
+	entorno.tonemap_exposure = float(atm.get("exposicion", 1.0))
 	entorno.glow_enabled = bool(Ajustes.g("glow", true))
 	entorno.glow_intensity = 0.9
 	entorno.glow_strength = 1.05
 	entorno.glow_bloom = 0.08
-	entorno.glow_hdr_threshold = 0.95
+	entorno.glow_hdr_threshold = float(atm.get("glow_umbral", 0.95))
 	entorno.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
 	entorno.adjustment_enabled = true
 	entorno.adjustment_contrast = 1.08
@@ -83,7 +104,7 @@ func _entorno() -> void:
 
 	sol = DirectionalLight3D.new()
 	sol.rotation_degrees = Vector3(-58, 35, 0)
-	sol.light_color = Color(0.78, 0.84, 0.95)
+	sol.light_color = Datos.color(str(atm.get("sol_color", "#c8d6f2")))
 	sol.light_energy = _sol_energia_base
 	sol.shadow_enabled = bool(Ajustes.g("sombras", true))
 	sol.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
@@ -102,14 +123,22 @@ func _entorno() -> void:
 
 func _suelo() -> void:
 	# Placas de metal mojado con textura horneada (1 placa = 1 m); refleja la sonda de reflejos.
-	var mat := Shaders.toon_tex("suelo", Color(0.95, 0.95, 1.0), Vector2(45, 45), false, 0.25, 0.25, 0.75)
-	var suelo := MeshInstance3D.new()
-	var pm := PlaneMesh.new()
-	pm.size = Vector2(180, 180)
-	pm.material = mat
-	suelo.mesh = pm
-	suelo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(suelo)
+	# Si hay canal, el suelo se parte en dos franjas y deja el hueco del agua.
+	var mat := Shaders.toon_tex("suelo", Color(0.95, 0.95, 1.0), Vector2.ONE, true, 0.25, 0.25, 0.55)
+	var franjas: Array = [[-90.0, 90.0]]
+	if not mapa.canal.is_empty():
+		franjas = [[float(mapa.canal["z_sur"]), 90.0], [-90.0, float(mapa.canal["z_norte"])]]
+	for f in franjas:
+		var z0: float = f[0]
+		var z1: float = f[1]
+		var suelo := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(180, z1 - z0)
+		pm.material = mat
+		suelo.mesh = pm
+		suelo.position = Vector3(0, 0, (z0 + z1) * 0.5)
+		suelo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(suelo)
 
 
 func _charcos() -> void:
@@ -322,13 +351,13 @@ func _atmosfera() -> void:
 	# Capas de niebla: anillos de bancos verticales a distintas distancias.
 	var capas := int(Ajustes.g("capas_niebla", 2))
 	for capa in capas:
-		var radio := 24.0 + capa * 16.0
+		var radio := (24.0 if mapa.piezas.is_empty() else 46.0) + capa * 16.0
 		var n := 10 + capa * 4
 		for i in n:
 			var a := TAU * (float(i) + 0.5 * capa) / n
 			var mat := Shaders.material("niebla")
 			mat.set_shader_parameter("color", _c("niebla").lightened(0.05 * capa))
-			mat.set_shader_parameter("opacidad", 0.28 + capa * 0.08)
+			mat.set_shader_parameter("opacidad", (0.28 if mapa.piezas.is_empty() else 0.16) + capa * 0.08)
 			mat.set_shader_parameter("velocidad", 0.015 + capa * 0.008)
 			mat.set_shader_parameter("semilla", float(i * 7 + capa * 31))
 			var q := QuadMesh.new()
@@ -351,8 +380,10 @@ func _atmosfera() -> void:
 		sonda.max_distance = 90.0
 		sonda.ambient_mode = ReflectionProbe.AMBIENT_DISABLED
 		add_child(sonda)
-	# Luces cálidas al pie de las torres más cercanas al campo.
+	# Luces cálidas al pie de las torres más cercanas al campo (sin trazado; con trazado las pone Trazado).
 	var cercanas: Array = []
+	if not mapa.piezas.is_empty():
+		cercanas = []
 	for o in mapa.obstaculos:
 		if o["tipo"] == "torre":
 			cercanas.append(o)

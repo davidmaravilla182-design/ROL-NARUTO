@@ -531,7 +531,7 @@ func _actualizar_proyectiles(dt: float) -> void:
 		var choca := impacto != null
 		if not choca and pos.y - radio * 0.25 <= 0.0:
 			choca = true
-		if not choca and mapa.punto_bloqueado(Vector2(pos.x, pos.z), radio * 0.6, pos.y):
+		if not choca and mapa.punto_bloqueado(Vector2(pos.x, pos.z), radio * 0.6, pos.y, true):
 			choca = true
 		if not choca and float(p["recorrido"]) >= float(p["alcance"]):
 			choca = true
