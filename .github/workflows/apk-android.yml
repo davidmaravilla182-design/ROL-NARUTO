@@ -1,0 +1,143 @@
+name: Compilar APK de Android
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-android
+  cancel-in-progress: false
+
+env:
+  # Versión de Godot fijada: debe coincidir con la del proyecto (project.godot).
+  GODOT_VERSION: "4.7.2"
+  GODOT_RELEASE: "stable"
+  APK_NOMBRE: "sombras-de-la-lluvia-demo.apk"
+
+jobs:
+  apk:
+    name: Exportar APK (debug)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Caché de Godot y plantillas
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-cache
+          key: godot-${{ env.GODOT_VERSION }}-${{ env.GODOT_RELEASE }}-v1
+
+      - name: Descargar Godot y plantillas de exportación
+        run: |
+          set -euo pipefail
+          V="$GODOT_VERSION"; R="$GODOT_RELEASE"
+          BASE="https://github.com/godotengine/godot/releases/download/${V}-${R}"
+          mkdir -p ~/godot-cache && cd ~/godot-cache
+          if [ ! -f godot ]; then
+            curl -fsSL --retry 4 -o godot.zip "${BASE}/Godot_v${V}-${R}_linux.x86_64.zip"
+            unzip -o -q godot.zip && mv "Godot_v${V}-${R}_linux.x86_64" godot && rm godot.zip
+          fi
+          if [ ! -f android_debug.apk ]; then
+            curl -fsSL --retry 4 -o plantillas.tpz "${BASE}/Godot_v${V}-${R}_export_templates.tpz"
+            unzip -j -o plantillas.tpz templates/android_debug.apk templates/android_release.apk templates/version.txt
+            rm plantillas.tpz
+          fi
+          chmod +x godot
+          sudo ln -sf ~/godot-cache/godot /usr/local/bin/godot
+          godot --version
+          DEST=~/.local/share/godot/export_templates/${V}.${R}
+          mkdir -p "$DEST" && cp android_debug.apk android_release.apk version.txt "$DEST/"
+          cat "$DEST/version.txt"
+
+      - name: Caché de la keystore de debug
+        uses: actions/cache@v4
+        with:
+          path: ~/keystore
+          key: keystore-debug-v1
+
+      - name: Generar keystore de debug
+        run: |
+          set -euo pipefail
+          mkdir -p ~/keystore
+          if [ ! -f ~/keystore/debug.keystore ]; then
+            keytool -genkeypair -v -keystore ~/keystore/debug.keystore \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Configurar Godot para Android
+        run: |
+          set -euo pipefail
+          echo "SDK de Android: $ANDROID_HOME"
+          ls "$ANDROID_HOME/build-tools" "$ANDROID_HOME/platform-tools" | head -20
+          mkdir -p ~/.config/godot
+          MINOR="$(echo "$GODOT_VERSION" | cut -d. -f1-2)"
+          for f in "editor_settings-${MINOR}.tres" "editor_settings-4.tres"; do
+            cat > ~/.config/godot/$f <<EOT
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$HOME/keystore/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOT
+          done
+          cat ~/.config/godot/editor_settings-${MINOR}.tres
+
+      - name: Verificar proyecto y pruebas (headless)
+        run: tools/verificar.sh
+
+      - name: Exportar APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          set -uo pipefail
+          export GODOT_ANDROID_KEYSTORE_DEBUG_PATH="$HOME/keystore/debug.keystore"
+          mkdir -p build
+          sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/" export_presets.cfg
+          godot --headless --path . --export-debug "Android" "build/${APK_NOMBRE}" 2>&1 | tee export.log
+          if [ ! -s "build/${APK_NOMBRE}" ]; then
+            echo "::error::No se generó el APK"; exit 1
+          fi
+          ls -la build
+
+      - name: Guardar APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: build/${{ env.APK_NOMBRE }}
+
+      - name: Publicar en el release "demo-latest"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release delete demo-latest --cleanup-tag -y --repo "$GITHUB_REPOSITORY" || true
+          git push origin ":refs/tags/demo-latest" || true
+          NOTAS="Demo jugable compilado automáticamente (APK debug, Android 64 bits).
+          Commit: ${GITHUB_SHA::7} · Rama: ${GITHUB_REF_NAME} · Godot ${GODOT_VERSION}-${GODOT_RELEASE}
+
+          Descarga directa: https://github.com/${GITHUB_REPOSITORY}/releases/download/demo-latest/${APK_NOMBRE}
+
+          Proyecto de fans sin fines de lucro. Sin relación con Masashi Kishimoto, Shueisha ni Bandai Namco."
+          gh release create demo-latest "build/${APK_NOMBRE}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Demo más reciente (v0.1)" \
+            --notes "$NOTAS"
