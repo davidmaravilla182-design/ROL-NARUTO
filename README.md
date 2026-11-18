@@ -39,6 +39,19 @@ Cada vez que se hace push, GitHub Actions compila un APK nuevo y reemplaza el re
 - Paleta como las referencias: violetas fríos, tuberías granate y luz ámbar.
 - **Rendimiento**: las llamadas de dibujo bajaron de 238 a 99 en calidad alta (67 en baja).
 
+## Novedades de la v0.5: personaje propio y red local
+
+- **Crea tu personaje** (botón «Personaje» o al entrar por primera vez): nombre, apariencia (5 peinados, colores de cabello, ojos y piel, complexión y 4 ropas ninja) con vista 3D girando bajo la lluvia, aldea, clan o linaje (con ventaja, desventaja y rareza), naturaleza innata (o «dejar al destino») y atributos con gráfica de radar y el deslizador **Reserva vs. Control**. Un panel a la derecha muestra en vivo qué jutsus quedan disponibles o bloqueados y por qué.
+- Hasta **3 personajes** en el celular (se pueden borrar). Empiezan como **Genin**; la segunda naturaleza llega en Chūnin. El repertorio y el combate usan al personaje elegido. «Modo prueba: desbloquear todo» sigue en el menú Repertorio.
+- **Red local** (mismo Wi-Fi, 2 a 4 jugadores): «Crear partida local» y «Unirse a partida local». Todos pelean entre sí y contra el ninja de la IA, con nombre y vida sobre cada jugador.
+- **Ajustes**: «Límite de FPS» 30 / 60 (por defecto 60 en calidad alta y 30 en media/baja, a propósito para ahorrar batería y calor), «Panel de diagnóstico» (FPS, tiempo de fotograma, draw calls, partículas y, en red, ping, pérdida y jugadores) y «Simular mala conexión».
+
+### Probar la red con 2 celulares
+1. Los dos celulares en el **mismo Wi-Fi** (sin «aislamiento de clientes»; un punto de acceso del propio celular también sirve).
+2. Celular A: **Crear partida local**. Abajo aparece su IP (por ejemplo `192.168.1.20`).
+3. Celular B: **Unirse a partida local**. La partida aparece sola en la lista; si no, escribe la IP de A y toca **Conectar**.
+4. Para ver ping y pérdida: Ajustes → **Panel de diagnóstico**. Para probar con mala conexión: Ajustes → **Simular mala conexión** (antes de unirte).
+
 ## Novedades de la v0.4: repertorio de 40 jutsus
 
 - Botón **Repertorio** en la pantalla de inicio. Pestañas por tipo (Fuego, Rayo, Agua, Tierra, Viento, Sin naturaleza, Kekkei genkai, Ojos, Cuerpo) y filtro **Solo disponibles**.
@@ -106,4 +119,4 @@ Otros botones de depuración:
 - Decisiones tomadas durante el desarrollo: [DECISIONES.md](DECISIONES.md)
 - Licencias y créditos: [assets/LICENCIAS.md](assets/LICENCIAS.md)
 - Todos los datos de diseño (nombres, jutsus, atributos, textos) están en [`/data`](data). Cambiar esos JSON renombra o rebalancea el juego sin tocar código.
-- Verificación local (headless): `tools/verificar.sh` (importa el proyecto, corre 89 pruebas de combate, 88 del repertorio y una prueba de humo). Hook de pre-commit: `git config core.hooksPath .githooks`.
+- Verificación local (headless): `tools/verificar.sh` (importa el proyecto, corre 89 pruebas de combate, 88 del repertorio, 36 de personaje, 18 de red local (servidor + 2 bots) y una prueba de humo). Hook de pre-commit: `git config core.hooksPath .githooks`.

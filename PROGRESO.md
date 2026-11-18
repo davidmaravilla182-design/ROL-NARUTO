@@ -1,4 +1,24 @@
-# PROGRESO — repertorio de 40 jutsus (v0.4)
+# PROGRESO — v0.5: creación de personaje y red local
+
+> Si el contexto se resume: releer este archivo y DECISIONES.md.
+
+## Hecho
+- [x] Límite de FPS 30/60 en Ajustes y panel de diagnóstico (FPS, ms, draw calls, partículas, ping, pérdida, jugadores).
+- [x] Datos de creación (`data/creacion.json`), rangos y progresión (`reglas.json`), reglas compartidas (`scripts/core/creacion.gd`).
+- [x] Pantalla de personajes: lista de 3 (usar/borrar/crear) y creación en 6 pasos con vista 3D bajo la lluvia, radar y jutsus disponibles en vivo.
+- [x] El servidor valida el personaje; repertorio y combate usan al personaje creado.
+- [x] Red local: crear/unirse, listen server ENet, descubrimiento UDP + IP manual, 2–4 jugadores, predicción e interpolación,
+      eventos fiables, instantáneas comprimidas, nombre y vida sobre cada jugador, simulador de mala conexión, permisos Android.
+- [x] Pruebas: personaje (36), red local con servidor y 2 bots por localhost (18), humo con partida anfitrión + invitado reales.
+
+## Siguiente (ideas)
+- Misiones para subir de rango (la regla ya está en `reglas.json → progresion`).
+- Servidor dedicado / en línea: maestría guardada en el servidor y clanes por probabilidad (`Creacion.sortear_clan`).
+- Animaciones propias por jutsu y sonidos por forma.
+
+---
+
+# Historial: repertorio de 40 jutsus (v0.4)
 
 > Si el contexto se resume: releer este archivo. Todo el diseño está en `data/jutsus.json`
 > (categorías, 40 jutsus + modos oculares, 3 niveles cada uno, requisitos, ventaja/desventaja).

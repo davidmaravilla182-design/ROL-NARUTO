@@ -5,7 +5,7 @@ config_version=5
 
 config/name="Sombras de la Lluvia (demo de fans)"
 config/description="Demo de fans sin fines de lucro."
-config/version="0.4"
+config/version="0.5"
 run/main_scene="res://escenas/menu.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"

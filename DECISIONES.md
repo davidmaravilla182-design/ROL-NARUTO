@@ -126,3 +126,28 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - Fuerza Sobrehumana N3: ahora salta sobre el rival, cae un puño gigante de chakra que abre un cráter (aturde y derriba) y además activa el sello de regeneración.
 - Cada jutsu tiene un uso (`rol`): Ataque, Defensa, Control o Apoyo, con filtro en el menú y etiqueta en cada tarjeta.
 - Tres defensas nuevas: Sustitución (anula el siguiente golpe; N2 te pone detrás del atacante; N3 el tronco estalla), Muro de Agua (cortina → remolino → remolino que devuelve proyectiles) y Barrera de Viento (desvía → empuja → devuelve y corta). Las defensas de nivel 2+ hacen inmune a atrapar y aturdir mientras duran.
+
+
+## v0.5 — personaje y red local
+
+### Rendimiento
+- El límite de 30 FPS en calidad media y baja es a propósito (`data/graficos.json → fps_objetivo`): en gama media se ve estable y ahorra batería y calor. Ahora el jugador puede elegir 30 o 60 en Ajustes; por defecto sigue a la calidad.
+- Panel de diagnóstico: reemplaza a «Mostrar FPS». Las partículas se cuentan sumando los sistemas activos (grupo `particulas`).
+
+### Creación de personaje
+- Uchiha empieza con Sharingan y despierta el Mangekyō al llegar a Jōnin (`linajes_por_rango`); así la regla de rangos tiene un efecto visible aunque aún no haya misiones.
+- «Sin clan» da +1 punto de atributo (tope 27) para compensar no tener técnicas secretas.
+- Los linajes de kekkei genkai traen sus dos naturalezas (madera: tierra+agua; hielo: agua+viento; lava: fuego+tierra; arcilla: tierra+rayo; arena: viento+tierra). El clan Hyūga trae Byakugan y el de papel, la Danza de Papel.
+- Rarezas: común (sin clan, papel), raro (Uchiha, Hyūga, hielo, lava, arcilla), legendario (madera, arena). En línea se sortean por peso (70/25/5) con `Creacion.sortear_clan`; en offline se eligen.
+- El deslizador «Reserva vs. Control» (−1…+1) suma a la reserva y resta al control derivados (o al revés), sin gastar puntos de atributo. Se guarda como `_balance` dentro de los atributos (las reglas ignoran claves que empiezan con `_`).
+- Las aldeas distintas de Amegakure se muestran como «Próximamente» y el servidor las rechaza.
+- El personaje creado empieza con un repertorio automático (hasta 3 jutsus que ya puede usar) para no entrar con ranuras vacías.
+- El progreso (maestría y repertorios) es por personaje. El perfil anterior se migra como «personaje de práctica».
+
+### Red local
+- Listen server: el anfitrión juega sin pasar por la red (TransporteLocal) y además atiende a los invitados por ENet; no hace falta un servidor dedicado para probar.
+- Las instantáneas van comprimidas y sin garantía (tamaño de un solo paquete); los eventos van por un canal fiable para que ningún impacto, jutsu o mensaje se pierda.
+- Predicción solo del movimiento propio (lo que más se nota); jutsus, golpes y daño siguen siendo 100 % del servidor. Los demás se interpolan con 100 ms de retraso.
+- Cada jugador está en su propio equipo (todos contra todos) además de la IA; el botón «Reaparecer» del anfitrión reinicia todo y el de un invitado solo lo reanima a él.
+- La maestría y el «modo prueba» los manda el cliente también en red (es una prueba local entre amigos); en línea los guardaría el servidor.
+- Descubrimiento por difusión UDP: en algunos Android el filtro de multidifusión puede impedir recibir anuncios; por eso siempre está la opción de escribir la IP.

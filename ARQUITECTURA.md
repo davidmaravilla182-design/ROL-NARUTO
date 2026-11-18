@@ -31,15 +31,30 @@ Godot **4.7.2-stable**, GDScript, renderizador **Mobile** (con caída automátic
 | señal `conectado(id_entidad)` | el servidor asignó una entidad al jugador |
 
 - `TransporteLocal` (modo offline actual): servidor y cliente en el mismo proceso; copia profunda de cada mensaje, igual que si viajara por red.
-- `TransporteENet` (preparado): misma interfaz sobre `ENetMultiplayerPeer` + RPC. Las entradas viajan `unreliable_ordered` y las acciones `reliable`. El servidor ya admite varios peers (`agregar_jugador(peer_id)`, `quitar_jugador`) y envía a cada uno su instantánea con `tu_entidad`.
+- `TransporteENet` (red local, v0.5): misma interfaz sobre `ENetMultiplayerPeer` + RPC. Un mismo nodo llamado `Red` hace de anfitrión (`crear_servidor`) o de invitado (`unirse`); cada uno usa su propia `SceneMultiplayer` en su rama del árbol, así varias instancias conviven en un proceso (prueba automática).
 
-Para jugar en red bastará con crear `TransporteENet` en lugar de `TransporteLocal` en `cliente_juego.gd` (o en un ejecutable de servidor dedicado), sin tocar el combate. Pendiente para ese paso: mandar los eventos por un canal fiable (hoy van dentro de la instantánea), predicción local del movimiento y compresión de instantáneas.
+### Red local (listen server)
+- **Anfitrión**: el celular que crea la partida corre el `ServidorJuego` con autoridad; su propio jugador entra por `TransporteLocal` (peer 1, sin latencia) y los invitados por `TransporteENet`. Máximo 4 jugadores (`data/red.json`); el quinto recibe «partida llena».
+- **Invitados**: solo mandan comandos (`entrada` numerada a 30/s sin garantía; acciones, repertorio y personaje fiables).
+- **Instantáneas**: ~20/s por invitado, comprimidas (ZSTD) y sin garantía; lo que llega tarde se descarta. Las recargas y niveles de los demás no viajan. Los **eventos** viajan aparte por un canal fiable y el cliente los reinyecta en la siguiente instantánea (el cliente los procesa igual que offline).
+- **Predicción** (`scripts/cliente/prediccion.gd`): el invitado mueve a su personaje al instante con la misma regla y colisiones del servidor; en cada instantánea parte de la posición del servidor y reaplica las entradas que aún no se procesaron (`ultima_entrada`). Solo cuando está libre: en jutsus, golpes y empujes manda el servidor. La corrección se suaviza (de golpe si el error supera 3 m).
+- **Interpolación**: los demás se dibujan 100 ms en el pasado, interpolando entre dos instantáneas.
+- **Descubrimiento** (`scripts/red/descubrimiento.gd`): el anfitrión anuncia cada segundo por difusión UDP (puerto 7778) con una firma; los invitados escuchan y listan. También se puede escribir la IP que muestra el anfitrión.
+- **Diagnóstico**: ping (ida y vuelta), pérdida (huecos en la numeración de instantáneas) y jugadores. **Simulador** de mala conexión en el invitado: retraso, variación y pérdida de paquetes sin garantía (`data/red.json → simulador`).
+- **Equipos**: cada jugador está en su propio equipo (todos contra todos) y todos contra la IA.
+- **Permisos Android**: `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_MULTICAST_STATE`.
+
+### Personajes
+- `data/creacion.json`: apariencia (peinados, colores, complexiones, ropas), aldeas, clanes con ventaja/desventaja/rareza/modificadores, naturalezas y deslizador reserva/control; `reglas.json`: rangos (Estudiante → Kage) y progresión.
+- `scripts/core/creacion.gd` (compartido): `validar` (el servidor sanea lo que llega), `naturalezas` (innata + segunda en Chūnin, o las dos del linaje), `linajes` (más los que despiertan por rango), `ficha` (para los requisitos del repertorio), `estadisticas` (con modificadores del clan), `sortear_clan` (regla en línea por rareza).
+- El cliente manda `{"t": "personaje", "datos": {...}}` al conectar; el servidor valida y configura la entidad. El nombre y el aspecto de cada jugador llegan a todos cada medio segundo (`jugadores[]`).
+- `Perfil` guarda hasta 3 personajes en `user://personajes.json`, cada uno con su maestría y sus 3 repertorios.
 
 ## Protocolo
 
 Todos los mensajes son `Dictionary` con tipos serializables por Godot (int, float, String, Vector2/3, Array, Dictionary). Detalle completo en `scripts/core/protocolo.gd`.
 
-Comandos: `entrada {mov, mira}`, `accion {id, dir, objetivo, exacto}`, `nivel {valor 0..3}` (0 = automático por maestría), `reaparecer`, `repertorio {activos[4], modo, niveles_max, maestria, prueba}`.
+Comandos: `entrada {mov, mira, seq}`, `personaje {datos}`, `accion {id, dir, objetivo, exacto}`, `nivel {valor 0..3}` (0 = automático por maestría), `reaparecer`, `repertorio {activos[4], modo, niveles_max, maestria, prueba}`.
 
 **Repertorio (v0.4)**: el cliente elige (menú) y el servidor valida con `Repertorio.validar` (puntos, requisitos, incompatibles); si no es válido, usa el repertorio por defecto y avisa con un `mensaje`. El servidor resuelve el nivel de cada uso con `Repertorio.nivel_efectivo` (maestría, tope elegido, nivel forzado de depuración), suma XP y emite `maestria`. Las mecánicas nuevas viven en `scripts/servidor/tecnicas.gd` (modos, Kirin, Amaterasu, Susanoo, Shinra Tensei, Ocho Puertas) y las zonas persistentes (fuego negro, cráter, lago, lava) viajan en la instantánea como `zonas[]`. Los otros 31 jutsus usan `scripts/servidor/genericas.gd`: cinco mecánicas configuradas con los campos de cada nivel en `data/jutsus.json` (`mecanica`, `forma`, `cantidad`, `radio`, `atrapa`, `duracion`…); las invocaciones viajan como `criaturas[]` y el cliente las dibuja con `scripts/cliente/efectos_genericos.gd` según su `forma`. Offline, la maestría se guarda en el perfil local (`user://perfil.json`); en red la guardaría el servidor.
 
@@ -80,7 +95,7 @@ data/               datos de diseño (JSON)
 escenas/            menu.tscn y juego.tscn (solo nodo raíz + script)
 scripts/core/       Datos, Combate, Mapa, Protocolo, Repertorio (reglas compartidas del repertorio)
 scripts/servidor/   ServidorJuego, EntidadServidor, IaEnemigo, Tecnicas (primer bloque), Genericas (salva, área, aura, invocación, teletransporte)
-scripts/red/        Transporte, TransporteLocal, TransporteENet
+scripts/red/        Transporte, TransporteLocal, TransporteENet (anfitrión e invitado), Descubrimiento (UDP)
 scripts/cliente/    escena de juego, personaje, vestimenta, animaciones, escenario, lluvia, efectos, cámara,
                     shaders (toon, contorno, fuego, calor, charcos, nubes, niebla, ojos, indicadores),
                     rayos ramificados, sonidos sintetizados, indicadores de apuntado, ajustes
