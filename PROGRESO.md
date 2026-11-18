@@ -34,11 +34,11 @@
 - [x] C6 Rendimiento: LOD/visibilidad, conteo de draw calls por calidad, ajustes baja/media. (Vulkan)
 - [x] C7 Pulido: chaleco deformable, vendas, docs y versión 0.3 publicada.
 - [x] C8 Menú de inicio con la aldea en 3D de fondo (cámara lenta que recorre el canal).
-- [ ] C9 Lluvia más densa (como las referencias) + muñecos de práctica modelados en Blender. (Vulkan)
+- [x] C9 Lluvia más densa (como las referencias) + muñecos de práctica modelados en Blender. (Vulkan)
 - [ ] C10 Revisión final con Vulkan, prueba de calidad media/baja, release y reporte.
 
 ## Estado actual
-- Ciclo en curso: C9 (lluvia densa + muñecos de Blender)
+- Ciclo en curso: C10 (revisión final Vulkan, calidades, release)
 - Texturas: `tools/blender/texturas.py` (6 materiales, ~10 s). Tras hornear: `python3 tools/ajustar_importacion.py` y `godot --headless --path . --import`.
 - Shader con texturas: `Shaders.toon_tex(nombre, tinte, escala_uv, triplanar, escala_mundo, metalico, humedad, contorno)`.
 - Capturas: `/tmp/claude-0/cap.sh <carpeta> [mobile]` (si falta, recrear: xvfb-run + godot -s res://tools/captura.gd).

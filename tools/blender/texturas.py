@@ -154,7 +154,26 @@ def rejilla(g):
     return col, rug, alt
 
 
+def madera(g):
+    """Madera con vetas a lo largo de V (el eje del poste), nudos y desgaste por la lluvia."""
+    p, w = g.toro(0.6, 0.12)                      # ruido estirado en V → vetas
+    dist = g.ruido(p, w, 3.0, 4, 0.5)
+    vetas = g.m("SINE", g.m("MULTIPLY", g.m("ADD", g.u, g.m("MULTIPLY", dist, 0.35)), 3.14159 * 2 * 9))
+    vetas = g.m("MULTIPLY", g.m("ADD", vetas, 1.0), 0.5)
+    p2, w2 = g.toro(1.0, 1.0, du=0.3)
+    nudos = g.suave(0.72, 0.8, g.voronoi(p2, w2, 3.0, "Distance", "F1") if False else g.ruido(p2, w2, 6.0, 2, 0.5))
+    pv, wv = g.toro(3.0, 0.4, du=0.6)
+    humedo = g.suave(0.5, 0.75, g.ruido(pv, wv, 3.0, 4, 0.6))
+    base = g.rampa(vetas, [(0.0, L(0.3, 0.19, 0.11)), (1.0, L(0.48, 0.32, 0.19))])
+    col = g.mezcla(g.m("MULTIPLY", nudos, 0.8), base, L(0.2, 0.12, 0.07))
+    col = g.mezcla(g.m("MULTIPLY", humedo, 0.5), col, L(0.18, 0.13, 0.1))
+    rug = g.m("SUBTRACT", 0.75, g.m("MULTIPLY", humedo, 0.3))
+    alt = g.m("ADD", g.m("MULTIPLY", vetas, 0.5), g.m("MULTIPLY", nudos, -0.3))
+    return col, rug, alt
+
+
 MATERIALES = {
+    "madera": (madera, 512, 2.5),
     "concreto": (concreto, 1024, 3.0),
     "lamina": (lamina, 1024, 2.5),
     "tuberia": (tuberia, 512, 2.0),

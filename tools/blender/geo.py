@@ -12,7 +12,7 @@ import bpy
 from mathutils import Matrix, Vector
 
 # Metros que cubre una repetición de cada textura (densidad de texel coherente).
-TILE = {"piedra": 8.0, "lengua": 4.0, "concreto": 6.0, "lamina": 4.0, "tuberia": 3.0, "techo": 3.0, "suelo": 4.0, "rejilla": 1.5,
+TILE = {"madera": 1.2, "paja": 1.0, "cuerda": 1.0, "diana": 1.0, "piedra": 8.0, "lengua": 4.0, "concreto": 6.0, "lamina": 4.0, "tuberia": 3.0, "techo": 3.0, "suelo": 4.0, "rejilla": 1.5,
         "ventana": 1.0, "luz": 1.0, "oscuro": 2.0, "cable": 1.0, "agua": 4.0}
 
 
@@ -23,7 +23,8 @@ def material(nombre):
         colores = {"concreto": (0.4, 0.4, 0.42, 1), "lamina": (0.4, 0.38, 0.45, 1), "tuberia": (0.4, 0.1, 0.12, 1),
                    "techo": (0.35, 0.27, 0.36, 1), "suelo": (0.25, 0.25, 0.28, 1), "rejilla": (0.2, 0.2, 0.2, 1),
                    "ventana": (1.0, 0.75, 0.4, 1), "luz": (1.0, 0.8, 0.5, 1), "oscuro": (0.05, 0.05, 0.06, 1),
-                   "cable": (0.03, 0.03, 0.03, 1), "piedra": (0.6, 0.58, 0.56, 1), "lengua": (0.55, 0.2, 0.25, 1)}
+                   "cable": (0.03, 0.03, 0.03, 1), "piedra": (0.6, 0.58, 0.56, 1), "lengua": (0.55, 0.2, 0.25, 1),
+                   "madera": (0.45, 0.3, 0.18, 1), "paja": (0.72, 0.62, 0.38, 1), "cuerda": (0.65, 0.58, 0.45, 1), "diana": (0.7, 0.12, 0.1, 1)}
         m.diffuse_color = colores.get(nombre, (0.5, 0.5, 0.5, 1))
     return m
 

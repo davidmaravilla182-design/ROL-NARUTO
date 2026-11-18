@@ -365,7 +365,38 @@ def torre_cabeza(rng):
     return unir(o, "torre_cabeza")
 
 
+def muneco(rng):
+    """Muñeco de práctica: poste de madera, travesaño, torso de paja atado con cuerdas, cabeza y diana.
+    Se exporta en dos partes: la base (fija) y el cuerpo (que se sacude con los golpes), con el pivote en el suelo."""
+    o = [cilindro(0.34, 0.14, "madera", seg=10, bisel=0.02)]
+    for k in range(3):
+        a = 2 * math.pi * k / 3
+        o.append(caja((0.5, 0.09, 0.09), "madera", pos=polar(0.32, a, 0.12), rot=(0, 0.35, a), bisel=0.01))
+    return unir(o, "muneco_base")
+
+
+def muneco_cuerpo(rng):
+    o = [cilindro(0.12, 1.55, "madera", pos=(0, 0, 0.1), seg=10, r2=0.1, bisel=0.01)]
+    o.append(cilindro(0.055, 1.15, "madera", pos=(-0.575, 0, 1.25), rot=(0, math.pi / 2, 0), seg=8))
+    for sx in (-0.56, 0.56):
+        o.append(cilindro(0.075, 0.18, "paja", pos=(sx, 0, 1.25), rot=(0, math.pi / 2, 0), seg=8))
+    # Torso de paja abultado
+    o.append(cilindro(0.21, 0.6, "paja", pos=(0, 0, 0.78), seg=12, r2=0.23))
+    for z in (0.84, 1.05, 1.3):
+        o.append(cilindro(0.235, 0.035, "cuerda", pos=(0, 0, z), seg=12))
+    o.append(cilindro(0.23, 0.06, "paja", pos=(0, 0, 1.38), seg=12, r2=0.12))
+    # Cabeza de paja con cuerda al cuello
+    cab = cilindro(0.16, 0.34, "paja", pos=(0, 0, 1.5), seg=12, r2=0.13)
+    o.append(cab)
+    o.append(cilindro(0.13, 0.04, "cuerda", pos=(0, 0, 1.5), seg=12))
+    # Diana en el pecho (frente -Y)
+    for k, (r, mat) in enumerate(((0.11, "diana"), (0.075, "paja"), (0.04, "diana"))):
+        o.append(cilindro(r, 0.012, mat, pos=(0, -0.225 - k * 0.004, 1.02), rot=(math.pi / 2, 0, 0), seg=14))
+    return unir(o, "muneco_cuerpo")
+
+
 PIEZAS = {
+    "muneco": muneco, "muneco_cuerpo": muneco_cuerpo,
     "torre_cabeza": torre_cabeza,
     "silo_lejano": silo_lejano, "bloque_lejano": bloque_lejano,
     "silo": silo, "edificio": edificio, "farol": farol, "barandal": barandal, "pasarela": pasarela,

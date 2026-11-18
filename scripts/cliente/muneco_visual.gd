@@ -9,6 +9,13 @@ var _angulo_caida := 0.0
 
 
 func construir() -> void:
+	if ResourceLoader.exists("res://assets/modelos/muneco_cuerpo.glb"):
+		# Modelo de Blender: base fija y cuerpo que se sacude (pivote en el suelo).
+		add_child(Kit.instancia("muneco"))
+		_cuerpo = Node3D.new()
+		add_child(_cuerpo)
+		_cuerpo.add_child(Kit.instancia("muneco_cuerpo"))
+		return
 	var madera := Materiales.solido(Color(0.42, 0.29, 0.18), 0.9)
 	var madera_osc := Materiales.solido(Color(0.3, 0.2, 0.12), 0.9)
 	var paja := Materiales.solido(Color(0.72, 0.62, 0.38), 1.0)

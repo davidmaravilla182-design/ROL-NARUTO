@@ -83,3 +83,9 @@ Cada entrada: qué se hizo, cómo se verificó, capturas comparadas, problemas y
 - La pantalla de inicio muestra la aldea en 3D (SubViewport con su propio mundo, lluvia y relámpagos) con una cámara que
   recorre la plaza mirando la torre monumental, y un velo oscuro para leer el texto.
 - 1ª versión: la cámara atravesaba un edificio → recorrido limitado al espacio abierto de la plaza.
+
+## C9 — lluvia densa y muñecos
+- Lluvia: gotas 2600/1500/800 (alta/media/baja), más largas, algo más opacas e inclinadas por el viento, como las referencias.
+- Textura de madera horneada (vetas deformadas por ruido, nudos, zonas mojadas). Muñecos de práctica modelados en Blender:
+  base con patas, poste, travesaño con puños de paja, torso de paja atado con cuerdas, cabeza y diana. Base y cuerpo por
+  separado para que el cuerpo se siga sacudiendo y cayendo con los golpes.
