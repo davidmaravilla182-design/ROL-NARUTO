@@ -1,4 +1,4 @@
-# Sombras de la Lluvia — demo de fans (v0.2)
+# Sombras de la Lluvia — demo de fans (v0.3)
 
 > **Proyecto de fans sin fines de lucro. Sin relación con Masashi Kishimoto, Shueisha ni Bandai Namco.**
 > Sin anuncios, sin compras y sin música ni audio del anime.
@@ -29,6 +29,15 @@ La lluvia cambia el combate:
 Requisitos: Android de 64 bits (arm64), Android 7 o superior. Meta: 30 fps o más en gama media.
 
 Cada vez que se hace push, GitHub Actions compila un APK nuevo y reemplaza el release `demo-latest`.
+
+## Novedades de la v0.3 (gráficos)
+
+- **Nueva aldea** modelada en Blender por código: edificios de concreto con toldos y faroles, silos con balcones y agujas, tanques de agua, arcos de tuberías granate, un **canal** con agua animada, cascadas desde los desagües, puentes de celosía, vapor, cables colgantes y un horizonte de torres entre la niebla.
+- **Torre monumental con rostro** al fondo (banda en la frente, ojos de anillos, boca abierta con lengua), iluminada con focos.
+- **Texturas procedurales** horneadas en Blender (concreto manchado, lámina con remaches y óxido, tuberías pintadas, placas de suelo, techos corrugados, rejillas) con mapas de normales y humedad: el suelo se ve mojado y las paredes tienen chorreaduras.
+- **Personaje con cuerpo continuo** (piel deformable, sin piezas sueltas) y **chaleco** que se dobla con el cuerpo.
+- Paleta como las referencias: violetas fríos, tuberías granate y luz ámbar.
+- **Rendimiento**: las llamadas de dibujo bajaron de 238 a 99 en calidad alta (67 en baja).
 
 ## Novedades de la v0.2
 

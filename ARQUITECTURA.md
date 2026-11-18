@@ -97,10 +97,29 @@ tools/              verificar.sh (pre-commit/CI) y captura.gd (capturas con pant
 - **Atmósfera**: suelo PBR mojado + `ReflectionProbe` (sin SSR), charcos con ondas procedurales, nubes en un plano alto con ruido, bancos de niebla en anillos + niebla por altura, relámpagos en el cielo con destello y trueno retardado según la distancia.
 - **Sonido**: `Sonidos` sintetiza por código los efectos (rayo con trinos, fuego, explosión, golpe, trueno, chapoteo, lluvia).
 
+## Gráficos (v0.3): arte por código con Blender
+
+- `tools/blender/` contiene scripts de Blender (bpy) que generan todo el arte; se ejecutan fuera de Godot y su salida se versiona:
+  - `texturas.py`: materiales procedurales horneados en Cycles a `assets/texturas/*_color.png` (RGB + rugosidad en A) y `*_normal.png`.
+    Ruido 4D sobre un toro → texturas sin costuras.
+  - `kit.py` + `geo.py`: kit modular de la aldea (edificio, silo, tanque, pasarela, tuberías, muro de canal, torre con rostro,
+    siluetas lejanas) exportado a `assets/modelos/*.glb`, con UV a escala de mundo.
+  - `personaje.py`: cuerpo continuo y chaleco con piel deformable y el mismo esqueleto que usan las animaciones.
+- `tools/ajustar_importacion.py` fija compresión VRAM, mipmaps y mapas de normales en los `.import`.
+- En Godot, `Kit` carga cada GLB y sustituye sus materiales (por nombre) por `Shaders.toon_tex` (cel shading con texturas,
+  humedad y chorreaduras). `Trazado` monta la aldea a partir de `data/escenario.json` → `trazado`, y `Mapa` usa las mismas
+  huellas como colisiones del servidor.
+- Animaciones con esqueleto de Blender: cada clave se convierte a `padre_reposo⁻¹ · D · hueso_reposo`; las piezas hechas
+  por código cuelgan de un nodo "Marco" que anula la rotación de reposo del hueso.
+- Herramientas de verificación: `tools/captura.gd` (capturas con guion), `tools/vista_kit.gd` (fotografía piezas del kit),
+  `tools/medir.gd` (llamadas de dibujo, primitivas y sombras por calidad).
+
 ## Rendimiento móvil
 
 - Escenario con **MultiMesh** (torres, ventanas, tuberías, pasarelas, charcos): pocas llamadas de dibujo.
 - Lluvia: 2 sistemas GPU (≈1400 gotas + 220 salpicaduras) que siguen a la cámara.
 - Solo 3 luces fijas; las demás son temporales (efectos). Sombras solo de la luz direccional, a 30 m.
 - Simulación a 30 ticks/s; el cliente interpola.
+- Personajes: las piezas por código de cada hueso se fusionan en una malla (`Materiales.fusionar`); las piezas del trazado
+  se agrupan por tipo en MultiMesh. Medido: alta 99 llamadas de dibujo / 63k primitivas / 35 de sombra; baja 67 / 56k / 0.
 - Calidad **baja/media** (`data/graficos.json`): sin contorno del escenario, sin distorsión de calor, menos gotas y partículas, escala 3D 0.7–0.85, sombras opcionales, menos luces y capas de niebla; tope de 30 fps.

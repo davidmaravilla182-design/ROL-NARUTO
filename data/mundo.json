@@ -2,8 +2,8 @@
   "_nota": "Nombres del mundo. Cambiar aquí renombra todo el juego sin tocar código.",
   "juego": {
     "titulo": "Sombras de la Lluvia",
-    "subtitulo": "Demo de entrenamiento v0.2",
-    "version": "0.2"
+    "subtitulo": "Demo de entrenamiento v0.3",
+    "version": "0.3"
   },
   "aldeas": {
     "lluvia": {

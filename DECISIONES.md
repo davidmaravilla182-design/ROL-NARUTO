@@ -77,3 +77,20 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - Nuevas pruebas de la dirección del disparo en el servidor (dirección exacta, objetivo fijado, asistencia del toque, flecha del Chidori, saneado del comando).
 - La prueba de humo carga la partida en las tres calidades y ejercita toque, arrastre, cancelar, fijar, pausa de impacto, cámara lenta y el menú de ajustes.
 - Los shaders se compilaron también con el renderizador **Mobile (Vulkan)** usando el Vulkan por software de Mesa, además de OpenGL.
+
+## v0.3 — mejora gráfica (trabajo nocturno autónomo)
+
+- **Sin descargas de texturas** (Poly Haven y ambientCG siguen bloqueados): todas las texturas son procedurales y se hornean
+  en Blender (bpy por pip). Se versionan los PNG resultantes para que la compilación no necesite Blender.
+- **Blender como herramienta de arte por código**: el kit modular, la torre monumental y el cuerpo del personaje se generan con
+  scripts reproducibles en `tools/blender/`. Volver a ejecutarlos regenera el arte idéntico.
+- **Referencias** en `referencias/amegakure/` (8 imágenes del usuario) con `.gdignore`: no entran en el APK.
+- **Trazado fijo en datos** en vez de torres aleatorias: la composición (plaza, canal al norte, hito al fondo, calles con
+  arcos de tuberías) se diseñó mirando las referencias, y vive en `data/escenario.json` para poder cambiarla sin código.
+- **El canal** bloquea a los personajes pero no a los proyectiles (se puede disparar por encima del agua).
+- **Contorno negro solo en personajes**: en el escenario parecía un boceto a lápiz.
+- **Hito**: la torre con rostro se acercó (62 m) y se iluminó con focos porque a 88 m la niebla la borraba.
+- **Cuerpo continuo**: Skin + Subsurf en Blender en lugar de esculpir, para que sea reproducible por código. Pesos calculados
+  a mano (más predecibles que el pesado automático en modo sin interfaz).
+- **Rendimiento**: la mayor ganancia vino de fusionar las mallas de los personajes (≈70 piezas → ≈17), no de agrupar los edificios.
+- **Capturas**: con lavapipe instalado Godot usa Vulkan/Mobile por defecto; las revisiones visuales se hicieron con ambos renderizadores.
