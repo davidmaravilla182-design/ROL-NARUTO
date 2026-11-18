@@ -26,7 +26,7 @@ func _initialize() -> void:
 	suelo.mesh = pm
 	root.add_child(suelo)
 	var x := 0.0
-	var anchos := {"silo": 11.0, "edificio": 11.0, "tanque": 5.0, "tubo_arco": 10.0, "pasarela": 14.0, "muro_canal": 10.0, "barandal": 3.0, "farol": 1.5, "toldo": 4.0, "tubo_largo": 14.0}
+	var anchos := {"torre_cabeza": 34.0, "silo": 11.0, "edificio": 11.0, "tanque": 5.0, "tubo_arco": 10.0, "pasarela": 14.0, "muro_canal": 10.0, "barandal": 3.0, "farol": 1.5, "toldo": 4.0, "tubo_largo": 14.0}
 	var total := 0.0
 	for p in piezas:
 		total += float(anchos.get(p, 8.0))
@@ -37,12 +37,22 @@ func _initialize() -> void:
 		mi.position = Vector3(x + w * 0.5, 2.5 if p == "pasarela" else (1.5 if p == "tubo_largo" else 0.0), 0)
 		root.add_child(mi)
 		x += w
+	# Encuadre según la caja que envuelve todas las piezas.
+	var caja := AABB()
+	var primera := true
+	for n in root.get_children():
+		if n is MeshInstance3D and n != suelo:
+			var b: AABB = (n as MeshInstance3D).global_transform * (n as MeshInstance3D).get_aabb()
+			caja = b if primera else caja.merge(b)
+			primera = false
 	var cam := Camera3D.new()
 	cam.fov = 55
-	var lejos := maxf(total * 0.75, 6.0)
-	cam.position = Vector3(0, lejos * 0.45, lejos)
+	cam.far = 1000
+	var lejos := maxf(caja.size.x * 0.85, caja.size.y * 1.05)
+	var centro := caja.get_center()
+	cam.position = centro + Vector3(lejos * 0.25, lejos * 0.12, lejos)
 	root.add_child(cam)
-	cam.look_at(Vector3(0, lejos * 0.18, 0))
+	cam.look_at(centro)
 	var luz := OmniLight3D.new()
 	luz.light_color = Color(1.0, 0.7, 0.4)
 	luz.omni_range = 30

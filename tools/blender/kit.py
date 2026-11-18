@@ -286,7 +286,87 @@ def bloque_lejano(rng):
     return unir(o, "bloque_lejano")
 
 
+def cara(o, rng, r, z, alto, escala=1.0, boca_abierta=True):
+    """Rostro monumental en el frente (-Y) de un cilindro de radio r, centrado a altura z."""
+    s = escala
+    y = -r
+    # Placa del rostro que sobresale del cilindro (piedra clara).
+    o.append(cilindro(r * 0.62, alto, "piedra", pos=(0, y * 0.55, z - alto / 2), seg=16, tapas=True))
+    # Banda de la frente con placa metálica y el símbolo de la aldea (4 líneas verticales).
+    o.append(cilindro(r + 0.35, 3.2 * s, "lamina", pos=(0, 0, z + alto * 0.28), seg=28, tapas=False))
+    o.append(caja((7.5 * s, 0.6, 3.6 * s), "lamina", pos=(0, y - 0.45, z + alto * 0.28 + 1.6 * s), bisel=0.15))
+    for k in range(4):
+        o.append(caja((0.32 * s, 0.4, 2.4 * s), "oscuro", pos=((-1.5 + k) * 1.1 * s, y - 0.8, z + alto * 0.28 + 1.6 * s)))
+    # Ceño, ojos con anillos concéntricos, nariz y pómulos.
+    zo = z + alto * 0.1
+    o.append(caja((9.5 * s, 1.6, 1.0 * s), "piedra", pos=(0, y - 0.6, zo + 1.6 * s), rot=(0.25, 0, 0), bisel=0.2))
+    for lado in (-1, 1):
+        cx = lado * 2.6 * s
+        o.append(cilindro(1.35 * s, 0.6, "piedra", pos=(cx, y - 0.4, zo), rot=(math.pi / 2, 0, 0), seg=18))
+        for k, rr in enumerate((1.15, 0.85, 0.55, 0.25)):
+            o.append(cilindro(rr * s, 0.62 + k * 0.05, "oscuro" if k % 2 == 0 else "lamina", pos=(cx, y - 0.45, zo), rot=(math.pi / 2, 0, 0), seg=18))
+    o.append(caja((1.6 * s, 2.0, 4.0 * s), "piedra", pos=(0, y - 1.0, zo - 2.6 * s), rot=(-0.25, 0, 0), bisel=0.3))
+    # Boca (hueco oscuro) y lengua que sale y cuelga (para sentarse encima, como en la referencia).
+    zb = z - alto * 0.22
+    if boca_abierta:
+        o.append(cilindro(2.2 * s, 1.2, "oscuro", pos=(0, y - 0.3, zb), rot=(math.pi / 2, 0, 0), seg=18))
+        o.append(caja((5.0 * s, 1.4, 0.8 * s), "piedra", pos=(0, y - 0.6, zb + 2.3 * s), bisel=0.2))
+        lengua = tubo([(0, y + 0.5, zb - 0.4 * s), (0, y - 4 * s, zb - 1.2 * s), (0, y - 9 * s, zb - 1.6 * s), (0, y - 13 * s, zb - 0.4 * s)],
+                      1.0 * s, "lengua", seg=14, radio_codo=4 * s)
+        o.append(lengua)
+    else:
+        o.append(caja((4.0 * s, 1.2, 0.5 * s), "oscuro", pos=(0, y - 0.5, zb)))
+    # Pómulos y mentón
+    for lado in (-1, 1):
+        o.append(caja((2.0 * s, 1.2, 3.0 * s), "piedra", pos=(lado * 3.6 * s, y - 0.3, zo - 2.8 * s), rot=(0, 0, lado * 0.25), bisel=0.3))
+    o.append(caja((4.6 * s, 1.4, 2.0 * s), "piedra", pos=(0, y - 0.5, z - alto * 0.42), bisel=0.3))
+
+
+def torre_cabeza(rng):
+    """Torre monumental con rostros (el hito de la aldea): fuste de concreto con anillos, tuberías
+    granate subiendo por la fachada, ventanas, una cabeza con banda en la frente y boca abierta con lengua,
+    caras secundarias a los lados y corona de agujas. ~70 m de alto."""
+    r = 9.0
+    o = [cilindro(r, 46.0, "concreto", seg=32, tapas=False)]
+    o.append(cilindro(r * 1.12, 6.0, "lamina", pos=(0, 0, 0), seg=32, tapas=False))
+    for z in (8.0, 18.0, 30.0, 44.0):
+        o.append(cilindro(r + 1.2, 0.8, "lamina", pos=(0, 0, z), seg=32, bisel=0.1))
+    for fila, z in enumerate((11.0, 14.5, 21.5, 25.0, 34.0, 38.0)):
+        n = 18
+        for k in range(n):
+            a = 2 * math.pi * (k + 0.5 * (fila % 2)) / n
+            if abs(math.sin(a) + 1) < 0.35:   # no tapar el frente donde cae la lengua
+                continue
+            if rng.random() < 0.6:
+                o.append(caja((0.15, 0.8, 1.8), "ventana" if rng.random() < 0.6 else "oscuro", pos=polar(r + 0.05, a, z), rot=(0, 0, a)))
+    # Tuberías que suben por la fachada y se doblan hacia dentro
+    for k in range(7):
+        a = -math.pi / 2 + (k - 3) * 0.45 + rng.uniform(-0.05, 0.05)
+        rr = r + 0.9
+        z1 = rng.uniform(30, 50)
+        o.append(tubo([polar(rr, a, -1), polar(rr, a, z1), polar(r - 0.5, a, z1)], rng.uniform(0.45, 0.8), "tuberia", seg=12, bridas=(4.0, 12.0, 22.0)))
+    # Cabeza: alta y con rasgos grandes para que se lea a distancia entre la niebla.
+    zc = 46.0
+    o.append(cilindro(r * 1.08, 26.0, "piedra", pos=(0, 0, zc), seg=32, tapas=False))
+    cara(o, rng, r * 1.08, zc + 13.0, 26.0, 1.75, True)
+    # Caras secundarias más pequeñas a los lados (giradas), como en la referencia
+    for lado in (-1, 1):
+        sub = []
+        cara(sub, rng, r * 1.02, 27.0, 13.0, 0.95, False)
+        ob = unir(sub, "cara_lateral")
+        ob.rotation_euler = (0, 0, lado * math.pi / 2)
+        geo._aplicar(ob)
+        o.append(ob)
+    # Corona
+    o.append(cilindro(r * 1.14, 1.5, "lamina", pos=(0, 0, zc + 26.0), seg=32, bisel=0.1))
+    o.append(cilindro(r * 0.9, 6.0, "techo", pos=(0, 0, zc + 27.5), seg=24, r2=r * 0.3))
+    agujas(o, rng, (0, 0), r * 1.05, 12, 5.0, 10.0, zc + 27.5)
+    agujas(o, rng, (0, 0), 0, 1, 16.0, 18.0, zc + 33.0)
+    return unir(o, "torre_cabeza")
+
+
 PIEZAS = {
+    "torre_cabeza": torre_cabeza,
     "silo_lejano": silo_lejano, "bloque_lejano": bloque_lejano,
     "silo": silo, "edificio": edificio, "farol": farol, "barandal": barandal, "pasarela": pasarela,
     "tubo_largo": tubo_largo, "tubo_arco": tubo_arco, "tanque": tanque, "muro_canal": muro_canal, "toldo": toldo,

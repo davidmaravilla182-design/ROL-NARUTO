@@ -36,3 +36,12 @@ Cada entrada: qué se hizo, cómo se verificó, capturas comparadas, problemas y
 - Gradación: cielo/niebla violáceos y oscuros, sol tenue, ventanas ámbar, glow con umbral 0.8 (atmósfera en escenario.json).
 - Capturas: la calle con toldos y faroles ya se parece a las referencias. Corregido: contorno negro en el escenario
   (se veía como boceto; ahora solo personajes), bancos de niebla con aspecto de rectángulos, agua demasiado profunda.
+- Vulkan/Mobile (ciclo 3): calle y canal se ven igual que en OpenGL; sin errores de shader.
+
+## C4 — hito y horizonte
+- `torre_cabeza` (10.4k tris, ~80 m): fuste con anillos, tuberías granate por la fachada, ventanas, cabeza de piedra con
+  banda y placa de la aldea, ojos de anillos concéntricos, nariz, boca abierta con lengua, caras secundarias a los lados y corona de agujas.
+- Situada al fondo, detrás del canal, mirando a la plaza; focos cálidos desde abajo y luz fría sobre el rostro.
+- Errores encontrados: rostro demasiado pequeño (no se leía) → rasgos ×1.75; giro invertido; el filtro de errores de
+  `cap.sh` escondía errores que empezaban por "C" (Compile Error) → corregido, y ahora se ven todos.
+- Captura 01e_hito: horizonte de agujas, ventanas ámbar y vapor — composición cercana a las referencias 2 y 6.

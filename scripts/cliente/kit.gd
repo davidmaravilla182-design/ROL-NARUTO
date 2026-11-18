@@ -23,6 +23,8 @@ static func material_para(nombre: String) -> Material:
 		"techo": m = Shaders.toon_tex("techo", Color(1, 1, 1), Vector2.ONE, false, 0.25, 0.4, 0.6, c)
 		"suelo": m = Shaders.toon_tex("suelo", Color(1, 1, 1), Vector2.ONE, false, 0.25, 0.3, 0.7, c)
 		"rejilla": m = Shaders.toon_tex("rejilla", Color(1, 1, 1), Vector2.ONE, false, 0.25, 0.4, 0.4, 0.0)
+		"piedra": m = Shaders.toon_tex("concreto", Color(1.15, 1.12, 1.1), Vector2.ONE, false, 0.25, 0.0, 0.45, c)
+		"lengua": m = Materiales.solido(Color(0.55, 0.22, 0.28), 0.35)
 		"ventana": m = Materiales.emisivo(COLOR_VENTANA, 2.2)
 		"luz": m = Materiales.emisivo(Color(1.0, 0.78, 0.45), 4.0)
 		"oscuro": m = Materiales.solido(Color(0.06, 0.06, 0.08), 0.4)

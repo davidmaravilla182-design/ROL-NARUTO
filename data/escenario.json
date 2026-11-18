@@ -124,6 +124,11 @@
     10.0,
     10.0,
     22.0
+   ],
+   "torre_cabeza": [
+    20.0,
+    20.0,
+    80.0
    ]
   },
   "canal": {
@@ -273,6 +278,14 @@
      -44.0
     ],
     "giro": 0
+   },
+   {
+    "tipo": "torre_cabeza",
+    "pos": [
+     -4.0,
+     -62.0
+    ],
+    "giro": 0
    }
   ],
   "arcos": [
@@ -329,7 +342,7 @@
   "sol_energia": 0.32,
   "sol_color": "#b8b8e0",
   "ambiente": 0.42,
-  "niebla_densidad": 0.02,
+  "niebla_densidad": 0.016,
   "niebla_altura_densidad": 0.08,
   "exposicion": 1.05,
   "glow_umbral": 0.8

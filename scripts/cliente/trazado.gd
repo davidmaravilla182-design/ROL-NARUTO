@@ -22,10 +22,39 @@ static func construir(e: Escenario, m: Mapa) -> void:
 		e.add_child(Kit.instancia("tubo_largo", Transform3D(Basis(Vector3.UP, deg_to_rad(float(tb["giro"]))), Vector3(ct.x, float(tb["altura"]), ct.y)), true))
 	if not m.canal.is_empty():
 		_canal(e, m, rng)
+	_hito(e, m)
 	_faroles_de_calle(e, m)
 	_vapor(e, m, rng)
 	_cables(e, m, rng)
 	_horizonte(e, m, rng)
+
+
+## El hito (torre con rostros) no debe perderse en la niebla: focos cálidos desde abajo
+## y una luz fría sobre el rostro, como en la ilustración de referencia.
+static func _hito(e: Escenario, m: Mapa) -> void:
+	for p in m.piezas:
+		if p["tipo"] != "torre_cabeza":
+			continue
+		var c: Vector2 = p["centro"]
+		var f := frente(p) * -1.0   # el rostro mira a -Y de Blender = +Z de Godot rotado
+		var base := Vector3(c.x, 0, c.y)
+		for lado in [-1.0, 1.0]:
+			var foco := SpotLight3D.new()
+			foco.light_color = Color(1.0, 0.62, 0.35)
+			foco.light_energy = 6.0
+			foco.spot_range = 90.0
+			foco.spot_angle = 22.0
+			foco.spot_attenuation = 0.6
+			var desde: Vector3 = base + f * -24.0 + Vector3(f.z, 0, -f.x) * lado * 14.0 + Vector3(0, 6, 0)
+			e.add_child(foco)
+			foco.global_position = desde
+			foco.look_at(base + Vector3(0, 58, 0), Vector3.UP)
+		var cara := OmniLight3D.new()
+		cara.light_color = Color(0.72, 0.75, 1.0)
+		cara.light_energy = 4.0
+		cara.omni_range = 40.0
+		cara.position = base + f * -26.0 + Vector3(0, 64, 0)
+		e.add_child(cara)
 
 
 ## Frente de una pieza (hacia donde mira su fachada) en el plano XZ.
