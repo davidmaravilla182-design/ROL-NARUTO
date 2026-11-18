@@ -52,6 +52,8 @@ var _cancelar_zona: Control
 var _cancelar_activo := false
 var _cancelar_sobre := false
 var _fps: Label
+var diag_red: Dictionary = {}    # {ping, perdida, jugadores, simulado} lo rellena el cliente en red
+var _diag_t := 0.0
 var _clima: Label
 var _margen := Rect2()     # márgenes del área segura: position = (izq, arriba), size = (der, abajo)
 var nivel := 1
@@ -170,8 +172,10 @@ void fragment() {
 	_banner.visible = false
 	raiz.add_child(_banner)
 
-	_fps = _etiqueta("", 20, HORIZONTAL_ALIGNMENT_LEFT)
+	_fps = _etiqueta("", 18, HORIZONTAL_ALIGNMENT_LEFT)
 	_fps.modulate = Color(0.7, 1.0, 0.7)
+	_fps.add_theme_constant_override("outline_size", 5)
+	_fps.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 
 	if not get_viewport().size_changed.is_connected(_reordenar):
 		get_viewport().size_changed.connect(_reordenar)
@@ -451,7 +455,10 @@ func _process(delta: float) -> void:
 		_enemigo["mostrado"] = maxf(frac, move_toward(float(_enemigo["mostrado"]), frac, delta * 0.5))
 	_enemigo_panel.queue_redraw()
 	if _fps.visible:
-		_fps.text = "FPS %d" % Engine.get_frames_per_second()
+		_diag_t -= delta / maxf(Engine.time_scale, 0.05)
+		if _diag_t <= 0.0:
+			_diag_t = 0.25
+			_fps.text = texto_diagnostico()
 	if not _sellos.is_empty():
 		_sellos_t += delta
 		_sellos_panel.queue_redraw()
@@ -489,3 +496,22 @@ func _dibujar_sellos() -> void:
 		var nombre := str(datos.get("nombre", id))
 		Estilo.texto(_sellos_panel, Vector2(c.x - tam * 0.5, c.y + 15), nombre.substr(0, 1), 38, Color(1, 1, 1, alfa), tam, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_titulo(), 6)
 		Estilo.texto(_sellos_panel, Vector2(c.x - tam * 0.5 - 10, tam + 26), nombre, 19, Color(1, 1, 1, alfa), tam + 20, HORIZONTAL_ALIGNMENT_CENTER)
+
+
+## Panel de diagnóstico: FPS, tiempo de fotograma, draw calls, partículas y, en red, ping, pérdida y jugadores.
+func texto_diagnostico() -> String:
+	var fps := Engine.get_frames_per_second()
+	var ms := 1000.0 / maxf(fps, 1.0)
+	var dc := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+	var parts := 0
+	for p in get_tree().get_nodes_in_group("particulas"):
+		var gp := p as GPUParticles3D
+		if gp != null and gp.emitting and gp.is_visible_in_tree():
+			parts += gp.amount
+	var t := Datos.texto("diag_linea", [fps, Ajustes.fps_limite(), "%.1f" % ms, dc, parts])
+	if not diag_red.is_empty():
+		t += "\n" + Datos.texto("diag_red", [int(diag_red.get("ping", 0)), "%.0f" % (float(diag_red.get("perdida", 0.0)) * 100.0),
+			int(diag_red.get("jugadores", 1))])
+		if diag_red.get("simulado", false):
+			t += "  " + Datos.texto("diag_simulado")
+	return t

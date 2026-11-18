@@ -13,6 +13,8 @@ extends RefCounted
 ##   {"t": "repertorio", "activos": [id x4], "modo": id, "niveles_max": {id: 1..3},
 ##    "maestria": {id: xp}, "prueba": bool}             # repertorio elegido en el menú (el servidor lo valida)
 ##   {"t": "reaparecer"}                               # depuración: reinicia enemigo, muñecos y jugador
+##   {"t": "personaje", "datos": {...}}                # personaje creado (Creacion.validar en el servidor)
+##   (entrada lleva además "seq": número creciente para la predicción del cliente)
 ##
 ## ESTADO (servidor -> cliente), una instantánea por tick:
 ##   {"tick": int, "clima": String, "tu_entidad": int,
@@ -30,6 +32,7 @@ const C_ACCION := "accion"
 const C_NIVEL := "nivel"
 const C_REAPARECER := "reaparecer"
 const C_REPERTORIO := "repertorio"
+const C_PERSONAJE := "personaje"
 
 ## Acciones siempre disponibles; el resto son ids de jutsus de /data/jutsus.json.
 const ACCIONES := ["golpe", "esquivar", "saltar", "modo"]
@@ -60,7 +63,7 @@ static func sanear_comando(cmd: Variant) -> Dictionary:
 			var mira := float(c.get("mira", 0.0))
 			if not is_finite(mira):
 				mira = 0.0
-			return {"t": C_ENTRADA, "mov": v, "mira": mira}
+			return {"t": C_ENTRADA, "mov": v, "mira": mira, "seq": maxi(int(c.get("seq", 0)), 0)}
 		C_ACCION:
 			var id := str(c.get("id", ""))
 			if accion_valida(id):
@@ -99,4 +102,9 @@ static func sanear_comando(cmd: Variant) -> Dictionary:
 				"niveles_max": niveles, "maestria": maestria, "prueba": bool(c.get("prueba", false))}
 		C_REAPARECER:
 			return {"t": C_REAPARECER}
+		C_PERSONAJE:
+			# El contenido lo valida Creacion.validar en el servidor; aquí solo se limita el tamaño.
+			var dp: Variant = c.get("datos", {})
+			if typeof(dp) == TYPE_DICTIONARY and JSON.stringify(dp).length() < 4000:
+				return {"t": C_PERSONAJE, "datos": (dp as Dictionary).duplicate(true)}
 	return {}

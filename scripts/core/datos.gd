@@ -12,6 +12,8 @@ static var personajes: Dictionary = {}
 static var escenario: Dictionary = {}
 static var textos: Dictionary = {}
 static var graficos: Dictionary = {}
+static var creacion: Dictionary = {}
+static var red: Dictionary = {}
 static var _cargado := false
 
 
@@ -25,6 +27,8 @@ static func cargar(forzar := false) -> void:
 	escenario = leer_json("escenario.json")
 	textos = leer_json("textos.json")
 	graficos = leer_json("graficos.json")
+	creacion = leer_json("creacion.json")
+	red = leer_json("red.json")
 	_cargado = true
 
 

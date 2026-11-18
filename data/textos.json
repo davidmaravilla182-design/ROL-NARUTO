@@ -47,7 +47,7 @@
   "calidad_media": "Media",
   "calidad_alta": "Alta",
   "ajustes_vibracion": "Vibración",
-  "ajustes_fps": "Mostrar FPS",
+  "ajustes_fps": "Panel de diagnóstico",
   "ajustes_aviso_calidad": "La calidad nueva se aplica al cerrar (se reinicia el entrenamiento).",
   "ajustes_cerrar": "Cerrar",
   "menu_ajustes": "Ajustes",
@@ -131,5 +131,12 @@
   "rep_sin_puntos": "No alcanzan los puntos: quita otro jutsu primero",
   "rep_modo_auto": "Se equipó {0} en la ranura MODO (lo necesita {1})",
   "rep_rol_todos": "Todos",
-  "msg_sustitucion": "¡Sustitución!"
+  "msg_sustitucion": "¡Sustitución!",
+  "ajustes_limite_fps": "Límite de FPS",
+  "ajustes_simular_red": "Simular mala conexión (red)",
+  "diag_linea": "FPS {0}/{1} · {2} ms · draw calls {3} · partículas {4}",
+  "diag_red": "Ping {0} ms · pérdida {1} % · jugadores {2}",
+  "diag_simulado": "(simulada)",
+  "rango_estudiante": "Estudiante",
+  "pj_invalido_servidor": "Personaje no válido ({0}); se usa el de práctica"
 }

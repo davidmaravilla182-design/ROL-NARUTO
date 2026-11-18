@@ -29,6 +29,7 @@ func _ready() -> void:
 ## Crea un sistema de partículas GPU configurable.
 func particulas(cfg: Dictionary) -> GPUParticles3D:
 	var p := GPUParticles3D.new()
+	p.add_to_group("particulas")
 	p.amount = maxi(int(float(cfg.get("cantidad", 20)) * _mult_particulas), 1)
 	p.lifetime = float(cfg.get("vida", 0.6))
 	p.one_shot = bool(cfg.get("una_vez", false))

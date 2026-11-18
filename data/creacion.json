@@ -1,0 +1,342 @@
+{
+ "_nota": "Creación de personaje. Todo lo que se elige en la pantalla de creación sale de aquí. 'rareza' decide la probabilidad en línea (reglas_online).",
+ "max_personajes": 3,
+ "nombre": {
+  "min": 2,
+  "max": 16
+ },
+ "rango_inicial": "genin",
+ "atributos_iniciales": {
+  "ninjutsu": 2,
+  "taijutsu": 2,
+  "genjutsu": 2,
+  "inteligencia": 2,
+  "fuerza": 2,
+  "velocidad": 2,
+  "estamina": 2,
+  "sellos": 2
+ },
+ "balance_chakra": {
+  "_nota": "-1 = todo control, +1 = toda reserva. Suma/resta este efecto (escala 0-5) a la reserva y al control derivados.",
+  "min": -1.0,
+  "max": 1.0,
+  "efecto": 1.0
+ },
+ "peinados": {
+  "puntas": "Puntas",
+  "corto": "Corto",
+  "largo": "Largo",
+  "coleta": "Coleta",
+  "melena": "Melena"
+ },
+ "colores_pelo": [
+  "#1a1f2e",
+  "#3b2a1e",
+  "#7a4a22",
+  "#c8a24a",
+  "#e8e2d6",
+  "#b23a2a",
+  "#2f5f8a",
+  "#6b3c8f"
+ ],
+ "colores_ojos": [
+  "#151212",
+  "#4a2e1a",
+  "#2a5c8a",
+  "#3f7a3a",
+  "#8a7a2a",
+  "#7a2a2a",
+  "#c9c9d6"
+ ],
+ "tonos_piel": [
+  "#f6dcc4",
+  "#f1cfae",
+  "#e2b48c",
+  "#c99470",
+  "#a87454",
+  "#7e5038"
+ ],
+ "complexiones": {
+  "delgada": {
+   "nombre": "Delgada",
+   "ancho": 0.92,
+   "alto": 1.0
+  },
+  "media": {
+   "nombre": "Media",
+   "ancho": 1.0,
+   "alto": 1.0
+  },
+  "fornida": {
+   "nombre": "Fornida",
+   "ancho": 1.12,
+   "alto": 1.01
+  },
+  "alta": {
+   "nombre": "Alta",
+   "ancho": 0.98,
+   "alto": 1.07
+  }
+ },
+ "ropas": {
+  "chaleco": {
+   "nombre": "Chaleco táctico",
+   "aspecto": {
+    "camisa": "#1a2140",
+    "pantalon": "#1f2438",
+    "chaleco": "#56644e",
+    "banda": "#26304f",
+    "vendas": "#ece6d6",
+    "sandalias": "#262a36",
+    "capa": false,
+    "mascara": false,
+    "emblema_espalda": true
+   }
+  },
+  "impermeable": {
+   "nombre": "Impermeable de la lluvia",
+   "aspecto": {
+    "camisa": "#2a2f3e",
+    "pantalon": "#23283a",
+    "chaleco": "#3d4a3a",
+    "banda": "#3a4258",
+    "vendas": "#d9d3c3",
+    "sandalias": "#20232c",
+    "capa": true,
+    "capa_color": "#4a5164",
+    "mascara": false,
+    "emblema_espalda": false
+   }
+  },
+  "ligera": {
+   "nombre": "Ropa ligera",
+   "aspecto": {
+    "camisa": "#6b2f2f",
+    "pantalon": "#2a2a33",
+    "chaleco": "#6b2f2f",
+    "banda": "#2d3348",
+    "vendas": "#ece6d6",
+    "sandalias": "#2a2a30",
+    "capa": false,
+    "mascara": false,
+    "emblema_espalda": true
+   }
+  },
+  "sigilo": {
+   "nombre": "Sigilo (máscara)",
+   "aspecto": {
+    "camisa": "#14161c",
+    "pantalon": "#14161c",
+    "chaleco": "#2b2f38",
+    "banda": "#1d212b",
+    "vendas": "#9a978e",
+    "sandalias": "#111216",
+    "capa": false,
+    "mascara": true,
+    "emblema_espalda": false
+   }
+  }
+ },
+ "aldeas": {
+  "lluvia": {
+   "nombre": "Amegakure",
+   "disponible": true
+  },
+  "hoja": {
+   "nombre": "Aldea de la Hoja",
+   "disponible": false
+  },
+  "arena_aldea": {
+   "nombre": "Aldea de la Arena",
+   "disponible": false
+  },
+  "niebla": {
+   "nombre": "Aldea de la Niebla",
+   "disponible": false
+  },
+  "nube": {
+   "nombre": "Aldea de la Nube",
+   "disponible": false
+  },
+  "roca": {
+   "nombre": "Aldea de la Roca",
+   "disponible": false
+  }
+ },
+ "rarezas": {
+  "comun": {
+   "nombre": "Común",
+   "color": "#b9c0cc",
+   "peso_online": 70
+  },
+  "raro": {
+   "nombre": "Raro",
+   "color": "#5ab8ff",
+   "peso_online": 25
+  },
+  "legendario": {
+   "nombre": "Legendario",
+   "color": "#ffc94a",
+   "peso_online": 5
+  }
+ },
+ "reglas_online": {
+  "_nota": "En línea el clan no se elige: se sortea con el peso de su rareza (dentro de cada rareza, al azar entre sus clanes). En offline se elige libremente.",
+  "clan_por_probabilidad": true
+ },
+ "naturalezas": {
+  "innatas": 1,
+  "segunda_en_rango": "chunin",
+  "opciones": [
+   "fuego",
+   "viento",
+   "rayo",
+   "tierra",
+   "agua"
+  ]
+ },
+ "clanes": {
+  "sin_clan": {
+   "nombre": "Sin clan",
+   "rareza": "comun",
+   "ventaja": "+1 punto de atributo (tope 27).",
+   "desventaja": "Sin técnicas secretas de linaje.",
+   "linajes": [],
+   "puntos_extra": 1,
+   "modificadores": {}
+  },
+  "uchiha": {
+   "nombre": "Uchiha",
+   "rareza": "raro",
+   "ventaja": "Sharingan; al llegar a Jōnin despierta el Mangekyō. +10 % chakra.",
+   "desventaja": "Los ojos gastan chakra sin parar. −10 % vida.",
+   "linajes": [
+    "sharingan"
+   ],
+   "linajes_por_rango": {
+    "jonin": [
+     "mangekyo"
+    ]
+   },
+   "naturaleza_sugerida": "fuego",
+   "modificadores": {
+    "chakra_max": 1.1,
+    "vida_max": 0.9
+   }
+  },
+  "hyuga": {
+   "nombre": "Hyūga",
+   "rareza": "raro",
+   "ventaja": "Byakugan: 64 Palmas y Rotación. +10 % estamina.",
+   "desventaja": "Pocos jutsus a distancia; −10 % chakra.",
+   "linajes": [
+    "byakugan"
+   ],
+   "naturaleza_sugerida": "viento",
+   "modificadores": {
+    "estamina_max": 1.1,
+    "chakra_max": 0.9
+   }
+  },
+  "papel": {
+   "nombre": "Clan de papel de Amegakure",
+   "rareza": "comun",
+   "ventaja": "Danza de Papel; +5 % velocidad.",
+   "desventaja": "El papel se moja: −5 % vida.",
+   "linajes": [
+    "papel"
+   ],
+   "naturaleza_sugerida": "viento",
+   "modificadores": {
+    "velocidad": 1.05,
+    "vida_max": 0.95
+   }
+  },
+  "madera": {
+   "nombre": "Linaje de la Madera",
+   "rareza": "legendario",
+   "ventaja": "Tierra y agua; vida y chakra +10 %.",
+   "desventaja": "El chakra se recupera más lento (−15 %).",
+   "linajes": [
+    "madera"
+   ],
+   "naturalezas_fijas": [
+    "tierra",
+    "agua"
+   ],
+   "modificadores": {
+    "vida_max": 1.1,
+    "chakra_max": 1.1,
+    "regen_chakra": 0.85
+   }
+  },
+  "hielo": {
+   "nombre": "Linaje del Hielo",
+   "rareza": "raro",
+   "ventaja": "Agua y viento; espejos de hielo. +5 % velocidad.",
+   "desventaja": "−5 % vida.",
+   "linajes": [
+    "hielo"
+   ],
+   "naturalezas_fijas": [
+    "agua",
+    "viento"
+   ],
+   "modificadores": {
+    "velocidad": 1.05,
+    "vida_max": 0.95
+   }
+  },
+  "lava": {
+   "nombre": "Linaje de la Lava",
+   "rareza": "raro",
+   "ventaja": "Fuego y tierra; +10 % vida.",
+   "desventaja": "Lento: −5 % velocidad.",
+   "linajes": [
+    "lava"
+   ],
+   "naturalezas_fijas": [
+    "fuego",
+    "tierra"
+   ],
+   "modificadores": {
+    "vida_max": 1.1,
+    "velocidad": 0.95
+   }
+  },
+  "arcilla": {
+   "nombre": "Linaje de la Arcilla",
+   "rareza": "raro",
+   "ventaja": "Tierra y rayo; arcilla explosiva. +5 % chakra.",
+   "desventaja": "−5 % estamina.",
+   "linajes": [
+    "arcilla"
+   ],
+   "naturalezas_fijas": [
+    "tierra",
+    "rayo"
+   ],
+   "modificadores": {
+    "chakra_max": 1.05,
+    "estamina_max": 0.95
+   }
+  },
+  "arena": {
+   "nombre": "Linaje de la Arena",
+   "rareza": "legendario",
+   "ventaja": "Viento y tierra; escudo automático de arena. +10 % vida.",
+   "desventaja": "−10 % velocidad.",
+   "linajes": [
+    "arena"
+   ],
+   "naturalezas_fijas": [
+    "viento",
+    "tierra"
+   ],
+   "modificadores": {
+    "vida_max": 1.1,
+    "velocidad": 0.9
+   }
+  }
+ }
+}

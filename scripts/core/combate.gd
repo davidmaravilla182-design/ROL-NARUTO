@@ -19,6 +19,8 @@ static func validar_atributos(attrs: Dictionary) -> Dictionary:
 			errores.append("%s fuera de rango (%d)" % [nombre, v])
 		total += v
 	for nombre in attrs.keys():
+		if str(nombre).begins_with("_"):
+			continue   # "_balance": deslizador reserva/control, no es un atributo con puntos
 		if not (nombre in conf["lista"]):
 			errores.append("Atributo desconocido %s" % nombre)
 	if total > int(conf["tope_total"]):
@@ -36,13 +38,21 @@ static func _ponderado(attrs: Dictionary, pesos: Dictionary) -> float:
 ## Reserva de chakra (0-5): cuánto chakra tiene y qué tan grandes salen sus jutsus.
 static func reserva(attrs: Dictionary) -> float:
 	Datos.cargar()
-	return _ponderado(attrs, Datos.reglas["derivados"]["reserva"])
+	return clampf(_ponderado(attrs, Datos.reglas["derivados"]["reserva"]) + _balance(attrs), 0.0, 5.0)
+
+
+## Deslizador "Reserva vs. Control" (-1 control … +1 reserva) de la creación de personaje.
+static func _balance(attrs: Dictionary) -> float:
+	var b := float(attrs.get("_balance", 0.0))
+	if b == 0.0:
+		return 0.0
+	return b * float(Datos.creacion.get("balance_chakra", {}).get("efecto", 1.0))
 
 
 ## Control de chakra (0-5): eficiencia (menos costo) y precisión.
 static func control(attrs: Dictionary) -> float:
 	Datos.cargar()
-	return _ponderado(attrs, Datos.reglas["derivados"]["control"])
+	return clampf(_ponderado(attrs, Datos.reglas["derivados"]["control"]) - _balance(attrs), 0.0, 5.0)
 
 
 ## Multiplicador por naturaleza del atacante contra la naturaleza del defensor.

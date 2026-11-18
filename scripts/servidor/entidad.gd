@@ -11,6 +11,9 @@ var nombre := ""
 var attrs: Dictionary = {}
 var stats: Dictionary = {}
 var naturalezas: Array = []
+var personaje: Dictionary = {}    # personaje creado por el jugador (vacío = plantilla de /data/personajes.json)
+var aspecto: Dictionary = {}      # aspecto visual para dibujarlo en todos los clientes
+var ultima_entrada := 0           # número de la última entrada procesada (predicción del cliente)
 var jutsus: Array = []
 
 var pos := Vector3.ZERO
@@ -88,6 +91,36 @@ func reiniciar() -> void:
 	combo_ventana = 0.0
 	invulnerable_t = 0.0
 	apuntado = {}
+
+
+## Configura la entidad a partir de un personaje creado (ya validado con Creacion.validar).
+func configurar_personaje(pj: Dictionary) -> void:
+	personaje = pj.duplicate(true)
+	nombre = str(pj.get("nombre", nombre))
+	attrs = (pj.get("atributos", {}) as Dictionary).duplicate()
+	naturalezas = Creacion.naturalezas(pj)
+	stats = Creacion.estadisticas(pj)
+	aspecto = Creacion.aspecto_visual(pj)
+	aspecto["clan"] = str(pj.get("clan", ""))
+	aspecto["aldea"] = str(pj.get("aldea", "lluvia"))
+	vida = stats["vida_max"]
+	chakra = stats["chakra_max"]
+	estamina = stats["estamina_max"]
+	aplicar_repertorio(Creacion.repertorio_inicial(pj))
+
+
+## Ficha para las reglas del repertorio: la del personaje creado o la de la plantilla.
+func ficha() -> Dictionary:
+	if personaje.is_empty():
+		return Repertorio.ficha(plantilla_id, maestria)
+	return Creacion.ficha(personaje, maestria)
+
+
+## Repertorio por defecto según el personaje.
+func repertorio_defecto() -> Dictionary:
+	if personaje.is_empty():
+		return Repertorio.repertorio_por_defecto(plantilla_id)
+	return Creacion.repertorio_inicial(personaje)
 
 
 ## Equipa un repertorio ya validado: técnicas base + activos + modo.
@@ -184,7 +217,9 @@ func a_estado() -> Dictionary:
 		"ceguera": ceguera,
 		"efectos": _efectos_estado(),
 		"niveles": _niveles_estado(),
-		"maestria": maestria.duplicate(),
+		"nombre": nombre,
+		"equipo": equipo,
+		"ultima_entrada": ultima_entrada,
 		"recargas": r,
 		"en_suelo": en_suelo,
 		"en_charco": en_charco,

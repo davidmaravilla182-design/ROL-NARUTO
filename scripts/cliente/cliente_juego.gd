@@ -41,7 +41,7 @@ func _ready() -> void:
 	mapa = Mapa.generar()
 	Engine.time_scale = 1.0
 	get_viewport().scaling_3d_scale = float(Ajustes.g("escala_3d", 1.0))
-	Engine.max_fps = int(Ajustes.g("fps_objetivo", 60))
+	Ajustes.aplicar_fps()
 
 	sonidos = Sonidos.new()
 	sonidos.name = "Sonidos"
@@ -116,7 +116,9 @@ func _ready() -> void:
 	transporte = local
 	transporte.conectado.connect(func(id):
 		mi_id = id
-		# El repertorio elegido en el menú (el servidor lo valida con las mismas reglas).
+		# Personaje creado y repertorio elegido en el menú (el servidor valida ambos con las mismas reglas).
+		if not Perfil.personaje().is_empty():
+			transporte.enviar(Perfil.comando_personaje())
 		transporte.enviar(Perfil.comando()))
 	transporte.estado_recibido.connect(_on_estado)
 	local.iniciar(servidor)

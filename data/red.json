@@ -1,0 +1,25 @@
+{
+  "_nota": "Red local (listen server). Puertos UDP: juego (ENet) y descubrimiento por difusión en el mismo Wi-Fi.",
+  "puerto": 7777,
+  "puerto_descubrimiento": 7778,
+  "intervalo_anuncio": 1.0,
+  "max_jugadores": 4,
+  "min_jugadores": 2,
+  "tiempo_espera_conexion": 8.0,
+  "firma": "SOMBRAS-LLUVIA-1",
+  "estado_por_segundo": 20,
+  "interpolacion_retraso": 0.1,
+  "prediccion": {
+    "_nota": "Si la posición predicha se aleja más que 'umbral' del servidor, se corrige suavemente; más de 'teletransporte', de golpe.",
+    "umbral": 0.25,
+    "teletransporte": 3.0,
+    "suavizado": 12.0
+  },
+  "ping_intervalo": 1.0,
+  "simulador": {
+    "_nota": "Simulador de mala conexión (Ajustes). Retraso de ida, variación y pérdida de paquetes no fiables.",
+    "latencia_ms": 120,
+    "variacion_ms": 40,
+    "perdida": 0.05
+  }
+}

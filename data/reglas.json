@@ -82,6 +82,7 @@
     "vulnerable_dano": 1.3
   },
   "rangos": [
+    "estudiante",
     "genin",
     "chunin",
     "jonin",
@@ -136,5 +137,53 @@
     "xp_uso": 10,
     "xp_impacto": 15,
     "xp_modo_por_segundo": 2.0
+  },
+  "progresion": {
+    "_nota": "Regla de ascenso (aún sin misiones en el demo). 'desbloquea' se aplica al llegar a ese rango.",
+    "estudiante": {
+      "siguiente": "genin",
+      "requisitos": {
+        "examen": "academia"
+      }
+    },
+    "genin": {
+      "siguiente": "chunin",
+      "requisitos": {
+        "misiones": {
+          "D": 10,
+          "C": 3
+        },
+        "examen": "chunin"
+      }
+    },
+    "chunin": {
+      "siguiente": "jonin",
+      "requisitos": {
+        "misiones": {
+          "C": 10,
+          "B": 5
+        },
+        "maestria_n3": 3
+      },
+      "desbloquea": [
+        "segunda_naturaleza"
+      ]
+    },
+    "jonin": {
+      "siguiente": "kage",
+      "requisitos": {
+        "misiones": {
+          "A": 10,
+          "S": 2
+        },
+        "maestria_n3": 8
+      },
+      "desbloquea": [
+        "linajes_por_rango"
+      ]
+    },
+    "kage": {
+      "siguiente": ""
+    }
   }
 }

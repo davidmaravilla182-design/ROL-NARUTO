@@ -536,7 +536,7 @@ class Detalle extends Control:
 		var niveles := HBoxContainer.new()
 		niveles.add_theme_constant_override("separation", 14)
 		caja.add_child(niveles)
-		var attrs: Dictionary = Datos.personaje(Perfil.PLANTILLA).get("atributos", {})
+		var attrs: Dictionary = Perfil.atributos()
 		for n in 3:
 			var colu := VBoxContainer.new()
 			colu.size_flags_horizontal = Control.SIZE_EXPAND_FILL

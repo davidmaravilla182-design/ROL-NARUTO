@@ -9,7 +9,9 @@ static var opacidad_botones := 0.9
 static var sensibilidad := 1.0
 static var calidad := ""
 static var vibracion := true
-static var mostrar_fps := false
+static var mostrar_fps := false          # panel de diagnóstico
+static var limite_fps := 0               # 0 = según la calidad (alta 60, media/baja 30); 30 o 60 = elegido
+static var simular_red := false          # latencia y pérdida artificiales (data/red.json → simulador)
 static var _cargado := false
 
 
@@ -30,6 +32,10 @@ static func cargar() -> void:
 		calidad = c
 	vibracion = bool(cf.get_value("control", "vibracion", vibracion))
 	mostrar_fps = bool(cf.get_value("graficos", "mostrar_fps", mostrar_fps))
+	limite_fps = int(cf.get_value("graficos", "limite_fps", limite_fps))
+	if not (limite_fps in [0, 30, 60]):
+		limite_fps = 0
+	simular_red = bool(cf.get_value("red", "simular", simular_red))
 
 
 static func guardar() -> void:
@@ -40,6 +46,8 @@ static func guardar() -> void:
 	cf.set_value("control", "vibracion", vibracion)
 	cf.set_value("graficos", "calidad", calidad)
 	cf.set_value("graficos", "mostrar_fps", mostrar_fps)
+	cf.set_value("graficos", "limite_fps", limite_fps)
+	cf.set_value("red", "simular", simular_red)
 	cf.save(RUTA)
 
 
@@ -52,3 +60,13 @@ static func g(clave: String, por_defecto: Variant = null) -> Variant:
 static func vibrar(ms := 25) -> void:
 	if vibracion and OS.has_feature("mobile"):
 		Input.vibrate_handheld(ms)
+
+
+## FPS máximos efectivos: el elegido por el jugador o el de la calidad (media/baja = 30 a propósito).
+static func fps_limite() -> int:
+	cargar()
+	return limite_fps if limite_fps > 0 else int(g("fps_objetivo", 60))
+
+
+static func aplicar_fps() -> void:
+	Engine.max_fps = fps_limite()

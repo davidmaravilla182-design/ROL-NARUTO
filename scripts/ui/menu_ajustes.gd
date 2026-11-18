@@ -11,6 +11,7 @@ var _panel: Control
 var _calidad_inicial := ""
 var _aviso: Label
 var _botones_calidad: Dictionary = {}
+var _botones_fps: Dictionary = {}
 
 
 func construir() -> void:
@@ -59,11 +60,28 @@ func construir() -> void:
 		fila_cal.add_child(b)
 	caja.add_child(fila_cal)
 
+	# Límite de FPS: 30 ahorra batería y calor; 60 es más fluido. Por defecto sigue a la calidad.
+	var fila_fps := HBoxContainer.new()
+	fila_fps.add_theme_constant_override("separation", 12)
+	fila_fps.add_child(_etiqueta("ajustes_limite_fps"))
+	for f in [30, 60]:
+		var bf := Button.new()
+		bf.text = str(f)
+		bf.toggle_mode = true
+		bf.custom_minimum_size = Vector2(110, 58)
+		bf.focus_mode = Control.FOCUS_NONE
+		bf.pressed.connect(_elegir_fps.bind(f))
+		_botones_fps[f] = bf
+		fila_fps.add_child(bf)
+	caja.add_child(fila_fps)
+	_marcar_fps()
+
 	var fila_ch := HBoxContainer.new()
 	fila_ch.add_theme_constant_override("separation", 30)
 	fila_ch.add_child(_casilla("ajustes_vibracion", Ajustes.vibracion, func(v): Ajustes.vibracion = v; cambiado.emit()))
 	fila_ch.add_child(_casilla("ajustes_fps", Ajustes.mostrar_fps, func(v): Ajustes.mostrar_fps = v; cambiado.emit()))
 	caja.add_child(fila_ch)
+	caja.add_child(_casilla("ajustes_simular_red", Ajustes.simular_red, func(v): Ajustes.simular_red = v; cambiado.emit()))
 
 	_aviso = Label.new()
 	_aviso.text = Datos.texto("ajustes_aviso_calidad")
@@ -139,10 +157,23 @@ func _casilla(clave: String, valor: bool, cb: Callable) -> Control:
 	return b
 
 
+func _elegir_fps(f: int) -> void:
+	Ajustes.limite_fps = f
+	Ajustes.aplicar_fps()
+	_marcar_fps()
+	cambiado.emit()
+
+
+func _marcar_fps() -> void:
+	for k in _botones_fps.keys():
+		(_botones_fps[k] as Button).set_pressed_no_signal(k == Ajustes.fps_limite())
+
+
 func _elegir_calidad(q: String) -> void:
 	Ajustes.calidad = q
 	for k in _botones_calidad.keys():
 		(_botones_calidad[k] as Button).set_pressed_no_signal(k == q)
+	_marcar_fps()
 	_aviso.visible = q != _calidad_inicial
 
 

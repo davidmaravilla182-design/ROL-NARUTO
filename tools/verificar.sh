@@ -29,6 +29,14 @@ else
 fi
 if grep -E "SCRIPT ERROR|Parse Error|^ERROR" "$LOG"; then fallo=1; fi
 
+echo "== Pruebas de personaje =="
+if ! "$GODOT" --headless --path . -s res://tests/pruebas_personaje.gd >"$LOG" 2>&1; then
+  cat "$LOG"; echo "!! Fallan las pruebas de personaje"; fallo=1
+else
+  grep "Resultado" "$LOG"
+fi
+if grep -E "SCRIPT ERROR|Parse Error|^ERROR" "$LOG"; then fallo=1; fi
+
 echo "== Prueba de humo (menú + partida) =="
 "$GODOT" --headless --path . -s res://tests/humo.gd >"$LOG" 2>&1
 codigo=$?

@@ -123,11 +123,14 @@ func aplicar_comando(e: EntidadServidor, cmd: Dictionary) -> void:
 		Protocolo.C_ENTRADA:
 			e.entrada_mov = cmd["mov"]
 			e.entrada_mira = float(cmd["mira"])
+			e.ultima_entrada = maxi(e.ultima_entrada, int(cmd.get("seq", 0)))
 		Protocolo.C_NIVEL:
 			e.nivel_poder = int(cmd["valor"])
 			_evento({"tipo": "nivel", "entidad": e.id, "nivel": e.nivel_poder})
 		Protocolo.C_REPERTORIO:
 			aplicar_repertorio(e, cmd)
+		Protocolo.C_PERSONAJE:
+			aplicar_personaje(e, cmd)
 		Protocolo.C_ACCION:
 			# Dirección y objetivo del disparo viajan en el comando (igual offline y en red).
 			e.apuntado = {
@@ -145,14 +148,36 @@ func aplicar_repertorio(e: EntidadServidor, cmd: Dictionary) -> void:
 		return
 	e.maestria = (cmd.get("maestria", {}) as Dictionary).duplicate()
 	var rep := {"activos": cmd.get("activos", []), "modo": cmd.get("modo", ""), "niveles_max": cmd.get("niveles_max", {})}
-	var v := Repertorio.validar(rep, Repertorio.ficha(e.plantilla_id, e.maestria), bool(cmd.get("prueba", false)))
+	var v := Repertorio.validar(rep, e.ficha(), bool(cmd.get("prueba", false)))
 	if not v["ok"]:
-		rep = Repertorio.repertorio_por_defecto(e.plantilla_id)
+		rep = e.repertorio_defecto()
 		_evento({"tipo": "mensaje", "entidad": e.id, "clave": "rep_invalido_servidor", "args": [str(v["errores"][0]) if not v["errores"].is_empty() else ""]})
 	e.aplicar_repertorio(rep)
 	# El cliente reconstruye sus botones con lo que el servidor aceptó de verdad.
 	_evento({"tipo": "repertorio", "entidad": e.id, "jutsus": e.jutsus, "modo": e.modo,
 		"activos": (rep.get("activos", []) as Array).duplicate(), "niveles_max": (rep.get("niveles_max", {}) as Dictionary).duplicate()})
+
+
+## Personaje creado por el jugador: el servidor lo valida (atributos, clan, naturalezas, aldea) antes de usarlo.
+func aplicar_personaje(e: EntidadServidor, cmd: Dictionary) -> void:
+	if e.tipo != "jugador":
+		return
+	var v := Creacion.validar(cmd.get("datos", {}))
+	if not v["ok"]:
+		_evento({"tipo": "mensaje", "entidad": e.id, "clave": "pj_invalido_servidor", "args": [str(v["errores"][0])]})
+		return
+	e.configurar_personaje(v["pj"])
+	_evento({"tipo": "repertorio", "entidad": e.id, "jutsus": e.jutsus, "modo": e.modo,
+		"activos": (e.repertorio.get("activos", []) as Array).duplicate(), "niveles_max": {}})
+
+
+## Datos de presentación de los jugadores (nombre y aspecto), para que cada cliente los dibuje.
+func info_jugadores() -> Array:
+	var r: Array = []
+	for e in entidades:
+		if e.tipo == "jugador":
+			r.append({"id": e.id, "nombre": e.nombre, "aspecto": e.aspecto, "plantilla": e.plantilla_id})
+	return r
 
 
 ## Nivel efectivo de una técnica para una entidad (maestría, máximo elegido y depuración).
@@ -889,6 +914,9 @@ func publicar_estado() -> void:
 		cs.append({"id": c["id"], "jutsu": c["jutsu"], "nivel": c["nivel"], "pos": c["pos"], "yaw": c["yaw"], "forma": c["forma"],
 			"escala": c["escala"], "dueno": c["dueno"], "golpe": c["golpe"], "t": c["t"]})
 	var base := {"tick": tick, "clima": clima, "entidades": ents, "proyectiles": proys, "zonas": zs, "criaturas": cs, "eventos": eventos}
+	# Nombre y aspecto de los jugadores: cada 15 ticks (medio segundo) basta; el cliente los guarda.
+	if tick % 15 == 1:
+		base["jugadores"] = info_jugadores()
 	for peer in _peers.keys():
 		var est := base.duplicate()
 		est["tu_entidad"] = _peers[peer]
