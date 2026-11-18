@@ -109,14 +109,20 @@ func _ready() -> void:
 	cuerpo.add_child(scroll)
 	_grid = GridContainer.new()
 	_grid.columns = 4
+	# Columnas según el ancho disponible (pantallas de celular más alargadas muestran más tarjetas).
+	scroll.resized.connect(func(): _grid.columns = maxi(2, int((scroll.size.x - 12) / (TAM_TARJETA.x + 8))))
 	_grid.add_theme_constant_override("h_separation", 8)
 	_grid.add_theme_constant_override("v_separation", 8)
 	scroll.add_child(_grid)
 
+	var scroll_lado := ScrollContainer.new()
+	scroll_lado.custom_minimum_size = Vector2(312, 0)
+	scroll_lado.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	cuerpo.add_child(scroll_lado)
 	var lado := VBoxContainer.new()
 	lado.custom_minimum_size = Vector2(300, 0)
-	lado.add_theme_constant_override("separation", 6)
-	cuerpo.add_child(lado)
+	lado.add_theme_constant_override("separation", 5)
+	scroll_lado.add_child(lado)
 	for i in int(Repertorio.conf().get("ranuras_activas", 4)):
 		var rn := Ranura.new()
 		rn.configurar(self, i)
@@ -383,7 +389,13 @@ class Tarjeta extends Control:
 		Iconos.dibujar_icono(self, str(j.get("icono", "")), Vector2(46, 58), 28.0, false, int(j.get("patron", 1)), id)
 		# Nombre (hasta 2 líneas)
 		var f := Estilo.fuente_ui()
-		draw_multiline_string(f, Vector2(84, 30), str(j.get("nombre", id)), HORIZONTAL_ALIGNMENT_LEFT, size.x - 120, 19, 2, Color.WHITE)
+		var nombre := str(j.get("nombre", id))
+		var ancho := size.x - 84 - 40
+		var tam := 19
+		for palabra in nombre.split(" "):
+			while tam > 13 and f.get_string_size(palabra, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x > ancho:
+				tam -= 1
+		draw_multiline_string(f, Vector2(84, 30), nombre, HORIZONTAL_ALIGNMENT_LEFT, ancho, tam, 2, Color.WHITE)
 		# Puntos (círculo arriba a la derecha)
 		var pc := Vector2(size.x - 20, 22)
 		draw_circle(pc, 15, Color(0.05, 0.05, 0.08))
@@ -393,7 +405,7 @@ class Tarjeta extends Control:
 		var rol: Dictionary = Repertorio.roles().get(str(j.get("rol", "")), {})
 		if not rol.is_empty():
 			var rc := Datos.color(str(rol["color"]))
-			var caja := Rect2(Vector2(size.x - 82, 44), Vector2(74, 20))
+			var caja := Rect2(Vector2(size.x - 74, 86), Vector2(66, 20))
 			draw_rect(caja, Color(rc.r, rc.g, rc.b, 0.22))
 			draw_rect(caja, rc, false, 1.0)
 			Estilo.texto(self, caja.position + Vector2(0, 15), str(rol["nombre"]), 13, rc.lightened(0.3), caja.size.x, HORIZONTAL_ALIGNMENT_CENTER)
@@ -431,7 +443,7 @@ class Ranura extends Control:
 	func configurar(p_menu, i: int) -> void:
 		menu = p_menu
 		indice = i
-		custom_minimum_size = Vector2(300, 72)
+		custom_minimum_size = Vector2(300, 64)
 		mouse_filter = Control.MOUSE_FILTER_STOP
 
 	func _id() -> String:
@@ -470,7 +482,7 @@ class Ranura extends Control:
 		draw_multiline_string(Estilo.fuente_ui(), Vector2(74, 28), str(j.get("nombre", id)), HORIZONTAL_ALIGNMENT_LEFT, size.x - 214, 17, 1, Color.WHITE)
 		var nivel := Repertorio.nivel_desbloqueado(Perfil.xp(id))
 		for k in 3:
-			draw_circle(Vector2(82 + k * 16, 56), 5, Color(1.0, 0.85, 0.3) if k < nivel else Color(0.3, 0.3, 0.34))
+			draw_circle(Vector2(82 + k * 16, size.y - 15), 5, Color(1.0, 0.85, 0.3) if k < nivel else Color(0.3, 0.3, 0.34))
 		var nmax := int(menu.rep().get("niveles_max", {}).get(id, 0))
 		var txt := Datos.texto("rep_nivel_auto") if nmax == 0 else Datos.texto("rep_nivel_max", [nmax])
 		draw_rect(Rect2(Vector2(size.x - 138, 16), Vector2(90, size.y - 32)), Color(0.15, 0.17, 0.22))
