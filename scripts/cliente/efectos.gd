@@ -115,11 +115,24 @@ func _borrar_en(n: Node, segundos: float) -> void:
 	tw.tween_callback(n.queue_free)
 
 
+var _sacudidas: Array = []   # instantes (ms) de las últimas sacudidas aceptadas
+
+
+## Temblor de cámara con límite: como máximo N sacudidas por ventana y un trauma total acotado
+## (data/graficos.json → limites). Las explosiones se ven igual; solo se recorta el temblor sobrante.
 func sacudir_desde(pos: Vector3, fuerza: float) -> void:
 	if camara == null or fuerza <= 0.0:
 		return
+	var lim: Dictionary = Datos.graficos.get("limites", {})
+	var ahora := Time.get_ticks_msec()
+	var ventana := int(float(lim.get("ventana", 0.6)) * 1000.0)
+	while not _sacudidas.is_empty() and ahora - int(_sacudidas[0]) > ventana:
+		_sacudidas.pop_front()
+	if _sacudidas.size() >= int(lim.get("sacudidas", 3)):
+		return
+	_sacudidas.append(ahora)
 	var d := camara.global_position.distance_to(pos)
-	camara.sacudir(fuerza * clampf(1.4 - d / 30.0, 0.25, 1.0))
+	camara.sacudir(fuerza * clampf(1.4 - d / 30.0, 0.25, 1.0), float(lim.get("trauma_max", 0.9)))
 
 
 ## Marca en el suelo (quemadura o grietas) que se desvanece.

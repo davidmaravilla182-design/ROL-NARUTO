@@ -16,7 +16,7 @@
 - [x] Botones de combate generados desde el repertorio con toque/arrastre/cancelar.
 - [x] Bloque 1 (3 niveles visibles): Kirin, Rasengan, Amaterasu, Susanoo, Shinra Tensei, Ocho Puertas
       (+ ya existían Bola de Fuego y Chidori, y los modos Sharingan, Mangekyō, Rinnegan, Byakugan).
-- [x] Pruebas: 89 de combate + 81 de repertorio + humo (menú, repertorio y partida en 3 calidades).
+- [x] Pruebas: 89 de combate + 88 de repertorio + humo (menú, repertorio y partida en 3 calidades).
 - [x] Capturas por nivel del bloque 1: `GUION=tecnicas` con `tools/captura.gd`; menú con `tools/captura_menu.gd`.
 
 ## Bloques 2 a 7 (hechos): los 40 jutsus y el Modo Sabio
@@ -31,6 +31,10 @@
 - [x] N3 de cada uno: más grande, cámara lenta para quien lo lanza, sacudida fuerte, destello y marcas en el suelo.
 - [x] Prueba que lanza los 31 genéricos en N1/N2/N3 (93 usos) y comprueba su efecto; humo con varios en el cliente.
 - [x] Capturas: `GUION=todos` (y `FILTRO=prefijo`) en `tools/captura.gd`.
+
+## Ajustes v0.4.1
+- [x] Límite de temblor de cámara, equilibrio de invocaciones y Dragón de Agua, clones más ligeros, Fuerza N3 nueva,
+      usos (ataque/defensa/control/apoyo) y 3 defensas nuevas.
 
 ## Siguiente (ideas)
 - Afinar balance con partidas reales; sonidos propios por forma; IA enemiga que use el repertorio.

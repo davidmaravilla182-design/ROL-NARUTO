@@ -28,6 +28,11 @@ static func categorias() -> Dictionary:
 	return Datos.jutsus.get("_categorias", {})
 
 
+## Usos: ataque, defensa, control, apoyo ({id: {nombre, color}}).
+static func roles() -> Dictionary:
+	return Datos.jutsus.get("_roles", {})
+
+
 static func es_modo(id: String) -> bool:
 	return str(Datos.jutsu(id).get("ranura", "")) == "modo"
 

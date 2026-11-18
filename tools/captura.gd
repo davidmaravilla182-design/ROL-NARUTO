@@ -203,7 +203,7 @@ func _guion_todos(filtro: String) -> void:
 		var j := Datos.jutsu(id)
 		if str(j.get("mecanica", "")) not in ["generica", "modo_sabio"]:
 			continue
-		if filtro != "" and not id.begins_with(filtro):
+		if filtro != "" and not Array(filtro.split(",")).any(func(f): return id.begins_with(f)):
 			continue
 		var req: Array = j.get("requiere_modo_activo", [])
 		var modo := str(req[0]) if not req.is_empty() else ""

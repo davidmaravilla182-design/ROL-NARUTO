@@ -9,6 +9,8 @@ const TAM_TARJETA := Vector2(214, 140)
 
 var _categoria := ""   # "" = todas
 var _solo_disponibles := false
+var _rol := ""          # "" = todos; ataque, defensa, control, apoyo
+var _roles_fila: HBoxContainer
 var _grid: GridContainer
 var _tabs: HBoxContainer
 var _ranuras: Array = []       # [Ranura x4]
@@ -86,6 +88,15 @@ func _ready() -> void:
 	var cats := Repertorio.categorias()
 	for k in cats.keys():
 		_crear_tab(k, str(cats[k]["nombre"]), Datos.color(str(cats[k]["color"])))
+
+	# --- filtro por uso: ataque, defensa, control, apoyo
+	_roles_fila = HBoxContainer.new()
+	_roles_fila.add_theme_constant_override("separation", 6)
+	col.add_child(_roles_fila)
+	var roles := Repertorio.roles()
+	_crear_rol("", Datos.texto("rep_rol_todos"), Estilo.ACERO_BORDE)
+	for k in roles.keys():
+		_crear_rol(k, str(roles[k]["nombre"]), Datos.color(str(roles[k]["color"])))
 
 	# --- cuerpo: tarjetas a la izquierda, ranuras a la derecha
 	var cuerpo := HBoxContainer.new()
@@ -165,6 +176,21 @@ func _crear_tab(id: String, nombre: String, color: Color) -> void:
 	_tabs.add_child(b)
 
 
+func _crear_rol(id: String, nombre: String, color: Color) -> void:
+	var b := Button.new()
+	b.text = nombre
+	b.toggle_mode = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(120, 40)
+	b.add_theme_font_size_override("font_size", 17)
+	b.add_theme_color_override("font_color", color.lightened(0.25))
+	b.set_meta("rol", id)
+	b.pressed.connect(func():
+		_rol = id
+		_refrescar())
+	_roles_fila.add_child(b)
+
+
 func _elegir_rep(i: int) -> void:
 	Perfil.activo = i
 	Perfil.guardar()
@@ -195,10 +221,14 @@ func _refrescar() -> void:
 		(_botones_rep[i] as Button).set_pressed_no_signal(i == Perfil.activo)
 	for b in _tabs.get_children():
 		(b as Button).set_pressed_no_signal(str(b.get_meta("cat")) == _categoria)
+	for b in _roles_fila.get_children():
+		(b as Button).set_pressed_no_signal(str(b.get_meta("rol")) == _rol)
 	for h in _grid.get_children():
 		h.queue_free()
 	for id in Repertorio.catalogo():
 		if _categoria != "" and str(Datos.jutsu(id).get("categoria", "")) != _categoria:
+			continue
+		if _rol != "" and str(Datos.jutsu(id).get("rol", "")) != _rol:
 			continue
 		var est := estado(id)
 		if _solo_disponibles and not est["disponible"]:
@@ -359,6 +389,14 @@ class Tarjeta extends Control:
 		draw_circle(pc, 15, Color(0.05, 0.05, 0.08))
 		draw_arc(pc, 15, 0, TAU, 20, col, 2.0, true)
 		Estilo.texto(self, pc + Vector2(-15, 7), str(int(j.get("puntos", 0))), 19, Color.WHITE, 30, HORIZONTAL_ALIGNMENT_CENTER)
+		# Uso (ataque / defensa / control / apoyo) bajo los puntos
+		var rol: Dictionary = Repertorio.roles().get(str(j.get("rol", "")), {})
+		if not rol.is_empty():
+			var rc := Datos.color(str(rol["color"]))
+			var caja := Rect2(Vector2(size.x - 82, 44), Vector2(74, 20))
+			draw_rect(caja, Color(rc.r, rc.g, rc.b, 0.22))
+			draw_rect(caja, rc, false, 1.0)
+			Estilo.texto(self, caja.position + Vector2(0, 15), str(rol["nombre"]), 13, rc.lightened(0.3), caja.size.x, HORIZONTAL_ALIGNMENT_CENTER)
 		# Modo
 		if str(j.get("ranura", "")) == "modo":
 			Estilo.texto(self, Vector2(84, 74), Datos.texto("rep_ranura_modo"), 15, Color(1.0, 0.8, 0.4))
@@ -473,7 +511,8 @@ class Detalle extends Control:
 		caja.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		scroll.add_child(caja)
 		var cab := Label.new()
-		cab.text = "%s  ·  %s  ·  %d pts" % [j.get("nombre", id), Repertorio.categorias().get(str(j.get("categoria", "")), {}).get("nombre", ""), int(j.get("puntos", 0))]
+		cab.text = "%s  ·  %s  ·  %s  ·  %d pts" % [j.get("nombre", id), Repertorio.categorias().get(str(j.get("categoria", "")), {}).get("nombre", ""),
+			Repertorio.roles().get(str(j.get("rol", "")), {}).get("nombre", ""), int(j.get("puntos", 0))]
 		cab.add_theme_font_override("font", Estilo.fuente_titulo())
 		cab.add_theme_font_size_override("font_size", 28)
 		caja.add_child(cab)

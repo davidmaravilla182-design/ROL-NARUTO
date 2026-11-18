@@ -704,6 +704,8 @@ func _explotar(p: Dictionary, directo: EntidadServidor) -> void:
 func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServidor, info: Dictionary) -> void:
 	if not o.vivo():
 		return
+	if o.invulnerable_t <= 0.0 and Genericas.sustituir(self, o, atacante, info):
+		return
 	if o.invulnerable_t > 0.0 or Genericas.intangible(o):
 		_evento({"tipo": "esquivado", "entidad": o.id})
 		return

@@ -515,6 +515,26 @@ func evento(ev: Dictionary, mi_id: int, pos_entidad: Callable, visual_de: Callab
 			_sonar("golpe", -8.0, 1.6)
 		"tragado":
 			_salpicadura(ev["pos"], 1.0, 1)
+		"sustitucion":
+			# Un tronco queda donde estabas, con una nube de humo.
+			var desde: Vector3 = ev["desde"]
+			var tronco := Materiales.cilindro(0.28, 0.32, 1.6, _toon(Color(0.45, 0.32, 0.2)), 8)
+			add_child(tronco)
+			tronco.global_position = desde + Vector3(0, 0.8, 0)
+			tronco.rotation.z = 0.25
+			for pp in [desde, Vector3(ev["hasta"])]:
+				efectos.rafaga(Vector3(pp) + Vector3(0, 1, 0), {"cantidad": 30, "vida": 0.8, "radio": 0.6, "vel_min": 1.0, "vel_max": 2.5,
+					"tam_min": 0.5, "tam_max": 0.9, "color": Color(0.92, 0.93, 0.95, 0.6), "aditivo": false})
+			if float(ev.get("explota", 0.0)) > 0.0:
+				var tw12 := create_tween()
+				tw12.tween_interval(0.25)
+				tw12.tween_callback(func():
+					_bola_expansiva(desde + Vector3(0, 0.8, 0), float(ev["explota"]), Color(1.0, 0.5, 0.15), false)
+					_extras_nivel(ev, desde, float(ev["explota"]), Color(1.0, 0.5, 0.15), _nd(ev))
+					tronco.queue_free())
+			else:
+				_temporal(tronco, 1.5)
+			_sonar("golpe", -4.0, 1.4)
 
 
 func _anillo_suelo(pos: Vector3, radio: float, c: Color, dur: float) -> void:
@@ -733,6 +753,32 @@ func area_inicio(ev: Dictionary, _pos_entidad: Callable) -> void:
 				tw10.tween_interval(dur + 0.5)
 				tw10.tween_callback(roca.queue_free)
 			efectos.luz_temporal(nucleo.global_position, Color(0.5, 0.4, 1.0), 3.0, r * 3.0, dur)
+		"puno_celestial":
+			# Puño gigante de chakra que cae del cielo sobre el punto.
+			var puno := Node3D.new()
+			add_child(puno)
+			puno.global_position = Vector3(pos.x, 14.0, pos.z)
+			var mat := Materiales.transparente(Color(1.0, 0.45, 0.6, 0.55), true)
+			var palma := Materiales.caja(Vector3(2.4, 2.0, 2.0), mat)
+			puno.add_child(palma)
+			for k in 4:
+				var dedo := Materiales.caja(Vector3(0.55, 0.7, 0.9), mat)
+				dedo.position = Vector3(-0.85 + k * 0.57, -1.25, 0.4)
+				puno.add_child(dedo)
+			var antebrazo := Materiales.cilindro(0.9, 1.1, 4.0, Materiales.transparente(Color(1.0, 0.45, 0.6, 0.3), true), 10)
+			antebrazo.position.y = 3.0
+			puno.add_child(antebrazo)
+			var p6 := efectos.particulas({"cantidad": 60, "vida": 0.5, "radio": 1.4, "vel_min": 0.5, "vel_max": 2.0, "tam_min": 0.2,
+				"tam_max": 0.5, "color": Color(1.0, 0.5, 0.65, 0.6), "local": true})
+			puno.add_child(p6)
+			p6.emitting = true
+			var tw11 := create_tween()
+			tw11.tween_property(puno, "global_position", Vector3(pos.x, 1.6, pos.z), maxf(float(ev.get("retardo", 0.6)), 0.2)).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+			tw11.tween_property(puno, "scale", Vector3(1.3, 0.6, 1.3), 0.08)
+			tw11.tween_interval(0.25)
+			tw11.tween_property(puno, "scale", Vector3.ONE * 0.01, 0.3)
+			tw11.tween_callback(puno.queue_free)
+			_anillo_suelo(pos, r, Color(1.0, 0.5, 0.65), maxf(float(ev.get("retardo", 0.6)), 0.2))
 		"onda", "grietas", "crater", "palmas", "burbuja":
 			pass
 		_:
@@ -768,6 +814,19 @@ func area_golpe(ev: Dictionary) -> void:
 			_salpicadura(pos, r * 0.5, nivel)
 		"ola", "inundacion":
 			efectos.chapoteo(pos, 1.5)
+		"puno_celestial":
+			# Cráter: rocas que saltan en anillo, polvo y onda.
+			_rocas(pos, r, Color(0.45, 0.36, 0.27), 26)
+			for i in 10:
+				var a := TAU * i / 10.0
+				var pico := Materiales.cilindro(0.0, 0.7, 2.2, _toon(Color(0.42, 0.33, 0.24)), 5)
+				add_child(pico)
+				pico.global_position = Vector3(pos.x, 0.5, pos.z) + Vector3(cos(a), 0, sin(a)) * r * 0.7
+				pico.rotation = Vector3(sin(a) * 0.7, 0, -cos(a) * 0.7)
+				_temporal(pico, 3.0, 0.6)
+			efectos.polvo(pos, 60)
+			_onda_aire(pos + Vector3(0, 0.5, 0), r, Color(1.0, 0.75, 0.8), false)
+			_sonar("explosion", 0.0, 0.6)
 		"terremoto", "grietas", "crater":
 			_rocas(pos, r * 0.6, Color(0.42, 0.33, 0.24), 8 + nivel * 4)
 			efectos.polvo(pos, 24 + nivel * 10)
@@ -876,8 +935,8 @@ func teletransporte(ev: Dictionary) -> void:
 		var pp: Vector3 = p
 		efectos.rafaga(pp + Vector3(0, 1.0, 0), {"cantidad": 20 + nivel * 10, "vida": 0.4, "radio": 0.4, "vel_min": 2.0, "vel_max": 5.0,
 			"tam_min": 0.08, "tam_max": 0.2, "color": c})
-	if forma == "paso":
-		efectos.polvo(desde, 10)
+	if forma == "paso" or forma == "salto":
+		efectos.polvo(desde, 10 if forma == "paso" else 24)
 		return
 	# Estela entre los dos puntos.
 	var medio := (desde + hasta) * 0.5 + Vector3(0, 1.0, 0)
@@ -981,6 +1040,46 @@ func crear_aura(forma: String, nivel: int, jutsu: String) -> Node3D:
 						pico.position = Vector3(cos(a), 0, sin(a)) * 3.2 + Vector3(0, 0.6, 0)
 						pico.rotation = Vector3(sin(a) * 0.8, 0, -cos(a) * 0.8)
 						n.add_child(pico)
+		"sustitucion":
+			var hum := efectos.particulas({"cantidad": 16, "vida": 1.0, "radio": 0.5, "direccion": Vector3.UP, "dispersion": 30.0,
+				"vel_min": 0.1, "vel_max": 0.5, "tam_min": 0.2, "tam_max": 0.4, "color": Color(0.9, 0.9, 0.85, 0.25), "aditivo": false, "local": true})
+			hum.position.y = 1.0
+			n.add_child(hum)
+			hum.emitting = true
+		"muro_agua":
+			var cort := Materiales.caja(Vector3(3.4, 2.8, 0.25), Materiales.transparente(Color(0.35, 0.65, 1.0, 0.45), false))
+			cort.position = Vector3(0, 1.4, 1.5)
+			n.add_child(cort)
+			var cae := efectos.particulas({"cantidad": 80, "vida": 0.6, "radio": 1.5, "direccion": Vector3.DOWN, "dispersion": 10.0,
+				"vel_min": 3.0, "vel_max": 5.0, "tam_min": 0.08, "tam_max": 0.18, "color": Color(0.75, 0.88, 1.0, 0.7), "aditivo": false, "local": true})
+			cae.position = Vector3(0, 2.8, 1.5)
+			n.add_child(cae)
+			cae.emitting = true
+		"remolino_agua":
+			var rem := Giro.new()
+			rem.velocidad = Vector3(0, 7, 0)
+			n.add_child(rem)
+			for k in 4:
+				var anillo := Materiales.cilindro(2.2 + k * 0.25, 2.0 + k * 0.25, 0.7, Materiales.transparente(Color(0.35, 0.65, 1.0, 0.25), false), 20)
+				anillo.position.y = 0.4 + k * 0.7
+				rem.add_child(anillo)
+			var gotas := efectos.particulas({"cantidad": 90, "vida": 0.7, "radio": 2.4, "vel_min": 1.0, "vel_max": 3.0, "tam_min": 0.08,
+				"tam_max": 0.16, "color": Color(0.75, 0.88, 1.0, 0.8), "aditivo": false, "local": true})
+			gotas.position.y = 1.2
+			rem.add_child(gotas)
+			gotas.emitting = true
+		"barrera_viento":
+			var bv := Giro.new()
+			bv.velocidad = Vector3(0, 11, 0)
+			n.add_child(bv)
+			var cap := Materiales.esfera(2.8 if nivel <= 1 else 3.4, Materiales.transparente(Color(0.8, 1.0, 0.9, 0.12), true), 16)
+			cap.scale = Vector3(1, 0.8, 1)
+			bv.add_child(cap)
+			var rayas := efectos.particulas({"cantidad": 100, "vida": 0.4, "radio": 2.6, "vel_min": 4.0, "vel_max": 8.0, "tam_min": 0.05,
+				"tam_max": 0.1, "color": Color(0.9, 1.0, 0.95, 0.8), "estirado": true, "tam_quad": Vector2(0.08, 1.4), "local": true})
+			rayas.position.y = 1.0
+			bv.add_child(rayas)
+			rayas.emitting = true
 		"alas":
 			var al := Aleteo.new()
 			al.amplitud = 0.3
@@ -1144,7 +1243,7 @@ func crear_criatura(c: Dictionary) -> Criatura:
 				_luz_local(cuerpo, Efectos.COLOR_FUEGO, 2.0, 6.0)
 		"clon":
 			# Los primeros clones son copias del personaje; el resto, siluetas ligeras para el celular.
-			if _contar_clones() < 6:
+			if _contar_clones() < 3:
 				var pv := PersonajeVisual.new()
 				cuerpo.add_child(pv)
 				pv.construir("jugador_uchiha")

@@ -300,6 +300,11 @@ func pausa_impacto(segundos: float) -> void:
 
 
 func camara_lenta(escala: float, segundos: float) -> void:
+	# Sin encadenar cámaras lentas seguidas (varios N3 a la vez).
+	var ahora := Time.get_ticks_msec()
+	var minimo := int(float(Datos.graficos.get("limites", {}).get("lenta_minimo_entre", 1.2)) * 1000.0)
+	if ahora < _lento_hasta + minimo and ahora >= _lento_hasta:
+		return
 	_lento_hasta = Time.get_ticks_msec() + int(segundos * 1000.0)
 	if Time.get_ticks_msec() >= _hitstop_hasta:
 		Engine.time_scale = escala

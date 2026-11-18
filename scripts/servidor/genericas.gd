@@ -194,7 +194,7 @@ static func golpear(s: ServidorJuego, atacante: EntidadServidor, o: EntidadServi
 			"empuje": float(nd.get("empuje", 1.0)), "nivel": nivel})
 	elif float(nd.get("empuje", 0.0)) > 0.0 and o.tipo != "muneco" and o.vivo():
 		o.empuje = dir * float(nd["empuje"])
-	if not o.vivo() or o.invulnerable_t > 0.0 or intangible(o):
+	if not o.vivo() or o.invulnerable_t > 0.0 or intangible(o) or bool(_nd_aura(o).get("inmune_control", false)):
 		return
 	if float(nd.get("sin_chakra", 0.0)) > 0.0:
 		o.chakra = maxf(o.chakra - float(o.stats["chakra_max"]) * float(nd["sin_chakra"]), 0.0)
@@ -237,20 +237,14 @@ static func area(s: ServidorJuego, e: EntidadServidor, id: String, nivel: int, n
 			var res := _punto_objetivo(s, e, alcance)
 			pos = res["pos"]
 			obj = res["objetivo"]
+			if bool(nd.get("acerca", false)) and obj != null and obj.pos.distance_to(e.pos) > 2.0:
+				_acercar(s, e, obj, id, nivel, 1.8)
 		"frente":
 			var res2 := _punto_objetivo(s, e, maxf(alcance, float(nd.get("distancia", 3.0)) + float(nd.get("radio", 3.0))) + 4.0)
 			var cerca: EntidadServidor = res2["objetivo"]
 			# Golpes cuerpo a cuerpo: paso rápido hasta quedar frente al rival.
 			if bool(nd.get("acerca", false)) and cerca != null and cerca.pos.distance_to(e.pos) > 1.6:
-				var desde := e.pos
-				var v := e.pos - cerca.pos
-				v.y = 0
-				var dest := cerca.pos + v.normalized() * 1.2
-				var p3 := s.mapa.resolver_colision(Vector2(dest.x, dest.z), Datos.sim("radio_entidad"), 0.0)
-				e.pos = Vector3(p3.x, e.pos.y, p3.y)
-				e.yaw = s._yaw_hacia(e.pos, cerca.pos)
-				s._evento({"tipo": "teletransporte", "entidad": e.id, "jutsu": id, "nivel": nivel, "desde": desde, "hasta": e.pos,
-					"forma": "paso", "color": _color(id), "ultimo": true})
+				_acercar(s, e, cerca, id, nivel, 1.2)
 			var p := e.pos + e.adelante() * float(nd.get("distancia", 3.0))
 			pos = Vector3(p.x, 0, p.z)
 	var golpes := int(nd.get("golpes", 1))
@@ -262,6 +256,22 @@ static func area(s: ServidorJuego, e: EntidadServidor, id: String, nivel: int, n
 	s._evento({"tipo": "area_inicio", "entidad": e.id, "jutsu": id, "nivel": nivel, "pos": pos, "radio": float(nd.get("radio", 3.0)),
 		"retardo": retardo, "duracion": retardo + intervalo * maxf(golpes - 1, 0), "forma": str(nd.get("forma", "")), "yaw": e.yaw,
 		"color": _color(id), "origen": e.pos})
+	# Algunas áreas dejan además un aura (p. ej. el sello de regeneración tras el puño gigante).
+	if bool(nd.get("aura", false)):
+		aura(s, e, id, nivel, nd)
+
+
+## Paso rápido / salto hasta quedar frente al rival.
+static func _acercar(s: ServidorJuego, e: EntidadServidor, o: EntidadServidor, id: String, nivel: int, dist: float) -> void:
+	var desde := e.pos
+	var v := e.pos - o.pos
+	v.y = 0
+	var dest := o.pos + v.normalized() * dist
+	var p3 := s.mapa.resolver_colision(Vector2(dest.x, dest.z), Datos.sim("radio_entidad"), 0.0)
+	e.pos = Vector3(p3.x, e.pos.y, p3.y)
+	e.yaw = s._yaw_hacia(e.pos, o.pos)
+	s._evento({"tipo": "teletransporte", "entidad": e.id, "jutsu": id, "nivel": nivel, "desde": desde, "hasta": e.pos,
+		"forma": "salto" if dist > 1.5 else "paso", "color": _color(id), "ultimo": true})
 
 
 static func _golpe_area(s: ServidorJuego, d: Dictionary) -> void:
@@ -311,10 +321,9 @@ static func aura(s: ServidorJuego, e: EntidadServidor, id: String, nivel: int, n
 		e.efectos.erase("aura")
 		s._evento({"tipo": "fin_efecto", "entidad": e.id, "efecto": "aura"})
 		return
-	e.efectos["aura"] = {"t": float(nd.get("duracion", 5.0)), "jutsu": id, "nivel": nivel, "forma": str(nd.get("forma", "")), "acum": 0.0}
-	if bool(nd.get("intangible", false)):
-		e.invulnerable_t = maxf(e.invulnerable_t, 0.0)
-	s._evento({"tipo": "aura", "entidad": e.id, "jutsu": id, "nivel": nivel, "forma": str(nd.get("forma", "")), "color": _color(id),
+	var forma := str(nd.get("aura_forma", nd.get("forma", "")))
+	e.efectos["aura"] = {"t": float(nd.get("duracion", 5.0)), "jutsu": id, "nivel": nivel, "forma": forma, "acum": 0.0}
+	s._evento({"tipo": "aura", "entidad": e.id, "jutsu": id, "nivel": nivel, "forma": forma, "color": _color(id),
 		"duracion": float(nd.get("duracion", 5.0))})
 
 
@@ -360,7 +369,20 @@ static func repelido(s: ServidorJuego, p: Dictionary) -> bool:
 			continue
 		var r := float(_nd_aura(o).get("repele_radio", 0.0))
 		if r > 0.0 and o.centro().distance_to(p["pos"]) <= r + float(p["radio"]):
+			if p.has("equipo") and int(p["equipo"]) == o.equipo:
+				continue
 			s._evento({"tipo": "repelido", "entidad": o.id, "pos": p["pos"], "proyectil": p["id"], "forma": str(o.efectos["aura"]["forma"])})
+			if bool(_nd_aura(o).get("refleja", false)):
+				# Lo devuelve: el proyectil cambia de dueño y vuelve hacia quien lo lanzó.
+				var lanzador := s.entidad(int(p["dueno"]))
+				p["dir"] = (lanzador.centro() - Vector3(p["pos"])).normalized() if lanzador != null else -Vector3(p["dir"])
+				p["objetivo"] = lanzador.id if lanzador != null else -1
+				p["dueno"] = o.id
+				p["equipo"] = o.equipo
+				if p.has("golpeados"):
+					p["golpeados"] = []
+				p["recorrido"] = 0.0
+				return false
 			return true
 	return false
 
@@ -548,3 +570,38 @@ static func actualizar_diferidos(s: ServidorJuego, dt: float) -> void:
 			d["t"] = float(d["intervalo"])
 	for d in quitar:
 		s.diferidos.erase(d)
+
+
+## Sustitución: si `o` la tiene activa, anula este golpe, lo mueve (detrás del atacante en N2+) y en N3 deja un estallido.
+static func sustituir(s: ServidorJuego, o: EntidadServidor, atacante: EntidadServidor, info: Dictionary) -> bool:
+	var nd := _nd_aura(o)
+	if not bool(nd.get("sustituye", false)) or info.get("dot", false):
+		return false
+	var a: Dictionary = o.efectos["aura"]
+	var id := str(a["jutsu"])
+	var nivel := int(a["nivel"])
+	o.efectos.erase("aura")
+	var desde := o.pos
+	var dest := o.pos - o.adelante() * 4.0
+	if bool(nd.get("detras", false)) and atacante != null and atacante != o:
+		var v := atacante.pos - o.pos
+		v.y = 0
+		dest = atacante.pos + v.normalized() * 1.4
+	var p2 := s.mapa.resolver_colision(Vector2(dest.x, dest.z), Datos.sim("radio_entidad"), 0.0)
+	o.pos = Vector3(p2.x, 0, p2.y)
+	o.empuje = Vector3.ZERO
+	o.invulnerable_t = maxf(o.invulnerable_t, 0.4)
+	if atacante != null and atacante != o:
+		o.yaw = s._yaw_hacia(o.pos, atacante.pos)
+	if o.estado != "libre" and o.estado != "muerto":
+		o.poner_estado("libre", 0.0)
+	s._evento({"tipo": "sustitucion", "entidad": o.id, "jutsu": id, "nivel": nivel, "desde": desde, "hasta": o.pos,
+		"explota": float(nd.get("explota_radio", 0.0))})
+	var r := float(nd.get("explota_radio", 0.0))
+	if r > 0.0:
+		for x in _enemigos(s, o):
+			if x.pos.distance_to(desde) <= r:
+				var dir: Vector3 = x.pos - desde
+				dir.y = 0
+				golpear(s, o, x, id, nivel, {"empuje": 8.0, "derriba": true}, 1.0, dir.normalized())
+	return true

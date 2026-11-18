@@ -20,6 +20,7 @@ func _initialize() -> void:
 	probar_susanoo()
 	probar_sincronia_repertorio()
 	probar_genericos()
+	probar_defensas()
 	probar_shinra()
 	probar_ocho_puertas()
 	probar_bola_fuego_suelo()
@@ -42,7 +43,7 @@ func probar_datos() -> void:
 	var cat := Repertorio.catalogo()
 	var lista40: Array = []
 	for id in cat:
-		if not (id in ["sharingan", "mangekyo", "rinnegan", "byakugan"]):
+		if not (id in ["sharingan", "mangekyo", "rinnegan", "byakugan", "sustitucion", "muro_agua", "barrera_viento"]):
 			lista40.append(id)
 	comprobar(lista40.size() == 40, "hay exactamente 40 jutsus en el repertorio (%d)" % lista40.size())
 	var cats := Repertorio.categorias()
@@ -486,3 +487,71 @@ func probar_genericos() -> void:
 	s2.recibir_comando(1, {"t": "accion", "id": "modo"})
 	comprobar(j2.modo_activo and Genericas.mult_dano_saliente(j2) > 1.0, "el Modo Sabio se activa y aumenta el daño")
 	s2.free()
+
+
+func probar_defensas() -> void:
+	var sin_rol: Array = []
+	for id in Repertorio.catalogo():
+		if not Repertorio.roles().has(str(Datos.jutsu(id).get("rol", ""))):
+			sin_rol.append(id)
+	comprobar(sin_rol.is_empty(), "todos los jutsus tienen uso: ataque, defensa, control o apoyo %s" % str(sin_rol))
+	var defensas := 0
+	for id in Repertorio.catalogo():
+		if str(Datos.jutsu(id).get("rol", "")) == "defensa":
+			defensas += 1
+	comprobar(defensas >= 8, "hay al menos 8 jutsus de defensa (%d)" % defensas)
+	# Sustitución: anula el golpe y te mueve.
+	var s := servidor(["sustitucion", "", "", ""], "")
+	var j := s.entidad_de_peer(1)
+	s.recibir_comando(1, {"t": "accion", "id": "sustitucion"})
+	correr(s, 0.3)
+	var vida := j.vida
+	var antes := j.pos
+	s._aplicar_dano(j, 40.0, null, {"jutsu": "bola_fuego"})
+	comprobar(j.vida == vida and j.pos.distance_to(antes) > 2.0 and not j.efectos.has("aura"), "la sustitución anula un golpe y te aparta (solo una vez)")
+	j.invulnerable_t = 0.0
+	s._aplicar_dano(j, 10.0, null, {"jutsu": "bola_fuego"})
+	comprobar(j.vida < vida, "el siguiente golpe ya entra")
+	s.free()
+	# Barrera de viento N3 devuelve proyectiles.
+	s = servidor(["barrera_viento", "", "", ""], "", true)
+	j = s.entidad_de_peer(1)
+	var rival: EntidadServidor = null
+	for e in s.entidades:
+		if e.tipo == "enemigo":
+			rival = e
+	rival.ia = null
+	rival.pos = j.pos + Vector3(0, 0, -10)
+	s.recibir_comando(1, {"t": "nivel", "valor": 3})
+	s.recibir_comando(1, {"t": "accion", "id": "barrera_viento"})
+	correr(s, 0.3)
+	rival.yaw = 0.0
+	var p := {"id": s.nuevo_id(), "jutsu": "bola_fuego", "nivel": 1, "dueno": rival.id, "objetivo": j.id, "pos": rival.centro() + Vector3(0, 0, 1),
+		"dir": (j.centro() - rival.centro()).normalized(), "velocidad": 15.0, "radio": 0.4, "radio_explosion": 1.5, "recorrido": 0.0, "alcance": 25.0, "escala": 1.0}
+	s.proyectiles.append(p)
+	var vj := j.vida
+	var vr := rival.vida
+	correr(s, 2.0)
+	comprobar(j.vida == vj and rival.vida < vr, "la barrera de viento N3 devuelve el proyectil al que lo lanzó")
+	s.free()
+	# Inmunidad a control con el remolino de agua.
+	s = servidor(["muro_agua", "", "", ""], "")
+	j = s.entidad_de_peer(1)
+	s.recibir_comando(1, {"t": "nivel", "valor": 2})
+	s.recibir_comando(1, {"t": "accion", "id": "muro_agua"})
+	correr(s, 0.3)
+	Genericas.golpear(s, null, j, "prision_agua", 1, Datos.nivel_jutsu("prision_agua", 1))
+	comprobar(j.estado != "atrapado", "con el remolino de agua no te pueden atrapar")
+	s.free()
+	# Fuerza Sobrehumana N3: salta, golpea en área y activa la regeneración.
+	s = servidor(["fuerza_sobrehumana", "", "", ""], "")
+	j = s.entidad_de_peer(1)
+	var m := muneco_central(s)
+	j.pos = m.pos + Vector3(0, 0, 8)
+	j.vida = 60.0
+	s.recibir_comando(1, {"t": "nivel", "valor": 3})
+	s.recibir_comando(1, {"t": "accion", "id": "fuerza_sobrehumana", "objetivo": m.id})
+	var evs := correr(s, 2.0)
+	comprobar(j.pos.distance_to(m.pos) < 3.0 and contar(evs, "impacto") > 0 and j.efectos.has("aura") and j.vida > 60.0,
+		"fuerza sobrehumana N3: salto, puño gigante y regeneración")
+	s.free()

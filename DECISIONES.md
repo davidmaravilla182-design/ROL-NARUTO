@@ -118,3 +118,11 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - Interpretaciones para el juego: las invocaciones y clones son criaturas aliadas temporales que persiguen y golpean (no entidades completas); el Dios del Trueno Volador salta detrás de los rivales en cadena; la Gran Cascada N3 deja el suelo inundado y el rayo hace +30 % a quien esté dentro; el Tiburón N3 se traga los proyectiles rivales; muro, cúpula, arena, rotación y Kamui N3 repelen proyectiles; Kamui vuelve intangible; las 64 Palmas y la Fuerza Sobrehumana dan un paso rápido hasta el rival.
 - Los clones N3 son 20 en el servidor; en el cliente solo los 6 primeros son copias completas del personaje y el resto siluetas ligeras, para que el celular no se trabe.
 - Los requisitos se mantienen (naturalezas, linajes, rango); el personaje de prueba no puede usar los de otras naturalezas o linajes salvo con «Modo prueba».
+
+### Ajustes tras la prueba en el celular
+- Temblor de cámara limitado (`data/graficos.json` → `limites`): como máximo 3 sacudidas cada 0,6 s y trauma acumulado ≤ 0,9; las cámaras lentas de N3 no se encadenan (1,2 s entre una y otra). Las explosiones se ven igual: solo se recorta el temblor sobrante.
+- Equilibrio: Dragón de Agua N3 pasa de 5 a 3 dragones (20 de daño, lago más chico); Golem de Tierra, Golem de Lava e Invocación duran menos, golpean más lento y hacen menos daño; recargas más largas para golem e invocación.
+- Clones de Sombra N3: 10 clones (antes 20) y solo 3 copias completas del personaje en pantalla; el resto, siluetas ligeras.
+- Fuerza Sobrehumana N3: ahora salta sobre el rival, cae un puño gigante de chakra que abre un cráter (aturde y derriba) y además activa el sello de regeneración.
+- Cada jutsu tiene un uso (`rol`): Ataque, Defensa, Control o Apoyo, con filtro en el menú y etiqueta en cada tarjeta.
+- Tres defensas nuevas: Sustitución (anula el siguiente golpe; N2 te pone detrás del atacante; N3 el tronco estalla), Muro de Agua (cortina → remolino → remolino que devuelve proyectiles) y Barrera de Viento (desvía → empuja → devuelve y corta). Las defensas de nivel 2+ hacen inmune a atrapar y aturdir mientras duran.

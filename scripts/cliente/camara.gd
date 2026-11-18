@@ -28,8 +28,8 @@ func girar(delta_pantalla: Vector2) -> void:
 
 
 ## Sacudida de cámara (0..1+). Se acumula y decae.
-func sacudir(fuerza: float) -> void:
-	_trauma = clampf(_trauma + fuerza, 0.0, 1.4)
+func sacudir(fuerza: float, maximo := 1.4) -> void:
+	_trauma = clampf(_trauma + fuerza, 0.0, maxf(maximo, _trauma))
 
 
 ## Dirección "adelante" de la cámara en el plano XZ.

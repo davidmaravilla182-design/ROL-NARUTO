@@ -61,7 +61,7 @@ func _process(delta: float) -> void:
 	if nivel >= 3 and efectos.escenario != null:
 		efectos.escenario.destello(Efectos.COLOR_RAYO, 1.6 + randf() * 1.2, 0.12)
 	if embistiendo and efectos.camara != null and nivel >= 2:
-		efectos.camara.sacudir(delta * 0.6 * nivel)
+		efectos.camara.sacudir(delta * 0.6 * nivel, 0.6)
 	_t_rayos -= delta
 	if _t_rayos <= 0.0 and efectos.camara != null:
 		_t_rayos = 0.045
