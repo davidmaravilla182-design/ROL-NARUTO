@@ -95,7 +95,10 @@ static func definiciones() -> Dictionary:
 
 
 ## Construye la AnimationLibrary para un esqueleto en la ruta dada.
-static func crear_libreria(ruta_esqueleto: String, huesos: Array, rest_caderas: Vector3) -> AnimationLibrary:
+## rests (opcional): {hueso: {"global": Quaternion, "padre": Quaternion}} con la orientación de reposo de cada hueso
+## y de su padre en el espacio del esqueleto. Si los huesos no tienen reposo identidad (esqueleto de Blender),
+## la rotación local es padre⁻¹ · D · global, donde D es la rotación definida aquí en ejes del modelo.
+static func crear_libreria(ruta_esqueleto: String, huesos: Array, rest_caderas: Vector3, rests: Dictionary = {}) -> AnimationLibrary:
 	var lib := AnimationLibrary.new()
 	var defs := definiciones()
 	for nombre in defs.keys():
@@ -111,6 +114,9 @@ static func crear_libreria(ruta_esqueleto: String, huesos: Array, rest_caderas: 
 				var pose: Dictionary = c[1]
 				var grados: Vector3 = pose.get(hueso, Vector3.ZERO)
 				var q := Quaternion.from_euler(Vector3(deg_to_rad(grados.x), deg_to_rad(grados.y), deg_to_rad(grados.z)))
+				if rests.has(hueso):
+					var r: Dictionary = rests[hueso]
+					q = (r["padre"] as Quaternion).inverse() * q * (r["global"] as Quaternion)
 				anim.rotation_track_insert_key(pista, float(c[0]), q)
 		var pista_pos := anim.add_track(Animation.TYPE_POSITION_3D)
 		anim.track_set_path(pista_pos, "%s:Caderas" % ruta_esqueleto)

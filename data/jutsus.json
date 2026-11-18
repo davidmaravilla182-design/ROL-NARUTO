@@ -47,7 +47,7 @@
         "radio": 2.8,
         "radio_explosion": 8.0,
         "sacudida": 1.0,
-        "luz": 6.0,
+        "luz": 4.5,
         "luz_rango": 24.0,
         "particulas": 320,
         "marca": 7.5
@@ -103,8 +103,8 @@
         "radio_golpe": 1.6,
         "cadena_saltos": 4,
         "sacudida": 1.0,
-        "luz": 7.0,
-        "luz_rango": 70.0,
+        "luz": 4.5,
+        "luz_rango": 55.0,
         "particulas": 360,
         "marca": 5.0
       }

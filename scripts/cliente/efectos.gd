@@ -231,9 +231,9 @@ func crear_proyectil(datos: Dictionary) -> Node3D:
 	add_child(nodo)
 	nodo.global_position = datos["pos"]
 	if jutsu == "bola_fuego":
-		var cuerpo := esfera_fuego(radio, 1.5 + nivel * 0.25)
+		var cuerpo := esfera_fuego(radio, 1.05 + nivel * 0.08)
 		nodo.add_child(cuerpo)
-		var nucleo := Materiales.esfera(radio * 0.45, Materiales.emisivo(COLOR_FUEGO_NUCLEO, 2.5 + nivel * 0.5), 12)
+		var nucleo := Materiales.esfera(radio * 0.3, Materiales.emisivo(COLOR_FUEGO_NUCLEO, 1.6 + nivel * 0.2), 12)
 		nodo.add_child(nucleo)
 		if Ajustes.g("distorsion_calor", false):
 			var calor := MeshInstance3D.new()
@@ -243,13 +243,15 @@ func crear_proyectil(datos: Dictionary) -> Node3D:
 			sm.radial_segments = 16
 			sm.rings = 8
 			calor.mesh = sm
-			calor.material_override = Shaders.material("calor")
+			var mat_calor := Shaders.material("calor")
+			mat_calor.render_priority = -1
+			calor.material_override = mat_calor
 			calor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			nodo.add_child(calor)
 		var llamas := particulas({
-			"cantidad": int(nd.get("particulas", 40)), "vida": 0.4 + nivel * 0.15, "radio": radio * 0.8,
+			"cantidad": mini(int(nd.get("particulas", 40)), 90), "vida": 0.4 + nivel * 0.15, "radio": radio * 0.8,
 			"vel_min": 0.5, "vel_max": 1.5 + nivel, "dispersion": 180.0, "gravedad": Vector3(0, 3.0, 0),
-			"tam_min": radio * 0.5, "tam_max": radio * 1.1, "color": Color(1.0, 0.55, 0.15, 0.55), "color_fin": Color(0.6, 0.08, 0.0, 0.0),
+			"tam_min": radio * 0.4, "tam_max": radio * 0.9, "color": Color(1.0, 0.5, 0.12, 0.3), "color_fin": Color(0.6, 0.08, 0.0, 0.0),
 		})
 		nodo.add_child(llamas)
 		llamas.emitting = true
@@ -296,7 +298,7 @@ func explosion(ev: Dictionary) -> void:
 	var r := float(ev["radio"])
 	if jutsu == "bola_fuego":
 		# Bola de fuego que se expande y se apaga (shader de ruido).
-		var bola := esfera_fuego(r * 0.4, 1.8 + nivel * 0.3)
+		var bola := esfera_fuego(r * 0.4, 1.15 + nivel * 0.1)
 		add_child(bola)
 		bola.global_position = pos
 		var mat: ShaderMaterial = bola.material_override
@@ -306,8 +308,8 @@ func explosion(ev: Dictionary) -> void:
 		tw.tween_method(func(v): mat.set_shader_parameter("opacidad", v), 1.0, 0.0, 0.6 + nivel * 0.2).set_delay(0.1)
 		tw.chain().tween_callback(bola.queue_free)
 		var cant := int(nd.get("particulas", 40))
-		rafaga(pos, {"cantidad": cant, "vida": 0.5 + nivel * 0.2, "radio": r * 0.3, "vel_min": r * 1.0, "vel_max": r * 2.4,
-			"frenado": r * 2.0, "tam_min": r * 0.3, "tam_max": r * 0.6, "color": Color(1.0, 0.5, 0.12, 0.45), "color_fin": Color(0.6, 0.08, 0.0, 0.0)})
+		rafaga(pos, {"cantidad": mini(cant, 100), "vida": 0.5 + nivel * 0.2, "radio": r * 0.3, "vel_min": r * 1.0, "vel_max": r * 2.4,
+			"frenado": r * 2.0, "tam_min": r * 0.25, "tam_max": r * 0.5, "color": Color(1.0, 0.45, 0.1, 0.28), "color_fin": Color(0.5, 0.05, 0.0, 0.0)})
 		rafaga(pos, {"cantidad": cant, "vida": 1.8 + nivel * 0.5, "radio": r * 0.5, "vel_min": 0.5, "vel_max": r * 0.7,
 			"gravedad": Vector3(0, 2.0, 0), "tam_min": r * 0.5, "tam_max": r * 1.1, "color": Color(0.1, 0.09, 0.09, 0.5), "aditivo": false,
 			"explosividad": 0.6, "escala_inicio": 0.3, "escala_fin": 1.0})
@@ -315,8 +317,8 @@ func explosion(ev: Dictionary) -> void:
 			"gravedad": Vector3(0, -9, 0), "tam_min": 0.05, "tam_max": 0.12, "color": Color(1, 0.75, 0.3), "escala_fin": 0.3})
 		if nivel >= 3:
 			var suelo: Vector3 = ev["suelo"]
-			rafaga(suelo + Vector3(0, 0.3, 0), {"cantidad": 160, "vida": 0.9, "radio": 0.5, "direccion": Vector3(1, 0, 0), "dispersion": 180.0,
-				"vel_min": 10.0, "vel_max": 16.0, "frenado": 10.0, "tam_min": 0.8, "tam_max": 1.6, "color": Color(1.0, 0.5, 0.1, 0.6)})
+			rafaga(suelo + Vector3(0, 0.3, 0), {"cantidad": 90, "vida": 0.9, "radio": 0.5, "direccion": Vector3(1, 0, 0), "dispersion": 180.0,
+				"vel_min": 10.0, "vel_max": 16.0, "frenado": 10.0, "tam_min": 0.7, "tam_max": 1.3, "color": Color(1.0, 0.45, 0.1, 0.35)})
 			for i in 6:
 				var a := TAU * i / 6.0
 				var llama := esfera_fuego(0.6, 2.5)

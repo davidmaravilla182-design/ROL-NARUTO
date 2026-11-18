@@ -480,11 +480,11 @@ func _process(delta: float) -> void:
 		var k := _destello_t / maxf(_destello_dur, 0.001)
 		var parpadeo := 0.75 + randf() * 0.25
 		_luz_global.light_color = _destello_color
-		_luz_global.light_energy = _destello_energia * 0.5 * k * parpadeo
-		sol.light_energy = _sol_energia_base + _destello_energia * 0.2 * k
-		entorno.ambient_light_energy = _ambiente_base + _destello_energia * 0.12 * k
+		_luz_global.light_energy = _destello_energia * 0.35 * k * parpadeo
+		sol.light_energy = _sol_energia_base + _destello_energia * 0.1 * k
+		entorno.ambient_light_energy = _ambiente_base + _destello_energia * 0.05 * k
 		# La niebla toma el color del destello: todo el escenario se tiñe.
-		var mezcla := clampf(_destello_energia * 0.1 * k * parpadeo, 0.0, 0.55)
+		var mezcla := clampf(_destello_energia * 0.06 * k * parpadeo, 0.0, 0.3)
 		entorno.fog_light_color = _c("niebla").lerp(_destello_color, mezcla)
 		entorno.fog_light_energy = 0.9 + mezcla * 0.8
 	elif _luz_global.light_energy != 0.0:

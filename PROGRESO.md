@@ -30,15 +30,16 @@
 - [x] C2 Kit modular en Blender: silo con anillos y agujas, edificio con toldos, tubería+brida+codo, barandal, pasarela de celosía, farol, tanque.
 - [x] C3 Nuevo trazado de la aldea con el kit (Mapa compartido: canal, muelles, plataforma de entrenamiento). Agua, cascadas, vapor, cables. (Vulkan)
 - [x] C4 Torre-cabeza monumental + horizonte de agujas + gradación de color violeta/ámbar.
-- [ ] C5 Personaje: malla continua deformable (piel por pesos) desde Blender, ropa continua.
+- [x] C5 Personaje: malla continua deformable (piel por pesos) desde Blender, ropa continua.
 - [ ] C6 Rendimiento: LOD/visibilidad, conteo de draw calls por calidad, ajustes baja/media. (Vulkan)
 - [ ] C7 Pulido de efectos y enemigo/muñecos con el nuevo estilo; docs; release.
 
 ## Estado actual
-- Ciclo en curso: C5 (personaje con malla continua deformable)
+- Ciclo en curso: C6 (rendimiento: LOD, calidad baja/media) + Vulkan
 - Texturas: `tools/blender/texturas.py` (6 materiales, ~10 s). Tras hornear: `python3 tools/ajustar_importacion.py` y `godot --headless --path . --import`.
 - Shader con texturas: `Shaders.toon_tex(nombre, tinte, escala_uv, triplanar, escala_mundo, metalico, humedad, contorno)`.
 - Capturas: `/tmp/claude-0/cap.sh <carpeta> [mobile]` (si falta, recrear: xvfb-run + godot -s res://tools/captura.gd).
 - Kit: `tools/blender/kit.py` (geometría en `geo.py`); piezas en assets/modelos. En Godot: `Kit.instancia/multimalla` reemplaza materiales por nombre.
 - Trazado: data/escenario.json → "trazado" (piezas, arcos, tubos, canal, puentes, horizonte). `Mapa._trazado` da colisiones; `Trazado.construir` dibuja.
 - Capturas con cámara libre: en tools/captura.gd usar `_libre(pos, mirar)` y `_seguir()`.
+- Cuerpo: `tools/blender/personaje.py` → assets/modelos/cuerpo.glb. Animaciones corrigen el reposo de Blender (padre⁻¹·D·global); las piezas por código cuelgan de un nodo "Marco" que anula la rotación de reposo.

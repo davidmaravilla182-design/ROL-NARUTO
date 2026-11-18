@@ -32,6 +32,8 @@ var _ojos: Array[MeshInstance3D] = []
 var _mat_ojos_normal: Material
 var _luz_ojos: OmniLight3D
 var anim_actual := ""
+var cuerpo_continuo := false   # true si se usa la malla deformable de Blender (assets/modelos/cuerpo.glb)
+const RUTA_CUERPO := "res://assets/modelos/cuerpo.glb"
 var sharingan := false
 
 
@@ -43,21 +45,32 @@ func construir(plantilla_id: String) -> void:
 
 	var contorno_previo := Materiales.grosor_contorno
 	Materiales.grosor_contorno = 0.011 if Ajustes.g("contorno_personajes", true) else 0.0
-	esqueleto = Skeleton3D.new()
-	esqueleto.name = "Esqueleto"
-	add_child(esqueleto)
-	for h in HUESOS:
-		var idx := esqueleto.add_bone(h[0])
-		if h[1] != "":
-			esqueleto.set_bone_parent(idx, esqueleto.find_bone(h[1]))
-		esqueleto.set_bone_rest(idx, Transform3D(Basis(), h[2]))
-	esqueleto.reset_bone_poses()
+	cuerpo_continuo = ResourceLoader.exists(RUTA_CUERPO)
+	if cuerpo_continuo:
+		_cargar_cuerpo(aspecto)
+	else:
+		esqueleto = Skeleton3D.new()
+		esqueleto.name = "Esqueleto"
+		add_child(esqueleto)
+		for h in HUESOS:
+			var idx := esqueleto.add_bone(h[0])
+			if h[1] != "":
+				esqueleto.set_bone_parent(idx, esqueleto.find_bone(h[1]))
+			esqueleto.set_bone_rest(idx, Transform3D(Basis(), h[2]))
+		esqueleto.reset_bone_poses()
 	for h in HUESOS:
 		var ba := BoneAttachment3D.new()
 		ba.name = "Hueso_" + h[0]
 		ba.bone_name = h[0]
 		esqueleto.add_child(ba)
-		_adjuntos[h[0]] = ba
+		# Marco intermedio: deshace la orientación de reposo del hueso para que las piezas
+		# hechas por código usen siempre los ejes del modelo (Y arriba, frente +Z).
+		var marco := Node3D.new()
+		marco.name = "Marco"
+		var idx2 := esqueleto.find_bone(h[0])
+		marco.basis = _rest_global(idx2).basis.inverse() if cuerpo_continuo else Basis()
+		ba.add_child(marco)
+		_adjuntos[h[0]] = marco
 
 	_construir_cuerpo(aspecto)
 	Vestimenta.vestir(self, aspecto, aldea, clan)
@@ -69,12 +82,64 @@ func construir(plantilla_id: String) -> void:
 	var nombres: Array = []
 	for h in HUESOS:
 		nombres.append(h[0])
-	anim.add_animation_library("", Animaciones.crear_libreria("Esqueleto", nombres, HUESOS[0][2]))
+	var ruta_esq := String(get_path_to(esqueleto))
+	if cuerpo_continuo:
+		var rests := {}
+		for n in nombres:
+			var i := esqueleto.find_bone(n)
+			var padre := esqueleto.get_bone_parent(i)
+			rests[n] = {
+				"global": _rest_global(i).basis.get_rotation_quaternion(),
+				"padre": _rest_global(padre).basis.get_rotation_quaternion() if padre >= 0 else Quaternion.IDENTITY,
+			}
+		var pos_cad := esqueleto.get_bone_rest(esqueleto.find_bone("Caderas")).origin
+		anim.add_animation_library("", Animaciones.crear_libreria(ruta_esq, nombres, pos_cad, rests))
+	else:
+		anim.add_animation_library("", Animaciones.crear_libreria(ruta_esq, nombres, HUESOS[0][2]))
 	reproducir("quieto")
 
 
-func hueso(nombre: String) -> BoneAttachment3D:
+func hueso(nombre: String) -> Node3D:
 	return _adjuntos[nombre]
+
+
+## Transformación de reposo de un hueso en el espacio del esqueleto.
+func _rest_global(i: int) -> Transform3D:
+	if i < 0:
+		return Transform3D.IDENTITY
+	var t := esqueleto.get_bone_rest(i)
+	var p := esqueleto.get_bone_parent(i)
+	while p >= 0:
+		t = esqueleto.get_bone_rest(p) * t
+		p = esqueleto.get_bone_parent(p)
+	return t
+
+
+## Cuerpo continuo de Blender: se queda con su Skeleton3D y cambia los materiales por zona.
+func _cargar_cuerpo(a: Dictionary) -> void:
+	var escena: Node3D = (load(RUTA_CUERPO) as PackedScene).instantiate()
+	escena.name = "Cuerpo"
+	add_child(escena)
+	esqueleto = _buscar(escena, "Skeleton3D")
+	var mi: MeshInstance3D = _buscar(escena, "MeshInstance3D")
+	if mi != null:
+		var colores := {"piel": Datos.color(str(a.get("piel", "#e8c4a0"))), "camisa": Datos.color(str(a.get("camisa", "#1d2333"))),
+			"pantalon": Datos.color(str(a.get("pantalon", "#252a3a")))}
+		for i in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(i)
+			var nombre := m.resource_name if m != null else ""
+			var col: Color = colores.get(nombre.get_slice(".", 0), Color(0.5, 0.5, 0.5))
+			mi.set_surface_override_material(i, Materiales.solido(col, 0.75 if nombre == "piel" else 0.9))
+
+
+func _buscar(n: Node, clase: String) -> Node:
+	if n.is_class(clase):
+		return n
+	for h in n.get_children():
+		var r := _buscar(h, clase)
+		if r != null:
+			return r
+	return null
 
 
 func _construir_cuerpo(a: Dictionary) -> void:
@@ -84,11 +149,12 @@ func _construir_cuerpo(a: Dictionary) -> void:
 	var pelo := Materiales.solido(Datos.color(str(a.get("pelo", "#141418"))), 0.45)
 	var oscuro := Materiales.solido(Color(0.08, 0.06, 0.07), 0.6)
 
-	_pieza("Caderas", Materiales.caja(Vector3(0.28, 0.15, 0.17), pantalon), Vector3(0, -0.01, 0))
-	_pieza("Columna", Materiales.caja(Vector3(0.25, 0.2, 0.16), camisa), Vector3(0, 0.1, 0))
-	var pecho := Materiales.caja(Vector3(0.34, 0.25, 0.19), camisa)
-	_pieza("Pecho", pecho, Vector3(0, 0.12, 0))
-	_pieza("Cuello", Materiales.cilindro(0.045, 0.05, 0.1, piel, 6), Vector3(0, 0.03, 0))
+	if not cuerpo_continuo:
+		_pieza("Caderas", Materiales.caja(Vector3(0.28, 0.15, 0.17), pantalon), Vector3(0, -0.01, 0))
+		_pieza("Columna", Materiales.caja(Vector3(0.25, 0.2, 0.16), camisa), Vector3(0, 0.1, 0))
+		var pecho := Materiales.caja(Vector3(0.34, 0.25, 0.19), camisa)
+		_pieza("Pecho", pecho, Vector3(0, 0.12, 0))
+		_pieza("Cuello", Materiales.cilindro(0.045, 0.05, 0.1, piel, 6), Vector3(0, 0.03, 0))
 
 	# Cabeza: algo mayor y con mentón afilado (estilo anime).
 	var craneo := Materiales.esfera(0.125, piel, 10)
@@ -129,8 +195,8 @@ func _construir_cuerpo(a: Dictionary) -> void:
 	hueso("Cabeza").add_child(_luz_ojos)
 	_pelo(a, pelo)
 
-	# Brazos y piernas más finos y largos.
-	for lado in ["I", "D"]:
+	# Brazos y piernas más finos y largos (solo sin cuerpo continuo).
+	for lado in ([] if cuerpo_continuo else ["I", "D"]):
 		_pieza("Brazo" + lado, Materiales.capsula(0.052, 0.3, camisa), Vector3(0, -0.13, 0))
 		_pieza("Antebrazo" + lado, Materiales.capsula(0.043, 0.26, piel), Vector3(0, -0.12, 0))
 		_pieza("Mano" + lado, Materiales.caja(Vector3(0.06, 0.085, 0.04), piel), Vector3(0, -0.05, 0.005))

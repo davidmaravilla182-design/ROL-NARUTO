@@ -207,11 +207,11 @@ void vertex() {
 void fragment() {
 	float fres = pow(clamp(dot(NORMAL, VIEW), 0.0, 1.0), 1.3);
 	float n = fbm3(p_obj * 3.2 + vec3(0.0, -TIME * 3.4 * velocidad, TIME * 0.8));
-	float t = clamp(fres * 1.15 + n * 0.75 - 0.35, 0.0, 1.0);
+	float t = clamp(fres * 0.85 + n * 1.25 - 0.5, 0.0, 1.0);
 	vec3 c = mix(color_borde.rgb, color_medio.rgb, smoothstep(0.08, 0.45, t));
 	c = mix(c, color_nucleo.rgb, smoothstep(0.55, 0.92, t));
 	ALBEDO = c * intensidad;
-	ALPHA = clamp(t * 1.8, 0.0, 1.0) * opacidad;
+	ALPHA = clamp(t * 2.2 + 0.15, 0.0, 1.0) * opacidad;
 }
 """
 
@@ -226,8 +226,9 @@ void fragment() {
 	float fres = clamp(dot(NORMAL, VIEW), 0.0, 1.0);
 	vec3 q = vec3(SCREEN_UV * 12.0, TIME * 2.5);
 	vec2 off = vec2(ruido3(q) - 0.5, ruido3(q + vec3(5.2, 1.3, 0.0)) - 0.5);
-	ALBEDO = texture(pantalla, SCREEN_UV + off * fuerza * fres).rgb;
-	ALPHA = smoothstep(0.0, 0.6, fres);
+	// Solo un anillo alrededor de la bola: el centro lo cubre el fuego.
+	ALBEDO = texture(pantalla, SCREEN_UV + off * fuerza).rgb;
+	ALPHA = smoothstep(0.05, 0.35, fres) * (1.0 - smoothstep(0.45, 0.75, fres)) * 0.85;
 }
 """
 
