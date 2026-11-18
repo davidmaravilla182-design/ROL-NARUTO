@@ -79,6 +79,94 @@ void light() {
 }
 """
 
+## Cel shading con texturas horneadas: color (A = rugosidad) + normales, humedad por lluvia
+## (oscurece y abrillanta las caras que miran arriba, chorreaduras que bajan por las paredes).
+## Modo triplanar opcional en espacio mundo (para piezas escaladas sin UV coherentes).
+const TOON_TEX := """
+shader_type spatial;
+render_mode cull_back;
+uniform sampler2D tex_color : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D tex_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform vec4 tinte : source_color = vec4(1.0);
+uniform vec2 escala_uv = vec2(1.0);
+uniform float triplanar = 0.0;
+uniform float escala_mundo = 0.25;
+uniform float fuerza_normal = 1.0;
+uniform float metalico = 0.0;
+uniform float humedad = 0.6;
+uniform float chorreo = 1.0;
+uniform vec4 color_sombra : source_color = vec4(0.3, 0.32, 0.48, 1.0);
+uniform float rim_fuerza = 0.35;
+uniform vec4 emision : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform float emision_fuerza = 0.0;
+varying vec3 wpos;
+varying vec3 wnorm;
+
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wnorm = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+}
+
+vec4 muestra(sampler2D t, vec2 uv) { return texture(t, uv); }
+
+void fragment() {
+	vec4 c;
+	vec3 nm;
+	if (triplanar > 0.5) {
+		vec3 b = pow(abs(wnorm), vec3(4.0));
+		b /= (b.x + b.y + b.z);
+		vec3 p = wpos * escala_mundo;
+		c = texture(tex_color, p.zy) * b.x + texture(tex_color, p.xz) * b.y + texture(tex_color, p.xy) * b.z;
+		nm = texture(tex_normal, p.zy).rgb * b.x + texture(tex_normal, p.xz).rgb * b.y + texture(tex_normal, p.xy).rgb * b.z;
+	} else {
+		vec2 uv = UV * escala_uv;
+		c = texture(tex_color, uv);
+		nm = texture(tex_normal, uv).rgb;
+	}
+	vec3 alb = c.rgb * tinte.rgb;
+	float rug = c.a;
+	// Humedad: caras hacia arriba encharcadas; paredes con chorreaduras animadas que bajan.
+	float arriba = clamp(wnorm.y, 0.0, 1.0);
+	float chorros = 0.0;
+	if (chorreo > 0.0) {
+		float col_x = floor((wpos.x + wpos.z) * 7.0);
+		float h = fract(sin(col_x * 12.9898) * 43758.5453);
+		float y = fract(wpos.y * 0.12 + TIME * (0.25 + h * 0.4) + h * 7.0);
+		chorros = step(0.72, h) * smoothstep(0.0, 0.08, y) * smoothstep(0.35, 0.1, y) * (1.0 - arriba) * chorreo;
+	}
+	float mojado = clamp(humedad * (0.35 + arriba * 0.65) + chorros * 0.6, 0.0, 1.0);
+	alb *= mix(1.0, 0.62, mojado);
+	rug = mix(rug, rug * 0.25, mojado);
+	ALBEDO = alb;
+	ROUGHNESS = clamp(rug, 0.04, 1.0);
+	METALLIC = metalico;
+	NORMAL_MAP = nm;
+	NORMAL_MAP_DEPTH = fuerza_normal;
+	EMISSION = emision.rgb * emision_fuerza;
+}
+
+void light() {
+	float ndl = dot(NORMAL, LIGHT);
+	float l = clamp(ndl * 0.5 + 0.5, 0.0, 1.0);
+	if (LIGHT_IS_DIRECTIONAL) {
+		l *= mix(0.4, 1.0, ATTENUATION);
+		// Bandas con borde suave (aspecto de ilustración pintada).
+		float b = smoothstep(0.42, 0.5, l) * 0.55 + smoothstep(0.68, 0.74, l) * 0.45;
+		DIFFUSE_LIGHT += mix(color_sombra.rgb, vec3(1.0), b) * LIGHT_COLOR / PI;
+	} else {
+		float a = l * ATTENUATION;
+		float b = smoothstep(0.08, 0.16, a) * 0.6 + smoothstep(0.3, 0.42, a) * 0.6;
+		DIFFUSE_LIGHT += b * LIGHT_COLOR / PI;
+	}
+	vec3 h = normalize(VIEW + LIGHT);
+	float brillo = pow(clamp(dot(NORMAL, h), 0.0, 1.0), mix(160.0, 12.0, ROUGHNESS));
+	SPECULAR_LIGHT += smoothstep(0.35, 0.55, brillo) * (1.0 - ROUGHNESS) * 0.8 * LIGHT_COLOR * ATTENUATION;
+	float rim = 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0);
+	rim = smoothstep(0.65, 0.75, rim) * clamp(ndl + 0.5, 0.0, 1.0);
+	SPECULAR_LIGHT += rim * rim_fuerza * LIGHT_COLOR / PI * (LIGHT_IS_DIRECTIONAL ? 1.0 : ATTENUATION);
+}
+"""
+
 ## Contorno negro por casco invertido: el mismo mesh, inflado en espacio mundo y con caras traseras.
 const CONTORNO := """
 shader_type spatial;
@@ -302,6 +390,7 @@ static func _shader(clave: String, codigo: String) -> Shader:
 static func shader(clave: String) -> Shader:
 	match clave:
 		"toon": return _shader(clave, TOON)
+		"toon_tex": return _shader(clave, TOON_TEX)
 		"contorno": return _shader(clave, CONTORNO)
 		"fuego": return _shader(clave, FUEGO)
 		"calor": return _shader(clave, CALOR)
@@ -329,6 +418,29 @@ static func toon(c: Color, contorno := true, grosor := 0.012, metalico := 0.0, r
 	m.set_shader_parameter("color_sombra", Color(0.32, 0.36, 0.55).lerp(c, 0.25))
 	if contorno:
 		m.next_pass = material_contorno(grosor)
+	_cache[clave] = m
+	return m
+
+
+## Material con textura horneada de assets/texturas/<nombre>_color.png y _normal.png.
+static func toon_tex(nombre: String, tinte := Color.WHITE, escala_uv := Vector2.ONE, triplanar := false, escala_mundo := 0.25,
+		metalico := 0.0, humedad := 0.6, contorno := 0.0) -> ShaderMaterial:
+	var clave := "tt_%s_%s_%s_%s_%.3f_%.2f_%.2f_%.3f" % [nombre, tinte.to_html(), str(escala_uv), str(triplanar), escala_mundo, metalico, humedad, contorno]
+	if _cache.has(clave):
+		return _cache[clave]
+	var m := ShaderMaterial.new()
+	m.shader = shader("toon_tex")
+	m.set_shader_parameter("tex_color", load("res://assets/texturas/%s_color.png" % nombre))
+	m.set_shader_parameter("tex_normal", load("res://assets/texturas/%s_normal.png" % nombre))
+	m.set_shader_parameter("tinte", tinte)
+	m.set_shader_parameter("escala_uv", escala_uv)
+	m.set_shader_parameter("triplanar", 1.0 if triplanar else 0.0)
+	m.set_shader_parameter("escala_mundo", escala_mundo)
+	m.set_shader_parameter("metalico", metalico)
+	m.set_shader_parameter("humedad", humedad)
+	m.set_shader_parameter("chorreo", 1.0 if Ajustes.g("chorreo", true) else 0.0)
+	if contorno > 0.0:
+		m.next_pass = material_contorno(contorno)
 	_cache[clave] = m
 	return m
 

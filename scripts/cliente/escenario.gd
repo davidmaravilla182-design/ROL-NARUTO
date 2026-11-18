@@ -101,12 +101,8 @@ func _entorno() -> void:
 
 
 func _suelo() -> void:
-	# Placas de metal mojado: poco rugoso y algo metálico para reflejar la sonda.
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = _c("suelo")
-	mat.roughness = 0.34
-	mat.metallic = 0.3
-	mat.metallic_specular = 0.45
+	# Placas de metal mojado con textura horneada (1 placa = 1 m); refleja la sonda de reflejos.
+	var mat := Shaders.toon_tex("suelo", Color(0.95, 0.95, 1.0), Vector2(45, 45), false, 0.25, 0.25, 0.75)
 	var suelo := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
 	pm.size = Vector2(180, 180)
@@ -114,20 +110,6 @@ func _suelo() -> void:
 	suelo.mesh = pm
 	suelo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(suelo)
-	# Losas metálicas con juntas (líneas) para dar escala.
-	var juntas := MultiMesh.new()
-	juntas.transform_format = MultiMesh.TRANSFORM_3D
-	var bm := BoxMesh.new()
-	bm.size = Vector3(1, 1, 1)
-	bm.material = Materiales.solido(_c("suelo").darkened(0.35), 0.6, 0.2)
-	juntas.mesh = bm
-	var lineas: Array = []
-	var lim := 60
-	for i in range(-lim, lim + 1, 4):
-		lineas.append(Transform3D(Basis.from_scale(Vector3(lim * 2.0, 0.01, 0.06)), Vector3(0, 0.003, i)))
-		lineas.append(Transform3D(Basis.from_scale(Vector3(0.06, 0.01, lim * 2.0)), Vector3(i, 0.003, 0)))
-	_llenar(juntas, lineas)
-	_mmi(juntas, false)
 
 
 func _charcos() -> void:
@@ -241,13 +223,14 @@ func _torres() -> void:
 			var r2 := rng.randf_range(0.25, 0.5)
 			tuberias.append(Transform3D(tb.scaled_local(Vector3(r2, largo, r2)), medio + Vector3(0, rng.randf_range(-3.0, -1.2), 0) + base.x * rng.randf_range(-0.5, 0.5)))
 
-	var metal := Materiales.solido(_c("torre"), 0.3, 0.7)
-	var metal_osc := Materiales.solido(_c("torre_oscura"), 0.35, 0.65)
-	var mat_banda := Materiales.solido(_c("torre").lightened(0.12), 0.25, 0.85)
+	var c_esc := Materiales.grosor_contorno
+	var metal := Shaders.toon_tex("lamina", Color.WHITE, Vector2.ONE, true, 1.0 / 6.0, 0.4, 0.5, c_esc)
+	var metal_osc := Shaders.toon_tex("concreto", Color(0.9, 0.9, 0.95), Vector2.ONE, true, 1.0 / 8.0, 0.0, 0.5, c_esc)
+	var mat_banda := Shaders.toon_tex("lamina", Color(0.75, 0.72, 0.8), Vector2.ONE, true, 1.0 / 3.0, 0.5, 0.5)
 	var mat_ventana := Materiales.emisivo(_c("ventana"), 2.4)
-	var mat_tuberia := Materiales.solido(_c("tuberia"), 0.3, 0.75)
-	var mat_pasarela := Materiales.solido(_c("pasarela"), 0.5, 0.6)
-	var mat_caja := Materiales.solido(Color(0.35, 0.22, 0.18), 0.6, 0.5)
+	var mat_tuberia := Shaders.toon_tex("tuberia", Color.WHITE, Vector2.ONE, true, 0.5, 0.3, 0.5, c_esc)
+	var mat_pasarela := Shaders.toon_tex("rejilla", Color.WHITE, Vector2.ONE, true, 0.6, 0.4, 0.4)
+	var mat_caja := Shaders.toon_tex("techo", Color.WHITE, Vector2.ONE, true, 0.5, 0.3, 0.5, c_esc)
 	_mmi(_mm_caja(cuerpos, metal), true)
 	_mmi(_mm_caja(cuerpos_osc, metal_osc), true)
 	_mmi(_mm_caja(bandas, mat_banda), false)
@@ -273,7 +256,7 @@ func _torres() -> void:
 func _campo_entrenamiento() -> void:
 	# Plataforma de piedra del campo con borde y postes con faroles.
 	var radio := float(Datos.escenario["campo_entrenamiento"]["radio"])
-	var piedra := Materiales.solido(Color(0.3, 0.31, 0.32), 0.45, 0.1)
+	var piedra := Shaders.toon_tex("concreto", Color(0.85, 0.86, 0.9), Vector2.ONE, true, 1.0 / 5.0, 0.0, 0.8)
 	var plataforma := Materiales.disco(radio, piedra, 24)
 	plataforma.position = Vector3(0, 0.006, 0)
 	add_child(plataforma)

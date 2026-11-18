@@ -25,8 +25,8 @@
 - Atmósfera: lluvia densa, niebla por capas que engulle la distancia, cielo de tormenta, suelo mojado con reflejos ámbar.
 
 ## Ciclos
-- [ ] C0 Preparación: referencias, plan, pipeline Blender (bake de texturas tileables por toro 4D).
-- [ ] C1 Texturas procedurales (concreto manchado, lámina pintada/óxido, tubería granate, placas de suelo, lámina de techo) + shader toon con texturas.
+- [x] C0 Preparación: referencias, plan, pipeline Blender (bake de texturas tileables por toro 4D).
+- [x] C1 Texturas procedurales (concreto manchado, lámina pintada/óxido, tubería granate, placas de suelo, lámina de techo) + shader toon con texturas.
 - [ ] C2 Kit modular en Blender: silo con anillos y agujas, edificio con toldos, tubería+brida+codo, barandal, pasarela de celosía, farol, tanque.
 - [ ] C3 Nuevo trazado de la aldea con el kit (Mapa compartido: canal, muelles, plataforma de entrenamiento). Agua, cascadas, vapor, cables. (Vulkan)
 - [ ] C4 Torre-cabeza monumental + horizonte de agujas + gradación de color violeta/ámbar.
@@ -35,4 +35,7 @@
 - [ ] C7 Pulido de efectos y enemigo/muñecos con el nuevo estilo; docs; release.
 
 ## Estado actual
-- Ciclo en curso: C0
+- Ciclo en curso: C2 (kit modular en Blender)
+- Texturas: `tools/blender/texturas.py` (6 materiales, ~10 s). Tras hornear: `python3 tools/ajustar_importacion.py` y `godot --headless --path . --import`.
+- Shader con texturas: `Shaders.toon_tex(nombre, tinte, escala_uv, triplanar, escala_mundo, metalico, humedad, contorno)`.
+- Capturas: `/tmp/claude-0/cap.sh <carpeta> [mobile]` (si falta, recrear: xvfb-run + godot -s res://tools/captura.gd).
