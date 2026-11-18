@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Hook de pre-commit: el proyecto debe cargar sin errores en Godot headless.
+# Activar con: git config core.hooksPath .githooks
+if ! command -v "${GODOT:-godot}" >/dev/null 2>&1; then
+  echo "Aviso: Godot no está instalado; se omite la verificación local (CI la hará)."
+  exit 0
+fi
+exec "$(git rev-parse --show-toplevel)/tools/verificar.sh"

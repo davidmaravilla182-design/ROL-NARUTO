@@ -1,0 +1,87 @@
+{
+  "_nota": "Plantillas de personajes. Atributos de 0 a 5, máximo 26 en total.",
+  "jugador_uchiha": {
+    "nombre": "Uchiha de la Lluvia",
+    "tipo": "jugador",
+    "clan": "uchiha",
+    "aldea": "lluvia",
+    "naturalezas": ["fuego", "rayo"],
+    "atributos": {
+      "ninjutsu": 5,
+      "taijutsu": 2,
+      "genjutsu": 3,
+      "inteligencia": 3,
+      "fuerza": 1,
+      "velocidad": 5,
+      "estamina": 2,
+      "sellos": 5
+    },
+    "jutsus": ["golpe", "bola_fuego", "chidori", "sharingan", "esquivar", "saltar"],
+    "aspecto": {
+      "piel": "#e8c4a0",
+      "pelo": "#141418",
+      "ojos": "#1a1a1a",
+      "camisa": "#1d2333",
+      "pantalon": "#252a3a",
+      "chaleco": "#3d4a3a",
+      "banda": "#2b3550",
+      "vendas": "#ddd6c4",
+      "sandalias": "#2a2a30",
+      "emblema_espalda": true,
+      "mascara": false,
+      "peinado": "puntas"
+    }
+  },
+  "ninja_lluvia": {
+    "nombre": "Ninja de la Lluvia",
+    "tipo": "enemigo",
+    "clan": "sin_clan",
+    "aldea": "lluvia",
+    "naturalezas": ["agua"],
+    "atributos": {
+      "ninjutsu": 4,
+      "taijutsu": 3,
+      "genjutsu": 1,
+      "inteligencia": 3,
+      "fuerza": 3,
+      "velocidad": 3,
+      "estamina": 4,
+      "sellos": 3
+    },
+    "jutsus": ["golpe", "bala_agua", "esquivar"],
+    "ia": {
+      "distancia_preferida": 9.0,
+      "rango_disparo": 17.0,
+      "rango_melee": 2.2,
+      "prob_esquivar": 0.4,
+      "umbral_huida": 0.25,
+      "cambio_lateral": 2.5,
+      "pausa_reaccion": 0.35
+    },
+    "aspecto": {
+      "piel": "#d9b896",
+      "pelo": "#4a4f5a",
+      "ojos": "#202020",
+      "camisa": "#4b5260",
+      "pantalon": "#3a3f4a",
+      "chaleco": "#6a7078",
+      "banda": "#2b3550",
+      "vendas": "#c8c2b0",
+      "sandalias": "#2a2a30",
+      "emblema_espalda": false,
+      "mascara": true,
+      "peinado": "corto"
+    }
+  },
+  "muneco": {
+    "nombre": "Muñeco de práctica",
+    "tipo": "muneco",
+    "naturalezas": [],
+    "vida_fija": 250.0,
+    "atributos": {
+      "ninjutsu": 0, "taijutsu": 0, "genjutsu": 0, "inteligencia": 0,
+      "fuerza": 0, "velocidad": 0, "estamina": 0, "sellos": 0
+    },
+    "jutsus": []
+  }
+}

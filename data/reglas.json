@@ -1,0 +1,57 @@
+{
+  "_nota": "Reglas numéricas del combate. Todo valor de balance vive aquí; el código solo aplica fórmulas.",
+  "simulacion": {
+    "ticks_por_segundo": 30,
+    "gravedad": 24.0,
+    "radio_entidad": 0.45,
+    "altura_golpe": 1.0,
+    "radio_cuerpo": 0.6
+  },
+  "atributos": {
+    "lista": ["ninjutsu", "taijutsu", "genjutsu", "inteligencia", "fuerza", "velocidad", "estamina", "sellos"],
+    "minimo": 0,
+    "maximo": 5,
+    "tope_total": 26
+  },
+  "derivados": {
+    "_nota": "Reserva y control de chakra se derivan de los atributos (escala 0-5) con estos pesos.",
+    "reserva": { "estamina": 0.5, "ninjutsu": 0.5 },
+    "control": { "sellos": 0.4, "inteligencia": 0.3, "genjutsu": 0.3 }
+  },
+  "formulas": {
+    "vida_base": 100.0,
+    "vida_por_estamina": 12.0,
+    "vida_por_fuerza": 6.0,
+    "chakra_base": 60.0,
+    "chakra_por_reserva": 24.0,
+    "estamina_base": 60.0,
+    "estamina_por_estamina": 10.0,
+    "estamina_por_taijutsu": 4.0,
+    "velocidad_base": 6.0,
+    "velocidad_por_punto": 0.07,
+    "regen_chakra_base": 1.2,
+    "regen_chakra_por_control": 0.25,
+    "regen_estamina": 14.0,
+    "costo_por_reserva": 0.08,
+    "ahorro_por_control": 0.07,
+    "dano_por_ninjutsu": 0.08,
+    "dano_por_reserva": 0.05,
+    "tamano_por_reserva": 0.06,
+    "sellos_reduccion_por_punto": 0.09,
+    "precision_grados_base": 10.0,
+    "precision_grados_por_control": 6.0,
+    "taijutsu_dano_por_taijutsu": 0.07,
+    "taijutsu_dano_por_fuerza": 0.09
+  },
+  "clima": {
+    "lluvia": {
+      "fuego": { "dano": 0.6, "tamano": 0.75 },
+      "rayo": { "dano": 1.3, "tamano": 1.0, "cadena": true, "cadena_radio": 7.0, "cadena_factor": 0.5 }
+    }
+  },
+  "estados": {
+    "golpeado_duracion": 0.35,
+    "caido_duracion": 1.3,
+    "derribo_empuje": 5.0
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "_nota": "Parámetros de la generación procedural del sector de la aldea. La misma semilla produce el mismo mapa en servidor y cliente.",
+  "semilla": 1337,
+  "tamano": 90.0,
+  "limite_juego": 38.0,
+  "campo_entrenamiento": { "centro": [0.0, 0.0], "radio": 16.0 },
+  "inicio_jugador": [0.0, 10.0],
+  "inicio_enemigo": [0.0, -12.0],
+  "munecos": [[-4.0, -2.0], [0.0, -4.0], [4.0, -2.0]],
+  "charcos_fijos": [
+    [-4.0, -2.0, 1.8], [0.0, -4.0, 1.6], [4.0, -2.0, 1.8], [-8.0, 6.0, 2.5], [9.0, 5.0, 2.2], [2.0, -14.0, 2.8]
+  ],
+  "charcos_aleatorios": 14,
+  "torres": {
+    "cantidad": 22,
+    "radio_minimo": 21.0,
+    "radio_maximo": 42.0,
+    "ancho": [4.0, 8.0],
+    "alto": [14.0, 42.0],
+    "separacion": 2.0
+  },
+  "obstaculos_campo": 5,
+  "colores": {
+    "suelo": "#2a2e33",
+    "charco": "#1a2430",
+    "torre": "#3b4048",
+    "torre_oscura": "#2a2e35",
+    "tuberia": "#5a5048",
+    "pasarela": "#454a52",
+    "ventana": "#ffcf7a",
+    "cielo_arriba": "#5d6670",
+    "cielo_horizonte": "#8a929b",
+    "niebla": "#7d8790"
+  },
+  "lluvia": { "gotas": 1400, "salpicaduras": 220, "area": 22.0 }
+}
