@@ -1,202 +1,2179 @@
 {
-  "_nota": "Datos de técnicas. 'niveles' contiene los 3 niveles de poder (1, 2, 3). Costos y daños son base: el servidor aplica fórmulas de reglas.json.",
-  "bola_fuego": {
-    "nombre": "Gran Bola de Fuego",
-    "tipo": "proyectil",
-    "naturaleza": "fuego",
-    "sellos": [
-      "serpiente",
-      "carnero",
-      "mono",
-      "jabali",
-      "caballo",
-      "tigre"
-    ],
-    "tiempo_sellos": 0.95,
-    "recarga": 4.0,
-    "alcance": 30.0,
-    "niveles": [
-      {
-        "costo": 14.0,
-        "dano": 20.0,
-        "velocidad": 17.0,
-        "radio": 0.6,
-        "radio_explosion": 2.4,
-        "sacudida": 0.25,
-        "luz": 2.5,
-        "luz_rango": 7.0,
-        "particulas": 40,
-        "marca": 1.8
-      },
-      {
-        "costo": 24.0,
-        "dano": 36.0,
-        "velocidad": 15.0,
-        "radio": 1.3,
-        "radio_explosion": 4.5,
-        "sacudida": 0.55,
-        "luz": 4.0,
-        "luz_rango": 13.0,
-        "particulas": 120,
-        "marca": 3.6
-      },
-      {
-        "costo": 40.0,
-        "dano": 60.0,
-        "velocidad": 12.0,
-        "radio": 2.8,
-        "radio_explosion": 8.0,
-        "sacudida": 1.0,
-        "luz": 4.5,
-        "luz_rango": 24.0,
-        "particulas": 320,
-        "marca": 7.5
-      }
-    ]
+ "_nota": "Repertorio de jutsus. 'niveles' = N1/N2/N3 (cada uno más caro). 'ranura': activo o modo. 'puntos': costo en el repertorio (tope en reglas.json). 'implementado': false → 'Próximamente' en el menú. Las técnicas con 'interno' no aparecen en el menú.",
+ "_categorias": {
+  "fuego": {
+   "nombre": "Fuego",
+   "color": "#ff6a1a"
   },
-  "chidori": {
-    "nombre": "Chidori",
-    "tipo": "embiste",
-    "naturaleza": "rayo",
-    "sellos": [
-      "buey",
-      "liebre",
-      "mono"
-    ],
-    "tiempo_sellos": 0.35,
-    "recarga": 5.0,
-    "niveles": [
-      {
-        "costo": 18.0,
-        "dano": 26.0,
-        "carga": 0.6,
-        "distancia": 8.0,
-        "velocidad": 26.0,
-        "radio_golpe": 1.1,
-        "cadena_saltos": 1,
-        "sacudida": 0.35,
-        "luz": 2.5,
-        "luz_rango": 8.0,
-        "particulas": 50,
-        "marca": 1.5
-      },
-      {
-        "costo": 28.0,
-        "dano": 42.0,
-        "carga": 0.9,
-        "distancia": 12.0,
-        "velocidad": 32.0,
-        "radio_golpe": 1.3,
-        "cadena_saltos": 2,
-        "sacudida": 0.7,
-        "luz": 4.5,
-        "luz_rango": 18.0,
-        "particulas": 140,
-        "marca": 3.0
-      },
-      {
-        "costo": 45.0,
-        "dano": 68.0,
-        "carga": 1.2,
-        "distancia": 17.0,
-        "velocidad": 40.0,
-        "radio_golpe": 1.6,
-        "cadena_saltos": 4,
-        "sacudida": 1.0,
-        "luz": 4.5,
-        "luz_rango": 55.0,
-        "particulas": 360,
-        "marca": 5.0
-      }
-    ]
+  "rayo": {
+   "nombre": "Rayo",
+   "color": "#6fc3ff"
   },
-  "sharingan": {
-    "nombre": "Sharingan",
-    "tipo": "modo",
-    "costo_activar": 6.0,
-    "costo_por_segundo": 3.5,
-    "recarga": 1.0,
-    "ralentiza_proyectiles": 0.5,
-    "aviso_anticipado": true
+  "agua": {
+   "nombre": "Agua",
+   "color": "#3a8dff"
   },
-  "golpe": {
-    "nombre": "Golpe",
-    "tipo": "taijutsu",
-    "ventana_combo": 0.55,
-    "costo_estamina": 5.0,
-    "recarga": 0.0,
-    "pasos": [
-      {
-        "dano": 7.0,
-        "alcance": 2.0,
-        "angulo": 80.0,
-        "duracion": 0.3,
-        "impacto": 0.12,
-        "empuje": 1.2,
-        "derriba": false
-      },
-      {
-        "dano": 7.0,
-        "alcance": 2.0,
-        "angulo": 80.0,
-        "duracion": 0.3,
-        "impacto": 0.12,
-        "empuje": 1.2,
-        "derriba": false
-      },
-      {
-        "dano": 12.0,
-        "alcance": 2.3,
-        "angulo": 100.0,
-        "duracion": 0.45,
-        "impacto": 0.2,
-        "empuje": 4.0,
-        "derriba": true
-      }
-    ]
+  "tierra": {
+   "nombre": "Tierra",
+   "color": "#b08a55"
   },
-  "esquivar": {
-    "nombre": "Esquivar",
-    "tipo": "movimiento",
-    "costo_estamina": 22.0,
-    "distancia": 4.5,
-    "duracion": 0.28,
-    "invulnerable": 0.25,
-    "recarga": 0.6
+  "viento": {
+   "nombre": "Viento",
+   "color": "#8fe0b8"
   },
-  "saltar": {
-    "nombre": "Saltar",
-    "tipo": "movimiento",
-    "fuerza": 9.0,
-    "costo_estamina": 6.0,
-    "recarga": 0.0
+  "neutro": {
+   "nombre": "Sin naturaleza",
+   "color": "#c9c3d6"
   },
-  "bala_agua": {
-    "nombre": "Bala de Agua",
-    "tipo": "proyectil",
-    "naturaleza": "agua",
-    "sellos": [
-      "tigre",
-      "pajaro"
-    ],
-    "tiempo_sellos": 0.5,
-    "recarga": 2.6,
-    "alcance": 26.0,
-    "niveles": [
-      {
-        "costo": 8.0,
-        "dano": 5.5,
-        "velocidad": 14.0,
-        "radio": 0.3,
-        "radio_explosion": 0.8,
-        "rafaga": 2,
-        "intervalo_rafaga": 0.2,
-        "sacudida": 0.2,
-        "luz": 0.0,
-        "luz_rango": 0.0,
-        "particulas": 20,
-        "marca": 0.0
-      }
-    ]
+  "kekkei": {
+   "nombre": "Kekkei genkai",
+   "color": "#d6a3ff"
+  },
+  "ojos": {
+   "nombre": "Ojos",
+   "color": "#e0303a"
+  },
+  "cuerpo": {
+   "nombre": "Cuerpo",
+   "color": "#55d06a"
   }
+ },
+ "bola_fuego": {
+  "nombre": "Gran Bola de Fuego",
+  "categoria": "fuego",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": true,
+  "mecanica": "proyectil",
+  "naturaleza": "fuego",
+  "icono": "llama",
+  "apuntable": true,
+  "recarga": 4.0,
+  "tiempo_sellos": 0.95,
+  "sellos": [
+   "serpiente",
+   "carnero",
+   "mono",
+   "jabali",
+   "caballo",
+   "tigre"
+  ],
+  "alcance": 30.0,
+  "requisitos": {
+   "naturalezas": [
+    "fuego"
+   ]
+  },
+  "ventaja": "Gran área de daño; deja el suelo ardiendo desde N2.",
+  "desventaja": "Débil bajo la lluvia (−40 % de daño y más pequeña).",
+  "niveles": [
+   {
+    "costo": 14.0,
+    "dano": 20.0,
+    "velocidad": 17.0,
+    "radio": 0.6,
+    "radio_explosion": 2.4,
+    "sacudida": 0.25,
+    "luz": 2.5,
+    "luz_rango": 7.0,
+    "particulas": 40,
+    "marca": 1.8,
+    "descripcion": "Esfera de fuego del tamaño de una persona."
+   },
+   {
+    "costo": 24.0,
+    "dano": 36.0,
+    "velocidad": 15.0,
+    "radio": 1.3,
+    "radio_explosion": 4.5,
+    "sacudida": 0.55,
+    "luz": 4.0,
+    "luz_rango": 13.0,
+    "particulas": 120,
+    "marca": 3.6,
+    "descripcion": "Esfera enorme que deja el suelo ardiendo.",
+    "suelo_ardiente": 4.0,
+    "suelo_dps": 6.0
+   },
+   {
+    "costo": 40.0,
+    "dano": 60.0,
+    "velocidad": 12.0,
+    "radio": 2.8,
+    "radio_explosion": 8.0,
+    "sacudida": 1.0,
+    "luz": 4.5,
+    "luz_rango": 24.0,
+    "particulas": 320,
+    "marca": 7.5,
+    "descripcion": "Muro de fuego que cubre toda la vista.",
+    "suelo_ardiente": 6.0,
+    "suelo_dps": 9.0,
+    "muro": true
+   }
+  ]
+ },
+ "fenix": {
+  "nombre": "Fénix de Fuego",
+  "categoria": "fuego",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "fuego",
+  "icono": "llama",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "fuego"
+   ]
+  },
+  "ventaja": "Muchos impactos difíciles de esquivar.",
+  "desventaja": "Poco daño por cada bola.",
+  "niveles": [
+   {
+    "descripcion": "3 bolas pequeñas.",
+    "costo": 12.0,
+    "dano": 6.0
+   },
+   {
+    "descripcion": "8 bolas con shuriken ocultos.",
+    "costo": 20.0,
+    "dano": 6.0
+   },
+   {
+    "descripcion": "20 bolas que persiguen al objetivo.",
+    "costo": 34.0,
+    "dano": 6.0
+   }
+  ]
+ },
+ "dragon_fuego": {
+  "nombre": "Dragón de Fuego",
+  "categoria": "fuego",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "fuego",
+  "icono": "llama",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "fuego"
+   ],
+   "rango": "chunin"
+  },
+  "ventaja": "Alcance y daño continuo.",
+  "desventaja": "Carga larga.",
+  "niveles": [
+   {
+    "descripcion": "Llamarada en línea.",
+    "costo": 18.0,
+    "dano": 22.0
+   },
+   {
+    "descripcion": "Dragón que serpentea.",
+    "costo": 30.0,
+    "dano": 34.0
+   },
+   {
+    "descripcion": "Dragón gigante que rodea al enemigo.",
+    "costo": 48.0,
+    "dano": 52.0
+   }
+  ]
+ },
+ "chidori": {
+  "nombre": "Chidori",
+  "categoria": "rayo",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": true,
+  "mecanica": "embiste",
+  "naturaleza": "rayo",
+  "icono": "rayo",
+  "apuntable": true,
+  "recarga": 5.0,
+  "tiempo_sellos": 0.35,
+  "sellos": [
+   "buey",
+   "liebre",
+   "mono"
+  ],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "rayo"
+   ]
+  },
+  "ventaja": "Daño enorme y +30 % bajo la lluvia; salta por charcos.",
+  "desventaja": "Quedas expuesto al terminar el embiste.",
+  "niveles": [
+   {
+    "costo": 18.0,
+    "dano": 26.0,
+    "carga": 0.6,
+    "distancia": 8.0,
+    "velocidad": 26.0,
+    "radio_golpe": 1.1,
+    "cadena_saltos": 1,
+    "sacudida": 0.35,
+    "luz": 2.5,
+    "luz_rango": 8.0,
+    "particulas": 50,
+    "marca": 1.5,
+    "descripcion": "Embiste corto con la mano cargada de rayo."
+   },
+   {
+    "costo": 28.0,
+    "dano": 42.0,
+    "carga": 0.9,
+    "distancia": 12.0,
+    "velocidad": 32.0,
+    "radio_golpe": 1.3,
+    "cadena_saltos": 2,
+    "sacudida": 0.7,
+    "luz": 4.5,
+    "luz_rango": 18.0,
+    "particulas": 140,
+    "marca": 3.0,
+    "descripcion": "Embiste largo con descarga a los cercanos.",
+    "descarga_radio": 3.5
+   },
+   {
+    "costo": 45.0,
+    "dano": 68.0,
+    "carga": 1.2,
+    "distancia": 17.0,
+    "velocidad": 40.0,
+    "radio_golpe": 1.6,
+    "cadena_saltos": 4,
+    "sacudida": 1.0,
+    "luz": 4.5,
+    "luz_rango": 55.0,
+    "particulas": 360,
+    "marca": 5.0,
+    "descripcion": "Descarga por todo el cuerpo en área.",
+    "descarga_radio": 3.5,
+    "area_radio": 5.5
+   }
+  ]
+ },
+ "lanza_chidori": {
+  "nombre": "Lanza Chidori",
+  "categoria": "rayo",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "rayo",
+  "icono": "rayo",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "rayo"
+   ],
+   "dominio": {
+    "chidori": 2
+   }
+  },
+  "ventaja": "Ataque de rayo a distancia.",
+  "desventaja": "Poco daño a corta distancia.",
+  "niveles": [
+   {
+    "descripcion": "Agujas de rayo.",
+    "costo": 14.0,
+    "dano": 12.0
+   },
+   {
+    "descripcion": "Lanza que se extiende a distancia.",
+    "costo": 24.0,
+    "dano": 30.0
+   },
+   {
+    "descripcion": "Lanza que se ramifica a varios enemigos.",
+    "costo": 38.0,
+    "dano": 30.0
+   }
+  ]
+ },
+ "kirin": {
+  "nombre": "Kirin",
+  "categoria": "rayo",
+  "ranura": "activo",
+  "puntos": 5,
+  "implementado": true,
+  "mecanica": "kirin",
+  "naturaleza": "rayo",
+  "icono": "kirin",
+  "apuntable": true,
+  "recarga": 16.0,
+  "tiempo_sellos": 1.4,
+  "sellos": [
+   "mono",
+   "pajaro",
+   "buey",
+   "liebre",
+   "tigre"
+  ],
+  "alcance": 32.0,
+  "requisitos": {
+   "naturalezas": [
+    "rayo"
+   ],
+   "modo": [
+    "sharingan",
+    "mangekyo"
+   ],
+   "rango": "jonin"
+  },
+  "ventaja": "El jutsu de rayo más destructivo; imposible de bloquear.",
+  "desventaja": "Solo con tormenta; gasta casi todo el chakra.",
+  "niveles": [
+   {
+    "descripcion": "Un rayo cae del cielo sobre el objetivo.",
+    "costo": 60.0,
+    "dano": 70.0,
+    "costo_pct": 0.45,
+    "radio": 3.0,
+    "golpes": 1,
+    "intervalo": 0.0,
+    "sacudida": 0.8,
+    "luz": 6.0,
+    "luz_rango": 40.0,
+    "marca": 3.5,
+    "particulas": 120
+   },
+   {
+    "descripcion": "Una bestia de rayo baja del cielo.",
+    "costo": 80.0,
+    "dano": 105.0,
+    "costo_pct": 0.6,
+    "radio": 5.0,
+    "golpes": 1,
+    "intervalo": 0.0,
+    "bestia": true,
+    "sacudida": 1.0,
+    "luz": 9.0,
+    "luz_rango": 70.0,
+    "marca": 6.0,
+    "particulas": 220
+   },
+   {
+    "descripcion": "Tormenta de varios Kirin sobre el área.",
+    "costo": 105.0,
+    "dano": 62.0,
+    "costo_pct": 0.8,
+    "radio": 4.0,
+    "golpes": 5,
+    "intervalo": 0.28,
+    "dispersion": 6.0,
+    "bestia": true,
+    "sacudida": 1.3,
+    "luz": 12.0,
+    "luz_rango": 90.0,
+    "marca": 5.0,
+    "particulas": 300
+   }
+  ],
+  "clima": "tormenta"
+ },
+ "manto_rayo": {
+  "nombre": "Manto de Rayo",
+  "categoria": "rayo",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "rayo",
+  "icono": "rayo",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "rayo"
+   ],
+   "rango": "jonin"
+  },
+  "ventaja": "Velocidad extrema.",
+  "desventaja": "Drena chakra cada segundo.",
+  "niveles": [
+   {
+    "descripcion": "+Velocidad.",
+    "costo": 12.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "+Velocidad y daño.",
+    "costo": 20.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Desplazamiento instantáneo con estela eléctrica.",
+    "costo": 30.0,
+    "dano": 20.0
+   }
+  ]
+ },
+ "dragon_agua": {
+  "nombre": "Gran Dragón de Agua",
+  "categoria": "agua",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "agua",
+  "icono": "gota",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "agua"
+   ]
+  },
+  "ventaja": "Fuerte en la aldea de la lluvia.",
+  "desventaja": "Sin agua cerca cuesta el doble.",
+  "niveles": [
+   {
+    "descripcion": "Un dragón.",
+    "costo": 20.0,
+    "dano": 26.0
+   },
+   {
+    "descripcion": "Dos dragones.",
+    "costo": 34.0,
+    "dano": 26.0
+   },
+   {
+    "descripcion": "Cinco dragones que dejan un lago temporal.",
+    "costo": 55.0,
+    "dano": 26.0
+   }
+  ]
+ },
+ "prision_agua": {
+  "nombre": "Prisión de Agua",
+  "categoria": "agua",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "agua",
+  "icono": "gota",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "agua"
+   ]
+  },
+  "ventaja": "Inmoviliza al rival.",
+  "desventaja": "Tú tampoco puedes moverte.",
+  "niveles": [
+   {
+    "descripcion": "Atrapa 2 s.",
+    "costo": 16.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Atrapa 4 s y se mueve contigo.",
+    "costo": 26.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Encierra a varios.",
+    "costo": 40.0,
+    "dano": 0.0
+   }
+  ]
+ },
+ "cascada": {
+  "nombre": "Gran Cascada",
+  "categoria": "agua",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "agua",
+  "icono": "gota",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "agua"
+   ]
+  },
+  "ventaja": "Gran área; deja charcos.",
+  "desventaja": "También te moja a ti.",
+  "niveles": [
+   {
+    "descripcion": "Ola.",
+    "costo": 18.0,
+    "dano": 18.0
+   },
+   {
+    "descripcion": "Ola gigante frontal.",
+    "costo": 30.0,
+    "dano": 30.0
+   },
+   {
+    "descripcion": "Inunda toda el área (potencia el rayo).",
+    "costo": 50.0,
+    "dano": 34.0
+   }
+  ]
+ },
+ "tiburones": {
+  "nombre": "Tiburones de Agua",
+  "categoria": "agua",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "agua",
+  "icono": "gota",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "agua"
+   ]
+  },
+  "ventaja": "Persigue al objetivo.",
+  "desventaja": "Lento.",
+  "niveles": [
+   {
+    "descripcion": "Un tiburón.",
+    "costo": 12.0,
+    "dano": 18.0
+   },
+   {
+    "descripcion": "Cardumen.",
+    "costo": 22.0,
+    "dano": 12.0
+   },
+   {
+    "descripcion": "Tiburón gigante que traga jutsus enemigos.",
+    "costo": 38.0,
+    "dano": 40.0
+   }
+  ]
+ },
+ "muro_tierra": {
+  "nombre": "Muro de Tierra",
+  "categoria": "tierra",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "tierra",
+  "icono": "roca",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "tierra"
+   ]
+  },
+  "ventaja": "Bloquea proyectiles.",
+  "desventaja": "Lento de invocar.",
+  "niveles": [
+   {
+    "descripcion": "Muro.",
+    "costo": 12.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Cúpula protectora.",
+    "costo": 22.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Fortaleza con picos.",
+    "costo": 36.0,
+    "dano": 20.0
+   }
+  ]
+ },
+ "dragon_tierra": {
+  "nombre": "Dragón de Tierra",
+  "categoria": "tierra",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "tierra",
+  "icono": "roca",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "tierra"
+   ]
+  },
+  "ventaja": "Mucho daño en área.",
+  "desventaja": "Corto alcance sobre pasarelas metálicas.",
+  "niveles": [
+   {
+    "descripcion": "Proyectiles de lodo.",
+    "costo": 14.0,
+    "dano": 10.0
+   },
+   {
+    "descripcion": "Dragón de lodo.",
+    "costo": 26.0,
+    "dano": 28.0
+   },
+   {
+    "descripcion": "Terremoto que agrieta el suelo.",
+    "costo": 44.0,
+    "dano": 40.0
+   }
+  ]
+ },
+ "golem_tierra": {
+  "nombre": "Golem de Tierra",
+  "categoria": "tierra",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "tierra",
+  "icono": "roca",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "tierra"
+   ],
+   "rango": "chunin"
+  },
+  "ventaja": "Un aliado que pelea por ti.",
+  "desventaja": "No puedes usar otros jutsus mientras existe.",
+  "niveles": [
+   {
+    "descripcion": "Golem pequeño.",
+    "costo": 20.0,
+    "dano": 14.0
+   },
+   {
+    "descripcion": "Golem grande.",
+    "costo": 34.0,
+    "dano": 24.0
+   },
+   {
+    "descripcion": "Golem gigante que pelea a tu lado.",
+    "costo": 55.0,
+    "dano": 36.0
+   }
+  ]
+ },
+ "gran_rafaga": {
+  "nombre": "Gran Ráfaga",
+  "categoria": "viento",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "viento",
+  "icono": "viento",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "viento"
+   ]
+  },
+  "ventaja": "Empuja y desvía proyectiles.",
+  "desventaja": "Potencia el fuego enemigo.",
+  "niveles": [
+   {
+    "descripcion": "Ráfaga que empuja.",
+    "costo": 10.0,
+    "dano": 6.0
+   },
+   {
+    "descripcion": "Ráfaga cortante.",
+    "costo": 18.0,
+    "dano": 18.0
+   },
+   {
+    "descripcion": "Tornado.",
+    "costo": 32.0,
+    "dano": 28.0
+   }
+  ]
+ },
+ "balas_vacio": {
+  "nombre": "Balas de Vacío",
+  "categoria": "viento",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "viento",
+  "icono": "viento",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "viento"
+   ]
+  },
+  "ventaja": "Rápidas y precisas.",
+  "desventaja": "Poco daño en área.",
+  "niveles": [
+   {
+    "descripcion": "Una bala.",
+    "costo": 10.0,
+    "dano": 16.0
+   },
+   {
+    "descripcion": "Ráfaga de 5.",
+    "costo": 20.0,
+    "dano": 10.0
+   },
+   {
+    "descripcion": "Bala gigante perforante.",
+    "costo": 34.0,
+    "dano": 45.0
+   }
+  ]
+ },
+ "rasenshuriken": {
+  "nombre": "Rasenshuriken",
+  "categoria": "viento",
+  "ranura": "activo",
+  "puntos": 5,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "viento",
+  "icono": "espiral",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "viento"
+   ],
+   "dominio": {
+    "rasengan": 2
+   }
+  },
+  "ventaja": "Daño devastador a nivel celular.",
+  "desventaja": "Daña tu propio brazo (vida) si lo repites.",
+  "niveles": [
+   {
+    "descripcion": "Lanzado corto.",
+    "costo": 40.0,
+    "dano": 60.0
+   },
+   {
+    "descripcion": "Explosión enorme.",
+    "costo": 60.0,
+    "dano": 85.0
+   },
+   {
+    "descripcion": "Lluvia de varios Rasenshuriken.",
+    "costo": 85.0,
+    "dano": 70.0
+   }
+  ]
+ },
+ "rasengan": {
+  "nombre": "Rasengan",
+  "categoria": "neutro",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": true,
+  "mecanica": "embiste",
+  "naturaleza": "",
+  "icono": "espiral",
+  "apuntable": true,
+  "recarga": 5.0,
+  "tiempo_sellos": 0.1,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "control_min": 3.5
+  },
+  "ventaja": "No necesita sellos ni naturaleza; empuja y derriba.",
+  "desventaja": "Corto alcance.",
+  "niveles": [
+   {
+    "descripcion": "Esfera de chakra en la mano.",
+    "costo": 16.0,
+    "dano": 30.0,
+    "carga": 0.45,
+    "distancia": 3.0,
+    "velocidad": 18.0,
+    "radio_golpe": 1.0,
+    "esfera": 0.17,
+    "empuje": 8.0,
+    "clones": 0,
+    "sacudida": 0.4,
+    "luz": 2.5,
+    "luz_rango": 6.0,
+    "marca": 1.5,
+    "particulas": 40
+   },
+   {
+    "descripcion": "Rasengan gigante.",
+    "costo": 28.0,
+    "dano": 55.0,
+    "carga": 0.7,
+    "distancia": 4.0,
+    "velocidad": 20.0,
+    "radio_golpe": 1.5,
+    "esfera": 0.45,
+    "empuje": 14.0,
+    "clones": 0,
+    "sacudida": 0.7,
+    "luz": 4.0,
+    "luz_rango": 12.0,
+    "marca": 3.5,
+    "particulas": 110
+   },
+   {
+    "descripcion": "Varios Rasengan gigantes con ayuda de clones.",
+    "costo": 44.0,
+    "dano": 60.0,
+    "carga": 0.9,
+    "distancia": 5.0,
+    "velocidad": 22.0,
+    "radio_golpe": 1.8,
+    "esfera": 0.6,
+    "empuje": 18.0,
+    "clones": 3,
+    "clones_radio": 8.0,
+    "sacudida": 1.0,
+    "luz": 6.0,
+    "luz_rango": 20.0,
+    "marca": 5.0,
+    "particulas": 220
+   }
+  ]
+ },
+ "clones_sombra": {
+  "nombre": "Clones de Sombra",
+  "categoria": "neutro",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "clones",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "reserva_min": 3.5
+  },
+  "ventaja": "Confunde y multiplica ataques.",
+  "desventaja": "El chakra se divide entre ellos.",
+  "niveles": [
+   {
+    "descripcion": "2 clones.",
+    "costo": 20.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "5 clones.",
+    "costo": 32.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Multitud de 20 clones.",
+    "costo": 55.0,
+    "dano": 0.0
+   }
+  ]
+ },
+ "invocacion": {
+  "nombre": "Invocación",
+  "categoria": "neutro",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "pergamino",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "contrato": true,
+   "rango": "chunin"
+  },
+  "ventaja": "Un aliado poderoso (diseños propios).",
+  "desventaja": "Si muere, pierdes vida.",
+  "niveles": [
+   {
+    "descripcion": "Criatura pequeña.",
+    "costo": 20.0,
+    "dano": 12.0
+   },
+   {
+    "descripcion": "Criatura mediana.",
+    "costo": 36.0,
+    "dano": 22.0
+   },
+   {
+    "descripcion": "Criatura gigante.",
+    "costo": 60.0,
+    "dano": 40.0
+   }
+  ]
+ },
+ "hiraishin": {
+  "nombre": "Dios del Trueno Volador",
+  "categoria": "neutro",
+  "ranura": "activo",
+  "puntos": 5,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "kunai",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "atributos_min": {
+    "velocidad": 5,
+    "sellos": 5
+   }
+  },
+  "ventaja": "Movimiento instantáneo.",
+  "desventaja": "Hay que colocar marcas antes.",
+  "niveles": [
+   {
+    "descripcion": "1 marca.",
+    "costo": 14.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "3 marcas.",
+    "costo": 26.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Teletransporte en cadena por todas las marcas.",
+    "costo": 44.0,
+    "dano": 40.0
+   }
+  ]
+ },
+ "sellos_explosivos": {
+  "nombre": "Sellos Explosivos",
+  "categoria": "neutro",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "papel",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "atributos_min": {
+    "sellos": 2
+   }
+  },
+  "ventaja": "Barato y versátil.",
+  "desventaja": "Te daña si estás cerca.",
+  "niveles": [
+   {
+    "descripcion": "Kunai explosivo.",
+    "costo": 8.0,
+    "dano": 18.0
+   },
+   {
+    "descripcion": "Muro de sellos.",
+    "costo": 16.0,
+    "dano": 26.0
+   },
+   {
+    "descripcion": "Explosión en cadena de cientos de sellos.",
+    "costo": 32.0,
+    "dano": 50.0
+   }
+  ]
+ },
+ "danza_papel": {
+  "nombre": "Danza de Papel",
+  "categoria": "neutro",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "papel",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "linaje": "papel"
+  },
+  "ventaja": "Técnica propia de la aldea de la lluvia.",
+  "desventaja": "El papel mojado pierde fuerza con el tiempo.",
+  "niveles": [
+   {
+    "descripcion": "Lluvia de shuriken de papel.",
+    "costo": 16.0,
+    "dano": 14.0
+   },
+   {
+    "descripcion": "Alas de papel para planear.",
+    "costo": 26.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Tormenta de miles de hojas explosivas.",
+    "costo": 52.0,
+    "dano": 60.0
+   }
+  ]
+ },
+ "fuerza_sobrehumana": {
+  "nombre": "Fuerza Sobrehumana",
+  "categoria": "neutro",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "puno",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "control_min": 3.5
+  },
+  "ventaja": "Taijutsu devastador.",
+  "desventaja": "Golpes lentos.",
+  "niveles": [
+   {
+    "descripcion": "Golpe que agrieta el suelo.",
+    "costo": 12.0,
+    "dano": 28.0
+   },
+   {
+    "descripcion": "Golpe que hace cráter.",
+    "costo": 22.0,
+    "dano": 45.0
+   },
+   {
+    "descripcion": "Sello de regeneración activo durante el combate.",
+    "costo": 40.0,
+    "dano": 45.0
+   }
+  ]
+ },
+ "curacion": {
+  "nombre": "Curación Médica",
+  "categoria": "neutro",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "cruz",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "control_min": 4.5
+  },
+  "ventaja": "Recupera vida.",
+  "desventaja": "Te quedas quieto mientras curas.",
+  "niveles": [
+   {
+    "descripcion": "Curación propia lenta.",
+    "costo": 14.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Curar aliados (para el online).",
+    "costo": 24.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Regeneración continua.",
+    "costo": 40.0,
+    "dano": 0.0
+   }
+  ]
+ },
+ "madera": {
+  "nombre": "Madera",
+  "categoria": "kekkei",
+  "ranura": "activo",
+  "puntos": 5,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "hoja",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "tierra",
+    "agua"
+   ],
+   "linaje": "madera"
+  },
+  "ventaja": "Control total del terreno.",
+  "desventaja": "Carga larga.",
+  "niveles": [
+   {
+    "descripcion": "Raíces que atrapan.",
+    "costo": 20.0,
+    "dano": 10.0
+   },
+   {
+    "descripcion": "Bosque que bloquea el área.",
+    "costo": 36.0,
+    "dano": 16.0
+   },
+   {
+    "descripcion": "Dragón de madera gigante.",
+    "costo": 60.0,
+    "dano": 50.0
+   }
+  ]
+ },
+ "hielo": {
+  "nombre": "Hielo",
+  "categoria": "kekkei",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "cristal",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "agua",
+    "viento"
+   ],
+   "linaje": "hielo"
+  },
+  "ventaja": "Velocidad dentro de los espejos.",
+  "desventaja": "El fuego lo derrite.",
+  "niveles": [
+   {
+    "descripcion": "Agujas de hielo.",
+    "costo": 14.0,
+    "dano": 14.0
+   },
+   {
+    "descripcion": "Espejos de hielo para moverte.",
+    "costo": 28.0,
+    "dano": 20.0
+   },
+   {
+    "descripcion": "Domo de espejos que encierra al rival.",
+    "costo": 48.0,
+    "dano": 40.0
+   }
+  ]
+ },
+ "lava": {
+  "nombre": "Lava",
+  "categoria": "kekkei",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "llama",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "fuego",
+    "tierra"
+   ],
+   "linaje": "lava"
+  },
+  "ventaja": "Quema y deja el suelo fundido.",
+  "desventaja": "Lento y caro.",
+  "niveles": [
+   {
+    "descripcion": "Bolas de lava.",
+    "costo": 20.0,
+    "dano": 24.0
+   },
+   {
+    "descripcion": "Río de lava.",
+    "costo": 36.0,
+    "dano": 30.0
+   },
+   {
+    "descripcion": "Golem de lava.",
+    "costo": 58.0,
+    "dano": 44.0
+   }
+  ]
+ },
+ "arcilla": {
+  "nombre": "Arcilla Explosiva",
+  "categoria": "kekkei",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "ave",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "naturalezas": [
+    "tierra",
+    "rayo"
+   ],
+   "linaje": "arcilla"
+  },
+  "ventaja": "Explosiones teledirigidas.",
+  "desventaja": "El rayo la neutraliza.",
+  "niveles": [
+   {
+    "descripcion": "Arañas explosivas.",
+    "costo": 16.0,
+    "dano": 20.0
+   },
+   {
+    "descripcion": "Aves teledirigidas.",
+    "costo": 28.0,
+    "dano": 30.0
+   },
+   {
+    "descripcion": "Dragón de arcilla que bombardea.",
+    "costo": 50.0,
+    "dano": 40.0
+   }
+  ]
+ },
+ "arena": {
+  "nombre": "Arena",
+  "categoria": "kekkei",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "roca",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "linaje": "arena"
+  },
+  "ventaja": "Defensa automática.",
+  "desventaja": "El agua la vuelve pesada y lenta.",
+  "niveles": [
+   {
+    "descripcion": "Escudo automático.",
+    "costo": 14.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Ataúd que atrapa.",
+    "costo": 28.0,
+    "dano": 30.0
+   },
+   {
+    "descripcion": "Funeral de arena gigante.",
+    "costo": 50.0,
+    "dano": 60.0
+   }
+  ]
+ },
+ "sharingan": {
+  "nombre": "Sharingan",
+  "categoria": "ojos",
+  "ranura": "modo",
+  "puntos": 1,
+  "implementado": true,
+  "mecanica": "modo_ocular",
+  "naturaleza": "",
+  "icono": "ojo",
+  "apuntable": false,
+  "recarga": 1.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "linaje": "sharingan"
+  },
+  "ventaja": "Avisos de ataques y proyectiles lentos.",
+  "desventaja": "Gasta chakra cada segundo.",
+  "niveles": [
+   {
+    "descripcion": "1 tomoe: ves los ataques antes de que lleguen.",
+    "costo": 6.0,
+    "dano": 0.0,
+    "costo_por_segundo": 3.5,
+    "ralentiza_proyectiles": 0.7
+   },
+   {
+    "descripcion": "2 tomoe: los proyectiles enemigos van más lentos.",
+    "costo": 8.0,
+    "dano": 0.0,
+    "costo_por_segundo": 3.0,
+    "ralentiza_proyectiles": 0.55
+   },
+   {
+    "descripcion": "3 tomoe: percepción completa.",
+    "costo": 10.0,
+    "dano": 0.0,
+    "costo_por_segundo": 2.6,
+    "ralentiza_proyectiles": 0.4
+   }
+  ],
+  "patron": 1
+ },
+ "mangekyo": {
+  "nombre": "Mangekyō Sharingan",
+  "categoria": "ojos",
+  "ranura": "modo",
+  "puntos": 3,
+  "implementado": true,
+  "mecanica": "modo_ocular",
+  "naturaleza": "",
+  "icono": "ojo",
+  "apuntable": false,
+  "recarga": 1.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "linaje": "mangekyo"
+  },
+  "ventaja": "Habilita Amaterasu, Susanoo, Tsukuyomi y Kamui.",
+  "desventaja": "Gasta mucho chakra; sus jutsus causan ceguera progresiva.",
+  "niveles": [
+   {
+    "descripcion": "Despierta el Mangekyō.",
+    "costo": 10.0,
+    "dano": 0.0,
+    "costo_por_segundo": 4.5,
+    "ralentiza_proyectiles": 0.5
+   },
+   {
+    "descripcion": "Control estable.",
+    "costo": 13.0,
+    "dano": 0.0,
+    "costo_por_segundo": 4.0,
+    "ralentiza_proyectiles": 0.42
+   },
+   {
+    "descripcion": "Dominio total del Mangekyō.",
+    "costo": 16.0,
+    "dano": 0.0,
+    "costo_por_segundo": 3.5,
+    "ralentiza_proyectiles": 0.35
+   }
+  ],
+  "patron": 2
+ },
+ "rinnegan": {
+  "nombre": "Rinnegan",
+  "categoria": "ojos",
+  "ranura": "modo",
+  "puntos": 4,
+  "implementado": true,
+  "mecanica": "modo_ocular",
+  "naturaleza": "",
+  "icono": "ojo",
+  "apuntable": false,
+  "recarga": 1.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "linaje": "rinnegan"
+  },
+  "ventaja": "Habilita Shinra Tensei y Chibaku Tensei.",
+  "desventaja": "Gasta mucho chakra.",
+  "niveles": [
+   {
+    "descripcion": "Despierta el Rinnegan.",
+    "costo": 12.0,
+    "dano": 0.0,
+    "costo_por_segundo": 4.5,
+    "ralentiza_proyectiles": 1.0
+   },
+   {
+    "descripcion": "Visión de los seis caminos.",
+    "costo": 15.0,
+    "dano": 0.0,
+    "costo_por_segundo": 4.0,
+    "ralentiza_proyectiles": 1.0
+   },
+   {
+    "descripcion": "Dominio total del Rinnegan.",
+    "costo": 18.0,
+    "dano": 0.0,
+    "costo_por_segundo": 3.5,
+    "ralentiza_proyectiles": 1.0
+   }
+  ],
+  "patron": 3
+ },
+ "byakugan": {
+  "nombre": "Byakugan",
+  "categoria": "ojos",
+  "ranura": "modo",
+  "puntos": 2,
+  "implementado": true,
+  "mecanica": "modo_ocular",
+  "naturaleza": "",
+  "icono": "ojo",
+  "apuntable": false,
+  "recarga": 1.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "linaje": "byakugan"
+  },
+  "ventaja": "Habilita 64 Palmas y Rotación.",
+  "desventaja": "Gasta chakra cada segundo.",
+  "niveles": [
+   {
+    "descripcion": "Visión de 360°.",
+    "costo": 5.0,
+    "dano": 0.0,
+    "costo_por_segundo": 2.5,
+    "ralentiza_proyectiles": 1.0
+   },
+   {
+    "descripcion": "Ves los puntos de chakra.",
+    "costo": 7.0,
+    "dano": 0.0,
+    "costo_por_segundo": 2.2,
+    "ralentiza_proyectiles": 1.0
+   },
+   {
+    "descripcion": "Visión a gran distancia.",
+    "costo": 9.0,
+    "dano": 0.0,
+    "costo_por_segundo": 2.0,
+    "ralentiza_proyectiles": 1.0
+   }
+  ],
+  "patron": 4
+ },
+ "tsukuyomi": {
+  "nombre": "Tsukuyomi",
+  "categoria": "ojos",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "ojo",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "modo": [
+    "mangekyo"
+   ]
+  },
+  "ventaja": "Inmovilización imparable.",
+  "desventaja": "Ceguera progresiva.",
+  "niveles": [
+   {
+    "descripcion": "Paraliza 2 s.",
+    "costo": 24.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Paraliza 4 s.",
+    "costo": 36.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Paraliza 6 s y deja al rival sin chakra.",
+    "costo": 55.0,
+    "dano": 0.0
+   }
+  ],
+  "requiere_modo_activo": [
+   "mangekyo"
+  ]
+ },
+ "amaterasu": {
+  "nombre": "Amaterasu",
+  "categoria": "ojos",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": true,
+  "mecanica": "amaterasu",
+  "naturaleza": "fuego_negro",
+  "icono": "llama_negra",
+  "apuntable": true,
+  "recarga": 7.0,
+  "tiempo_sellos": 0.25,
+  "sellos": [],
+  "alcance": 22.0,
+  "requisitos": {
+   "modo": [
+    "mangekyo"
+   ]
+  },
+  "ventaja": "Fuego que no se apaga y quema durante segundos.",
+  "desventaja": "Ceguera progresiva; la lluvia no la apaga.",
+  "niveles": [
+   {
+    "descripcion": "Llama negra en un punto.",
+    "costo": 20.0,
+    "dano": 8.0,
+    "duracion": 5.0,
+    "propaga_radio": 0.0,
+    "armadura": 0.0,
+    "ceguera": 0.1,
+    "zona_radio": 1.4,
+    "sacudida": 0.3,
+    "marca": 1.6,
+    "particulas": 50
+   },
+   {
+    "descripcion": "Las llamas se propagan a lo que tocan.",
+    "costo": 32.0,
+    "dano": 10.0,
+    "duracion": 6.0,
+    "propaga_radio": 4.8,
+    "armadura": 0.0,
+    "ceguera": 0.14,
+    "zona_radio": 1.8,
+    "sacudida": 0.5,
+    "marca": 2.6,
+    "particulas": 110
+   },
+   {
+    "descripcion": "Armadura de llamas negras.",
+    "costo": 48.0,
+    "dano": 12.0,
+    "duracion": 8.0,
+    "propaga_radio": 4.8,
+    "armadura": 8.0,
+    "armadura_radio": 2.4,
+    "ceguera": 0.2,
+    "zona_radio": 2.4,
+    "sacudida": 0.9,
+    "marca": 4.0,
+    "particulas": 220
+   }
+  ],
+  "requiere_modo_activo": [
+   "mangekyo"
+  ]
+ },
+ "susanoo": {
+  "nombre": "Susanoo",
+  "categoria": "ojos",
+  "ranura": "activo",
+  "puntos": 5,
+  "implementado": true,
+  "mecanica": "susanoo",
+  "naturaleza": "",
+  "icono": "susanoo",
+  "apuntable": false,
+  "recarga": 12.0,
+  "tiempo_sellos": 0.3,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "modo": [
+    "mangekyo"
+   ]
+  },
+  "ventaja": "Defensa absoluta y ataques a distancia.",
+  "desventaja": "Drena chakra y vida cada segundo.",
+  "niveles": [
+   {
+    "descripcion": "Costillas que protegen.",
+    "costo": 25.0,
+    "dano": 0.0,
+    "duracion": 8.0,
+    "reduccion": 0.5,
+    "drena_chakra": 3.0,
+    "drena_vida": 1.0,
+    "flecha_cada": 0.0,
+    "espada_cada": 0.0,
+    "sacudida": 0.4
+   },
+   {
+    "descripcion": "Torso con arco que dispara flechas.",
+    "costo": 40.0,
+    "dano": 18.0,
+    "duracion": 10.0,
+    "reduccion": 0.6,
+    "drena_chakra": 4.5,
+    "drena_vida": 1.5,
+    "flecha_cada": 1.5,
+    "espada_cada": 0.0,
+    "sacudida": 0.7
+   },
+   {
+    "descripcion": "Susanoo completo con espada.",
+    "costo": 60.0,
+    "dano": 40.0,
+    "duracion": 12.0,
+    "reduccion": 0.75,
+    "drena_chakra": 6.0,
+    "drena_vida": 2.0,
+    "flecha_cada": 1.2,
+    "espada_cada": 2.0,
+    "espada_radio": 4.5,
+    "sacudida": 1.2
+   }
+  ],
+  "requiere_modo_activo": [
+   "mangekyo"
+  ]
+ },
+ "kamui": {
+  "nombre": "Kamui",
+  "categoria": "ojos",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "espiral",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "modo": [
+    "mangekyo"
+   ]
+  },
+  "ventaja": "Evita cualquier ataque.",
+  "desventaja": "No atacas mientras eres intangible.",
+  "niveles": [
+   {
+    "descripcion": "Intangibilidad breve.",
+    "costo": 18.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Intangibilidad larga.",
+    "costo": 28.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Absorbe proyectiles enemigos.",
+    "costo": 44.0,
+    "dano": 0.0
+   }
+  ],
+  "requiere_modo_activo": [
+   "mangekyo"
+  ]
+ },
+ "shinra_tensei": {
+  "nombre": "Shinra Tensei",
+  "categoria": "ojos",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": true,
+  "mecanica": "shinra",
+  "naturaleza": "",
+  "icono": "ondas",
+  "apuntable": false,
+  "recarga": 9.0,
+  "tiempo_sellos": 0.25,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "modo": [
+    "rinnegan"
+   ]
+  },
+  "ventaja": "Repele personas y proyectiles a la vez.",
+  "desventaja": "Quedas vulnerable 5 s después (sin jutsus y recibes más daño).",
+  "niveles": [
+   {
+    "descripcion": "Onda de repulsión pequeña.",
+    "costo": 22.0,
+    "dano": 15.0,
+    "radio": 5.0,
+    "empuje": 10.0,
+    "crater": 0.0,
+    "sacudida": 0.5,
+    "marca": 2.0,
+    "particulas": 60
+   },
+   {
+    "descripcion": "Onda grande.",
+    "costo": 36.0,
+    "dano": 28.0,
+    "radio": 9.0,
+    "empuje": 16.0,
+    "crater": 0.0,
+    "sacudida": 0.8,
+    "marca": 4.0,
+    "particulas": 140
+   },
+   {
+    "descripcion": "Onda que arrasa el área y deja un cráter.",
+    "costo": 55.0,
+    "dano": 45.0,
+    "radio": 16.0,
+    "empuje": 26.0,
+    "crater": 9.0,
+    "sacudida": 1.4,
+    "marca": 9.0,
+    "particulas": 300
+   }
+  ],
+  "requiere_modo_activo": [
+   "rinnegan"
+  ],
+  "vulnerable": 5.0
+ },
+ "chibaku_tensei": {
+  "nombre": "Chibaku Tensei",
+  "categoria": "ojos",
+  "ranura": "activo",
+  "puntos": 5,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "ondas",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "modo": [
+    "rinnegan"
+   ],
+   "rango": "kage"
+  },
+  "ventaja": "Atrapa a todos los enemigos.",
+  "desventaja": "Chakra y vida al mínimo después.",
+  "niveles": [
+   {
+    "descripcion": "Esfera pequeña.",
+    "costo": 40.0,
+    "dano": 20.0
+   },
+   {
+    "descripcion": "Esfera que atrae rocas.",
+    "costo": 60.0,
+    "dano": 35.0
+   },
+   {
+    "descripcion": "Esfera gigante que atrapa a todos.",
+    "costo": 90.0,
+    "dano": 60.0
+   }
+  ],
+  "requiere_modo_activo": [
+   "rinnegan"
+  ]
+ },
+ "palmas_64": {
+  "nombre": "64 Palmas",
+  "categoria": "ojos",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "puno",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "modo": [
+    "byakugan"
+   ]
+  },
+  "ventaja": "Corta el chakra del rival.",
+  "desventaja": "Bloquea el chakra del rival pero exige estar pegado.",
+  "niveles": [
+   {
+    "descripcion": "8 palmas.",
+    "costo": 12.0,
+    "dano": 16.0
+   },
+   {
+    "descripcion": "64 palmas.",
+    "costo": 22.0,
+    "dano": 40.0
+   },
+   {
+    "descripcion": "128 palmas.",
+    "costo": 36.0,
+    "dano": 70.0
+   }
+  ],
+  "requiere_modo_activo": [
+   "byakugan"
+  ]
+ },
+ "rotacion": {
+  "nombre": "Rotación",
+  "categoria": "ojos",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "ondas",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "modo": [
+    "byakugan"
+   ]
+  },
+  "ventaja": "Defensa total por un instante.",
+  "desventaja": "No te mueves mientras giras.",
+  "niveles": [
+   {
+    "descripcion": "Escudo giratorio.",
+    "costo": 12.0,
+    "dano": 8.0
+   },
+   {
+    "descripcion": "Escudo grande que repele jutsus.",
+    "costo": 22.0,
+    "dano": 16.0
+   },
+   {
+    "descripcion": "Onda de aire que golpea a distancia.",
+    "costo": 34.0,
+    "dano": 26.0
+   }
+  ],
+  "requiere_modo_activo": [
+   "byakugan"
+  ]
+ },
+ "ocho_puertas": {
+  "nombre": "Ocho Puertas Internas",
+  "categoria": "cuerpo",
+  "ranura": "modo",
+  "puntos": 5,
+  "implementado": true,
+  "mecanica": "ocho_puertas",
+  "naturaleza": "",
+  "icono": "puerta",
+  "apuntable": false,
+  "recarga": 3.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 5
+   },
+   "atributos_max": {
+    "ninjutsu": 2
+   }
+  },
+  "ventaja": "Multiplica la velocidad y el taijutsu.",
+  "desventaja": "Cada puerta quita vida; la octava te deja casi muerto.",
+  "niveles": [
+   {
+    "descripcion": "Puertas 1-3: más velocidad y fuerza.",
+    "costo": 4.0,
+    "dano": 0.0,
+    "costo_vida_pct": 0.08,
+    "drena_vida": 1.5,
+    "vel_mult": 1.3,
+    "taijutsu_mult": 1.5,
+    "aura": 1
+   },
+   {
+    "descripcion": "Puertas 4-6: velocidad y fuerza extremas.",
+    "costo": 8.0,
+    "dano": 0.0,
+    "costo_vida_pct": 0.16,
+    "drena_vida": 3.0,
+    "vel_mult": 1.55,
+    "taijutsu_mult": 2.2,
+    "aura": 2
+   },
+   {
+    "descripcion": "Puertas 7-8 con golpe definitivo.",
+    "costo": 12.0,
+    "dano": 220.0,
+    "costo_vida_pct": 0.3,
+    "drena_vida": 6.0,
+    "vel_mult": 1.9,
+    "taijutsu_mult": 3.0,
+    "aura": 3,
+    "golpe_definitivo": true,
+    "definitivo_radio": 5.5,
+    "sacudida": 1.5,
+    "marca": 8.0
+   }
+  ]
+ },
+ "modo_sabio": {
+  "nombre": "Modo Sabio",
+  "categoria": "cuerpo",
+  "ranura": "modo",
+  "puntos": 4,
+  "implementado": false,
+  "mecanica": "",
+  "naturaleza": "",
+  "icono": "hoja",
+  "apuntable": false,
+  "recarga": 3.0,
+  "tiempo_sellos": 0.6,
+  "sellos": [],
+  "alcance": 20.0,
+  "requisitos": {
+   "atributos_min": {
+    "estamina": 4
+   }
+  },
+  "ventaja": "Energía natural: más daño y percepción.",
+  "desventaja": "Cargar exige quedarte quieto y se rompe si te mueves.",
+  "niveles": [
+   {
+    "descripcion": "Sentidos mejorados.",
+    "costo": 10.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "+Daño a todo.",
+    "costo": 16.0,
+    "dano": 0.0
+   },
+   {
+    "descripcion": "Transformación completa.",
+    "costo": 24.0,
+    "dano": 0.0
+   }
+  ]
+ },
+ "golpe": {
+  "nombre": "Golpe",
+  "tipo": "taijutsu",
+  "ventana_combo": 0.55,
+  "costo_estamina": 5.0,
+  "recarga": 0.0,
+  "pasos": [
+   {
+    "dano": 7.0,
+    "alcance": 2.0,
+    "angulo": 80.0,
+    "duracion": 0.3,
+    "impacto": 0.12,
+    "empuje": 1.2,
+    "derriba": false
+   },
+   {
+    "dano": 7.0,
+    "alcance": 2.0,
+    "angulo": 80.0,
+    "duracion": 0.3,
+    "impacto": 0.12,
+    "empuje": 1.2,
+    "derriba": false
+   },
+   {
+    "dano": 12.0,
+    "alcance": 2.3,
+    "angulo": 100.0,
+    "duracion": 0.45,
+    "impacto": 0.2,
+    "empuje": 4.0,
+    "derriba": true
+   }
+  ],
+  "interno": true
+ },
+ "esquivar": {
+  "nombre": "Esquivar",
+  "tipo": "movimiento",
+  "costo_estamina": 22.0,
+  "distancia": 4.5,
+  "duracion": 0.28,
+  "invulnerable": 0.25,
+  "recarga": 0.6,
+  "interno": true
+ },
+ "saltar": {
+  "nombre": "Saltar",
+  "tipo": "movimiento",
+  "fuerza": 9.0,
+  "costo_estamina": 6.0,
+  "recarga": 0.0,
+  "interno": true
+ },
+ "bala_agua": {
+  "nombre": "Bala de Agua",
+  "tipo": "proyectil",
+  "naturaleza": "agua",
+  "sellos": [
+   "tigre",
+   "pajaro"
+  ],
+  "tiempo_sellos": 0.5,
+  "recarga": 2.6,
+  "alcance": 26.0,
+  "niveles": [
+   {
+    "costo": 8.0,
+    "dano": 5.5,
+    "velocidad": 14.0,
+    "radio": 0.3,
+    "radio_explosion": 0.8,
+    "rafaga": 2,
+    "intervalo_rafaga": 0.2,
+    "sacudida": 0.2,
+    "luz": 0.0,
+    "luz_rango": 0.0,
+    "particulas": 20,
+    "marca": 0.0
+   }
+  ],
+  "interno": true
+ },
+ "flecha_susanoo": {
+  "nombre": "Flecha de Susanoo",
+  "tipo": "proyectil",
+  "naturaleza": "",
+  "interno": true,
+  "recarga": 0.0,
+  "alcance": 30.0,
+  "sellos": [],
+  "tiempo_sellos": 0.0,
+  "niveles": [
+   {
+    "costo": 0.0,
+    "dano": 18.0,
+    "velocidad": 32.0,
+    "radio": 0.25,
+    "radio_explosion": 1.0,
+    "sacudida": 0.2,
+    "luz": 2.0,
+    "luz_rango": 6.0,
+    "particulas": 20,
+    "marca": 0.0
+   },
+   {
+    "costo": 0.0,
+    "dano": 18.0,
+    "velocidad": 32.0,
+    "radio": 0.25,
+    "radio_explosion": 1.0,
+    "sacudida": 0.2,
+    "luz": 2.0,
+    "luz_rango": 6.0,
+    "particulas": 20,
+    "marca": 0.0
+   },
+   {
+    "costo": 0.0,
+    "dano": 18.0,
+    "velocidad": 32.0,
+    "radio": 0.25,
+    "radio_explosion": 1.0,
+    "sacudida": 0.2,
+    "luz": 2.0,
+    "luz_rango": 6.0,
+    "particulas": 20,
+    "marca": 0.0
+   }
+  ]
+ }
 }

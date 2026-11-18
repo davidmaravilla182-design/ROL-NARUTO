@@ -75,7 +75,11 @@ static func costo_chakra(jutsu_id: String, nivel: int, attrs: Dictionary) -> flo
 	var j := Datos.jutsu(jutsu_id)
 	var costo := 0.0
 	if j.has("niveles"):
-		costo = float(Datos.nivel_jutsu(jutsu_id, nivel).get("costo", 0.0))
+		var nd := Datos.nivel_jutsu(jutsu_id, nivel)
+		costo = float(nd.get("costo", 0.0))
+		# Técnicas que gastan una fracción de la reserva (Kirin): el mayor de los dos.
+		if nd.has("costo_pct"):
+			return maxf(costo, float(nd["costo_pct"]) * float(estadisticas(attrs)["chakra_max"]))
 	else:
 		costo = float(j.get("costo_activar", 0.0))
 	var mult := (1.0 + reserva(attrs) * Datos.formula("costo_por_reserva")) \
@@ -83,9 +87,10 @@ static func costo_chakra(jutsu_id: String, nivel: int, attrs: Dictionary) -> flo
 	return costo * maxf(mult, 0.1)
 
 
-static func costo_por_segundo(jutsu_id: String, attrs: Dictionary) -> float:
+static func costo_por_segundo(jutsu_id: String, attrs: Dictionary, nivel := 1) -> float:
 	var j := Datos.jutsu(jutsu_id)
-	return float(j.get("costo_por_segundo", 0.0)) * maxf(1.0 - control(attrs) * Datos.formula("ahorro_por_control"), 0.1)
+	var base := float(Datos.nivel_jutsu(jutsu_id, nivel).get("costo_por_segundo", j.get("costo_por_segundo", 0.0)))
+	return base * maxf(1.0 - control(attrs) * Datos.formula("ahorro_por_control"), 0.1)
 
 
 static func tiempo_sellos(jutsu_id: String, attrs: Dictionary) -> float:

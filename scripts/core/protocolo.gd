@@ -9,7 +9,9 @@ extends RefCounted
 ##   {"t": "accion", "id": String,                     # golpe, bola_fuego, chidori, sharingan, esquivar, saltar
 ##    "dir": Vector2, "objetivo": int, "exacto": bool}  # opcional: dirección XZ del disparo, objetivo fijado
 ##                                                     # (-1 = ninguno) y si la dirección es manual (sin asistencia)
-##   {"t": "nivel", "valor": int}                      # depuración: nivel de poder 1..3
+##   {"t": "nivel", "valor": int}                      # depuración: nivel forzado 1..3 (0 = automático por maestría)
+##   {"t": "repertorio", "activos": [id x4], "modo": id, "niveles_max": {id: 1..3},
+##    "maestria": {id: xp}, "prueba": bool}             # repertorio elegido en el menú (el servidor lo valida)
 ##   {"t": "reaparecer"}                               # depuración: reinicia enemigo, muñecos y jugador
 ##
 ## ESTADO (servidor -> cliente), una instantánea por tick:
@@ -27,8 +29,17 @@ const C_ENTRADA := "entrada"
 const C_ACCION := "accion"
 const C_NIVEL := "nivel"
 const C_REAPARECER := "reaparecer"
+const C_REPERTORIO := "repertorio"
 
-const ACCIONES := ["golpe", "bola_fuego", "chidori", "sharingan", "esquivar", "saltar"]
+## Acciones siempre disponibles; el resto son ids de jutsus de /data/jutsus.json.
+const ACCIONES := ["golpe", "esquivar", "saltar", "modo"]
+
+
+static func accion_valida(id: String) -> bool:
+	if id in ACCIONES:
+		return true
+	Datos.cargar()
+	return not id.begins_with("_") and Datos.jutsus.has(id)
 
 
 ## Valida y normaliza un comando que llega de un cliente (posible red no confiable).
@@ -52,7 +63,7 @@ static func sanear_comando(cmd: Variant) -> Dictionary:
 			return {"t": C_ENTRADA, "mov": v, "mira": mira}
 		C_ACCION:
 			var id := str(c.get("id", ""))
-			if id in ACCIONES:
+			if accion_valida(id):
 				var r := {"t": C_ACCION, "id": id, "dir": Vector2.ZERO, "objetivo": -1, "exacto": false}
 				var d: Variant = c.get("dir", Vector2.ZERO)
 				if typeof(d) == TYPE_VECTOR2 and (d as Vector2).is_finite() and (d as Vector2).length() > 0.01:
@@ -63,7 +74,29 @@ static func sanear_comando(cmd: Variant) -> Dictionary:
 					r["objetivo"] = int(o)
 				return r
 		C_NIVEL:
-			return {"t": C_NIVEL, "valor": clampi(int(c.get("valor", 1)), 1, 3)}
+			return {"t": C_NIVEL, "valor": clampi(int(c.get("valor", 0)), 0, 3)}
+		C_REPERTORIO:
+			var activos: Array = []
+			var va: Variant = c.get("activos", [])
+			if typeof(va) == TYPE_ARRAY:
+				for a in (va as Array).slice(0, 4):
+					activos.append(str(a) if (str(a) == "" or accion_valida(str(a))) else "")
+			var niveles := {}
+			var vn: Variant = c.get("niveles_max", {})
+			if typeof(vn) == TYPE_DICTIONARY:
+				for k in (vn as Dictionary).keys():
+					if accion_valida(str(k)):
+						niveles[str(k)] = clampi(int(vn[k]), 1, 3)
+			var maestria := {}
+			var vm: Variant = c.get("maestria", {})
+			if typeof(vm) == TYPE_DICTIONARY:
+				for k in (vm as Dictionary).keys():
+					var xp := float(vm[k]) if (typeof(vm[k]) == TYPE_FLOAT or typeof(vm[k]) == TYPE_INT) else 0.0
+					if accion_valida(str(k)) and is_finite(xp):
+						maestria[str(k)] = clampf(xp, 0.0, 100000.0)
+			var modo := str(c.get("modo", ""))
+			return {"t": C_REPERTORIO, "activos": activos, "modo": modo if (modo == "" or accion_valida(modo)) else "",
+				"niveles_max": niveles, "maestria": maestria, "prueba": bool(c.get("prueba", false))}
 		C_REAPARECER:
 			return {"t": C_REAPARECER}
 	return {}

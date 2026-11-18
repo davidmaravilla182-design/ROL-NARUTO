@@ -21,9 +21,6 @@
     },
     "jutsus": [
       "golpe",
-      "bola_fuego",
-      "chidori",
-      "sharingan",
       "esquivar",
       "saltar"
     ],
@@ -40,6 +37,21 @@
       "emblema_espalda": true,
       "mascara": false,
       "peinado": "puntas"
+    },
+    "rango": "jonin",
+    "linajes": [
+      "sharingan",
+      "mangekyo"
+    ],
+    "contratos": [],
+    "repertorio": {
+      "activos": [
+        "bola_fuego",
+        "chidori",
+        "kirin",
+        ""
+      ],
+      "modo": "sharingan"
     }
   },
   "ninja_lluvia": {
@@ -89,7 +101,10 @@
       "peinado": "corto",
       "capa": true,
       "capa_color": "#3e4556"
-    }
+    },
+    "rango": "chunin",
+    "linajes": [],
+    "contratos": []
   },
   "muneco": {
     "nombre": "Muñeco de práctica",
@@ -106,6 +121,9 @@
       "estamina": 0,
       "sellos": 0
     },
-    "jutsus": []
+    "jutsus": [],
+    "rango": "genin",
+    "linajes": [],
+    "contratos": []
   }
 }

@@ -10,6 +10,7 @@ var mapa: Mapa
 var clima := "lluvia"
 var entidades: Array[EntidadServidor] = []
 var proyectiles: Array = []        # [Dictionary]
+var zonas: Array = []              # zonas de daño en el suelo: suelo ardiente, llamas negras...
 var eventos: Array = []
 var tick := 0
 var dt_tick := 1.0 / 30.0
@@ -82,6 +83,11 @@ func _crear_entidad(plantilla: String, p: Vector3) -> EntidadServidor:
 	return e
 
 
+func nuevo_id() -> int:
+	_siguiente_id += 1
+	return _siguiente_id - 1
+
+
 func entidad(eid: int) -> EntidadServidor:
 	for e in entidades:
 		if e.id == eid:
@@ -118,6 +124,8 @@ func aplicar_comando(e: EntidadServidor, cmd: Dictionary) -> void:
 		Protocolo.C_NIVEL:
 			e.nivel_poder = int(cmd["valor"])
 			_evento({"tipo": "nivel", "entidad": e.id, "nivel": e.nivel_poder})
+		Protocolo.C_REPERTORIO:
+			aplicar_repertorio(e, cmd)
 		Protocolo.C_ACCION:
 			# Dirección y objetivo del disparo viajan en el comando (igual offline y en red).
 			e.apuntado = {
@@ -128,8 +136,41 @@ func aplicar_comando(e: EntidadServidor, cmd: Dictionary) -> void:
 			_accion(e, str(cmd["id"]))
 
 
+## Repertorio enviado por el cliente: se valida con las mismas reglas que el menú.
+## En modo offline la maestría guardada viene del cliente; en red debería venir de la base de datos del servidor.
+func aplicar_repertorio(e: EntidadServidor, cmd: Dictionary) -> void:
+	if e.tipo != "jugador":
+		return
+	e.maestria = (cmd.get("maestria", {}) as Dictionary).duplicate()
+	var rep := {"activos": cmd.get("activos", []), "modo": cmd.get("modo", ""), "niveles_max": cmd.get("niveles_max", {})}
+	var v := Repertorio.validar(rep, Repertorio.ficha(e.plantilla_id, e.maestria), bool(cmd.get("prueba", false)))
+	if not v["ok"]:
+		rep = Repertorio.repertorio_por_defecto(e.plantilla_id)
+		_evento({"tipo": "mensaje", "entidad": e.id, "clave": "rep_invalido_servidor"})
+	e.aplicar_repertorio(rep)
+	_evento({"tipo": "repertorio", "entidad": e.id, "jutsus": e.jutsus, "modo": e.modo})
+
+
+## Nivel efectivo de una técnica para una entidad (maestría, máximo elegido y depuración).
+func nivel_de(e: EntidadServidor, id: String) -> int:
+	return Repertorio.nivel_efectivo(id, float(e.maestria.get(id, 0.0)), int(e.repertorio.get("niveles_max", {}).get(id, 3)), e.nivel_poder)
+
+
+## Experiencia de maestría (solo jugadores). Avisa al subir de nivel.
+func ganar_xp(e: EntidadServidor, id: String, cantidad: float) -> void:
+	if e.tipo != "jugador" or id in Repertorio.MODOS_BASE or not Datos.jutsus.has(id) or Datos.jutsu(id).get("interno", false):
+		return
+	var antes := float(e.maestria.get(id, 0.0))
+	var ahora := antes + cantidad
+	e.maestria[id] = ahora
+	var n0 := Repertorio.nivel_desbloqueado(antes)
+	var n1 := Repertorio.nivel_desbloqueado(ahora)
+	_evento({"tipo": "maestria", "entidad": e.id, "jutsu": id, "xp": ahora, "nivel": n1, "subio": n1 > n0})
+
+
 func reaparecer_todo() -> void:
 	proyectiles.clear()
+	zonas.clear()
 	for e in entidades:
 		e.reiniciar()
 		if e.ia != null:
@@ -148,7 +189,12 @@ func _mensaje(e: EntidadServidor, clave: String) -> void:
 
 
 func _accion(e: EntidadServidor, id: String) -> void:
-	if not e.vivo() or not (id in e.jutsus):
+	if id == "modo":
+		id = e.modo
+	if not e.vivo() or id == "" or not (id in e.jutsus):
+		return
+	if id == e.modo:
+		Tecnicas.alternar_modo(self, e)
 		return
 	match id:
 		"golpe":
@@ -165,10 +211,9 @@ func _accion(e: EntidadServidor, id: String) -> void:
 				_evento({"tipo": "salto", "entidad": e.id})
 		"esquivar":
 			_accion_esquivar(e)
-		"sharingan":
-			_accion_sharingan(e)
-		"bola_fuego", "chidori", "bala_agua":
-			_accion_jutsu(e, id)
+		_:
+			if Datos.jutsu(id).get("implementado", true) or Datos.jutsu(id).get("interno", false):
+				_accion_jutsu(e, id)
 
 
 func _accion_golpe(e: EntidadServidor) -> void:
@@ -231,39 +276,36 @@ func _accion_esquivar(e: EntidadServidor) -> void:
 	_evento({"tipo": "esquiva", "entidad": e.id, "dir": dir})
 
 
-func _accion_sharingan(e: EntidadServidor) -> void:
-	if e.recarga("sharingan") > 0.0 or not e.vivo():
-		return
-	var j := Datos.jutsu("sharingan")
-	if e.sharingan:
-		e.sharingan = false
-	else:
-		var costo := Combate.costo_chakra("sharingan", 1, e.attrs)
-		if e.chakra < costo:
-			_mensaje(e, "msg_sin_chakra")
-			return
-		e.chakra -= costo
-		e.sharingan = true
-	e.recargas["sharingan"] = float(j["recarga"])
-	_evento({"tipo": "sharingan", "entidad": e.id, "activo": e.sharingan})
-
-
 func _accion_jutsu(e: EntidadServidor, id: String) -> void:
+	var j := Datos.jutsu(id)
+	# Susanoo activo: volver a pulsarlo lo deshace.
+	if id == "susanoo" and e.efectos.has("susanoo"):
+		e.efectos.erase("susanoo")
+		_evento({"tipo": "susanoo", "entidad": e.id, "activo": false})
+		return
 	if not _puede_actuar(e):
+		return
+	if e.efectos.has("vulnerable"):
+		_mensaje(e, "msg_bloqueado_jutsu")
 		return
 	if e.recarga(id) > 0.0:
 		_mensaje(e, "msg_recarga")
 		return
-	var nivel := e.nivel_poder
-	var j := Datos.jutsu(id)
-	if j.get("niveles", []).size() < nivel:
-		nivel = j["niveles"].size()
+	var req_modo: Array = j.get("requiere_modo_activo", [])
+	if not req_modo.is_empty() and not (e.modo_activo and e.modo in req_modo):
+		_evento({"tipo": "mensaje", "entidad": e.id, "clave": "msg_requiere_modo", "args": [Datos.jutsu(str(req_modo[0])).get("nombre", "")]})
+		return
+	if str(j.get("clima", "")) == "tormenta" and not Datos.reglas.get("clima", {}).get(clima, {}).get("tormenta", false):
+		_mensaje(e, "msg_sin_tormenta")
+		return
+	var nivel := nivel_de(e, id)
 	var costo := Combate.costo_chakra(id, nivel, e.attrs)
 	if e.chakra < costo:
 		_mensaje(e, "msg_sin_chakra")
 		return
 	e.chakra -= costo
 	e.recargas[id] = float(j["recarga"])
+	ganar_xp(e, id, float(Datos.reglas["maestria"]["xp_uso"]))
 	var t := Combate.tiempo_sellos(id, e.attrs)
 	var dir_cmd: Vector2 = e.apuntado.get("dir", Vector2.ZERO)
 	if dir_cmd.length() > 0.1:
@@ -298,6 +340,8 @@ func paso(dt: float) -> void:
 	tick += 1
 	for e in entidades:
 		_actualizar_recursos(e, dt)
+		Tecnicas.actualizar_entidad(self, e, dt)
+	Tecnicas.actualizar_zonas(self, dt)
 	for e in entidades:
 		if e.ia != null and e.vivo():
 			e.ia.pensar(self, dt)
@@ -314,13 +358,9 @@ func _actualizar_recursos(e: EntidadServidor, dt: float) -> void:
 	e.combo_ventana = maxf(e.combo_ventana - dt, 0.0)
 	if not e.vivo() or e.tipo == "muneco":
 		return
-	if e.sharingan:
-		e.chakra -= Combate.costo_por_segundo("sharingan", e.attrs) * dt
-		if e.chakra <= 0.0:
-			e.chakra = 0.0
-			e.sharingan = false
-			_evento({"tipo": "sharingan", "entidad": e.id, "activo": false})
-	else:
+	# El chakra se regenera si no hay un modo ocular ni un Susanoo consumiéndolo.
+	var gastando := (e.modo_activo and e.modo in Tecnicas.OJOS) or e.efectos.has("susanoo")
+	if not gastando:
 		e.chakra = minf(e.chakra + float(e.stats["regen_chakra"]) * dt, float(e.stats["chakra_max"]))
 	if e.estado == "libre":
 		e.estamina = minf(e.estamina + float(e.stats["regen_estamina"]) * dt, float(e.stats["estamina_max"]))
@@ -350,6 +390,8 @@ func _actualizar_estado(e: EntidadServidor, dt: float) -> void:
 				_iniciar_embiste(e)
 		"chidori_embiste":
 			_actualizar_embiste(e, dt)
+		"kirin":
+			Tecnicas.tick_kirin(self, e, dt)
 		"rafaga":
 			e.accion["siguiente"] = float(e.accion["siguiente"]) - dt
 			if float(e.accion["siguiente"]) <= 0.0 and int(e.accion["quedan"]) > 0:
@@ -368,19 +410,31 @@ func _ejecutar_jutsu(e: EntidadServidor) -> void:
 	var id := str(e.accion["jutsu"])
 	var nivel := int(e.accion["nivel"])
 	var nd := Datos.nivel_jutsu(id, nivel)
-	match id:
-		"bola_fuego":
+	var mecanica := str(Datos.jutsu(id).get("mecanica", Datos.jutsu(id).get("tipo", "")))
+	if id == "bala_agua":
+		mecanica = "rafaga"
+	match mecanica:
+		"proyectil":
 			_disparar_proyectil(e, id, nivel)
 			e.poner_estado("lanzar", 0.35, {"jutsu": id, "nivel": nivel})
-		"bala_agua":
+		"kirin":
+			Tecnicas.preparar_kirin(self, e, nivel)
+		"amaterasu":
+			Tecnicas.lanzar_amaterasu(self, e, nivel)
+		"susanoo":
+			Tecnicas.alternar_susanoo(self, e, nivel)
+		"shinra":
+			Tecnicas.shinra(self, e, nivel)
+		"rafaga":
 			var n := int(nd.get("rafaga", 1))
 			var intervalo := float(nd.get("intervalo_rafaga", 0.2))
 			e.poner_estado("rafaga", intervalo * n, {"jutsu": id, "nivel": nivel, "quedan": n, "siguiente": 0.0, "intervalo": intervalo,
 				"yaw_apuntado": e.accion.get("yaw_apuntado", e.yaw), "objetivo": -1, "exacto": false})
-		"chidori":
+		"embiste":
+			# Carga en la mano (estado "chidori_carga", compartido por embiste de rayo y esfera) y luego embiste.
 			e.poner_estado("chidori_carga", float(nd["carga"]), {"jutsu": id, "nivel": nivel, "yaw_apuntado": e.accion.get("yaw_apuntado", e.yaw),
 				"objetivo": e.accion.get("objetivo", -1), "exacto": e.accion.get("exacto", false)})
-			_evento({"tipo": "chidori_carga", "entidad": e.id, "nivel": nivel, "duracion": float(nd["carga"])})
+			_evento({"tipo": "chidori_carga", "entidad": e.id, "jutsu": id, "nivel": nivel, "duracion": float(nd["carga"])})
 		_:
 			e.poner_estado("libre", 0.0)
 
@@ -425,37 +479,76 @@ func _disparar_proyectil(e: EntidadServidor, id: String, nivel: int) -> void:
 
 func _iniciar_embiste(e: EntidadServidor) -> void:
 	var nivel := int(e.accion["nivel"])
-	var nd := Datos.nivel_jutsu("chidori", nivel)
+	var jid := str(e.accion.get("jutsu", "chidori"))
+	var nd := Datos.nivel_jutsu(jid, nivel)
 	var yaw_base := float(e.accion.get("yaw_apuntado", e.yaw))
 	e.yaw = yaw_base
 	var obj := _resolver_objetivo(e, float(nd["distancia"]) + 2.0)
 	e.yaw = _yaw_hacia(e.pos, obj.pos) if obj != null else yaw_base
 	var dir := e.adelante()
 	var dur := float(nd["distancia"]) / float(nd["velocidad"])
-	e.poner_estado("chidori_embiste", dur, {"jutsu": "chidori", "nivel": nivel, "dir": dir, "golpeo": false})
+	e.poner_estado("chidori_embiste", dur, {"jutsu": jid, "nivel": nivel, "dir": dir, "golpeo": false})
 	e.empuje = dir * float(nd["velocidad"])
-	_evento({"tipo": "chidori_embiste", "entidad": e.id, "nivel": nivel, "desde": e.pos, "dir": dir, "duracion": dur})
+	_evento({"tipo": "chidori_embiste", "entidad": e.id, "jutsu": jid, "nivel": nivel, "desde": e.pos, "dir": dir, "duracion": dur})
 
 
 func _actualizar_embiste(e: EntidadServidor, _dt: float) -> void:
 	var nivel := int(e.accion["nivel"])
-	var nd := Datos.nivel_jutsu("chidori", nivel)
+	var jid := str(e.accion.get("jutsu", "chidori"))
+	var nd := Datos.nivel_jutsu(jid, nivel)
+	var nat := str(Datos.jutsu(jid).get("naturaleza", ""))
 	if not e.accion["golpeo"]:
 		for o in entidades:
 			if o == e or not o.vivo():
 				continue
 			if o.centro().distance_to(e.centro() + e.adelante() * 0.5) <= float(nd["radio_golpe"]) + Datos.sim("radio_cuerpo"):
 				e.accion["golpeo"] = true
-				var dano := Combate.dano_jutsu("chidori", nivel, e.attrs, o.naturaleza_principal(), clima)
-				_aplicar_dano(o, dano, e, {"jutsu": "chidori", "naturaleza": "rayo", "derriba": true, "dir": e.adelante(), "empuje": 9.0, "nivel": nivel})
-				_cadena_rayo(e, o, dano, nivel)
-				# Termina el embiste al impactar, con un breve retroceso.
+				var dano := Combate.dano_jutsu(jid, nivel, e.attrs, o.naturaleza_principal(), clima)
+				_aplicar_dano(o, dano, e, {"jutsu": jid, "naturaleza": nat, "derriba": true, "dir": e.adelante(), "empuje": float(nd.get("empuje", 9.0)), "nivel": nivel})
+				if jid == "chidori":
+					_cadena_rayo(e, o, dano, nivel)
+					_descarga(e, o, dano, nivel, nd)
+				elif int(nd.get("clones", 0)) > 0:
+					_clones_rasengan(e, o, dano, nivel, nd)
+				# Termina el embiste al impactar, con un breve retroceso (embiste de rayo te deja expuesto).
 				e.empuje = -e.adelante() * 3.0
-				e.poner_estado("recuperacion", 0.3, {"jutsu": "chidori", "nivel": nivel})
+				e.poner_estado("recuperacion", 0.55 if jid == "chidori" else 0.3, {"jutsu": jid, "nivel": nivel})
 				return
 	if e.estado_t <= 0.0:
 		e.empuje = Vector3.ZERO
-		e.poner_estado("recuperacion", 0.25, {"jutsu": "chidori", "nivel": nivel})
+		e.poner_estado("recuperacion", 0.25, {"jutsu": jid, "nivel": nivel})
+
+
+## embiste de rayo N2: descarga a los cercanos; N3: descarga por todo el cuerpo en área.
+func _descarga(e: EntidadServidor, primero: EntidadServidor, dano: float, nivel: int, nd: Dictionary) -> void:
+	var radio := maxf(float(nd.get("descarga_radio", 0.0)), float(nd.get("area_radio", 0.0)))
+	if radio <= 0.0:
+		return
+	var puntos: Array = []
+	var factor := 0.6 if nd.has("area_radio") else 0.4
+	for o in entidades:
+		if o == e or o == primero or not o.vivo():
+			continue
+		if o.pos.distance_to(e.pos) <= radio:
+			_aplicar_dano(o, dano * factor, e, {"jutsu": "chidori", "naturaleza": "rayo", "derriba": nd.has("area_radio"), "dir": (o.pos - e.pos).normalized(), "empuje": 5.0, "nivel": nivel, "cadena": true})
+			puntos.append(o.centro())
+	_evento({"tipo": "descarga", "entidad": e.id, "nivel": nivel, "pos": e.centro(), "radio": radio, "puntos": puntos})
+
+
+## Rasengan N3: los clones golpean a otros enemigos cercanos con su propio Rasengan gigante.
+func _clones_rasengan(e: EntidadServidor, primero: EntidadServidor, dano: float, nivel: int, nd: Dictionary) -> void:
+	var puntos: Array = []
+	var quedan := int(nd.get("clones", 0))
+	for o in entidades:
+		if quedan <= 0:
+			break
+		if o == e or o == primero or not o.vivo() or o.equipo == e.equipo:
+			continue
+		if o.pos.distance_to(primero.pos) <= float(nd.get("clones_radio", 8.0)):
+			_aplicar_dano(o, dano, e, {"jutsu": "rasengan", "naturaleza": "", "derriba": true, "dir": (o.pos - primero.pos).normalized(), "empuje": float(nd.get("empuje", 14.0)), "nivel": nivel})
+			puntos.append(o.pos)
+			quedan -= 1
+	_evento({"tipo": "clones", "entidad": e.id, "nivel": nivel, "puntos": puntos, "desde": e.pos})
 
 
 ## La lluvia hace que el rayo salte a enemigos parados sobre charcos.
@@ -491,6 +584,8 @@ func _cadena_rayo(atacante: EntidadServidor, primero: EntidadServidor, dano: flo
 
 
 func _resolver_golpe(e: EntidadServidor, paso: int) -> void:
+	if paso == 2 and Tecnicas.golpe_definitivo(self, e):
+		return
 	var p: Dictionary = Datos.jutsu("golpe")["pasos"][paso]
 	var alcance := float(p["alcance"])
 	var medio_ang := deg_to_rad(float(p["angulo"]) * 0.5)
@@ -504,7 +599,7 @@ func _resolver_golpe(e: EntidadServidor, paso: int) -> void:
 			continue
 		if d.length() > 0.3 and f.angle_to(d.normalized()) > medio_ang:
 			continue
-		var dano := Combate.dano_taijutsu(paso, e.attrs)
+		var dano := Combate.dano_taijutsu(paso, e.attrs) * Tecnicas.multiplicador_taijutsu(e)
 		_aplicar_dano(o, dano, e, {"jutsu": "golpe", "naturaleza": "", "derriba": bool(p["derriba"]), "dir": f, "empuje": float(p["empuje"]), "paso": paso})
 
 
@@ -514,8 +609,8 @@ func _actualizar_proyectiles(dt: float) -> void:
 		var vel := float(p["velocidad"])
 		# modo ocular: los proyectiles que van hacia quien lo tiene activo avanzan más lento.
 		var obj := entidad(int(p["objetivo"]))
-		if obj != null and obj.sharingan:
-			vel *= float(Datos.jutsu("sharingan")["ralentiza_proyectiles"])
+		if obj != null:
+			vel *= Tecnicas.ralentizacion(obj)
 		var paso_v: Vector3 = p["dir"] * vel * dt
 		p["pos"] = p["pos"] + paso_v
 		p["recorrido"] = float(p["recorrido"]) + paso_v.length()
@@ -562,6 +657,11 @@ func _explotar(p: Dictionary, directo: EntidadServidor) -> void:
 		dir.y = 0
 		_aplicar_dano(e, dano, dueno, {"jutsu": id, "naturaleza": nat, "derriba": id == "bola_fuego" and nivel >= 2, "dir": dir.normalized() if dir.length() > 0.01 else p["dir"], "empuje": (1.5 + nivel * 1.5) if id == "bola_fuego" else 0.8, "nivel": nivel})
 	var suelo := Vector3(pos.x, 0, pos.z)
+	var nd := Datos.nivel_jutsu(id, nivel)
+	if float(nd.get("suelo_ardiente", 0.0)) > 0.0:
+		# Bola de Fuego N2/N3: el suelo queda ardiendo (la lluvia lo acorta).
+		var mod := Combate.modificador_clima(nat, clima)
+		Tecnicas.crear_zona(self, suelo, r * 0.7, float(nd["suelo_ardiente"]) * float(mod["tamano"]), float(nd.get("suelo_dps", 6.0)) * float(mod["dano"]), id, nivel, dueno.id if dueno != null else -1, nat)
 	_evento({"tipo": "explosion", "jutsu": id, "nivel": nivel, "pos": pos, "suelo": suelo, "radio": r, "proyectil": p["id"], "escala": p["escala"]})
 
 
@@ -571,7 +671,14 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 	if o.invulnerable_t > 0.0:
 		_evento({"tipo": "esquivado", "entidad": o.id})
 		return
+	cantidad *= Tecnicas.multiplicador_recibido(o)
 	o.vida = maxf(o.vida - cantidad, 0.0)
+	var jid := str(info.get("jutsu", ""))
+	if atacante != null and atacante != o and not info.get("dot", false) and not info.get("cadena", false):
+		ganar_xp(atacante, jid, float(Datos.reglas["maestria"]["xp_impacto"]))
+	# Armadura de llamas negras: quien la golpea cuerpo a cuerpo se enciende.
+	if jid == "golpe" and atacante != null and o.efectos.has("armadura_negra"):
+		Tecnicas.encender(self, atacante, o, int(o.efectos["armadura_negra"]["nivel"]), 4.0)
 	var mult := 1.0
 	if str(info.get("naturaleza", "")) != "":
 		mult = Combate.multiplicador_naturaleza(str(info["naturaleza"]), o.naturaleza_principal())
@@ -581,7 +688,10 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		"naturaleza_mult": mult, "cadena": bool(info.get("cadena", false)), "nivel": int(info.get("nivel", 1)),
 	})
 	var dir: Vector3 = info.get("dir", Vector3.ZERO)
+	if info.get("dot", false) and o.vida > 0.0:
+		return   # el daño continuo no interrumpe ni derriba
 	if o.vida <= 0.0:
+		Tecnicas.apagar_modo(self, o)
 		o.sharingan = false
 		o.poner_estado("muerto", 0.0)
 		o.empuje = dir * 4.0
@@ -611,7 +721,7 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	var puede_moverse := e.estado == "libre"
 	if puede_moverse and e.entrada_mov.length() > 0.05:
 		var v := Vector3(e.entrada_mov.x, 0, e.entrada_mov.y)
-		horiz = v * float(e.stats["velocidad"])
+		horiz = v * float(e.stats["velocidad"]) * Tecnicas.multiplicador_velocidad(e)
 		var objetivo_yaw := atan2(v.x, v.z)
 		e.yaw = lerp_angle(e.yaw, objetivo_yaw, minf(1.0, dt * 14.0))
 	horiz += e.empuje
@@ -672,7 +782,8 @@ func _resolver_objetivo(e: EntidadServidor, rango: float) -> EntidadServidor:
 	if bool(e.accion.get("exacto", false)):
 		return null
 	var yaw_base := float(e.accion.get("yaw_apuntado", e.yaw))
-	return _buscar_objetivo(e, yaw_base, Combate.precision_grados(e.attrs), rango)
+	# La ceguera progresiva (Mangekyō) reduce la asistencia de puntería.
+	return _buscar_objetivo(e, yaw_base, Combate.precision_grados(e.attrs) * (1.0 - e.ceguera * 0.7), rango)
 
 
 ## Objetivo vivo más conveniente dentro de un cono (asistencia de puntería).
@@ -724,7 +835,10 @@ func publicar_estado() -> void:
 	var proys: Array = []
 	for p in proyectiles:
 		proys.append({"id": p["id"], "jutsu": p["jutsu"], "pos": p["pos"], "dir": p["dir"], "radio": p["radio"], "nivel": p["nivel"], "dueno": p["dueno"]})
-	var base := {"tick": tick, "clima": clima, "entidades": ents, "proyectiles": proys, "eventos": eventos}
+	var zs: Array = []
+	for z in zonas:
+		zs.append({"id": z["id"], "pos": z["pos"], "radio": z["radio"], "jutsu": z["jutsu"], "nivel": z["nivel"], "t": z["t"], "total": z["total"]})
+	var base := {"tick": tick, "clima": clima, "entidades": ents, "proyectiles": proys, "zonas": zs, "eventos": eventos}
 	for peer in _peers.keys():
 		var est := base.duplicate()
 		est["tu_entidad"] = _peers[peer]

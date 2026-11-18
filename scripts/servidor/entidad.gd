@@ -30,8 +30,16 @@ var estado_t := 0.0
 var estado_total := 0.0
 var accion: Dictionary = {}   # datos de la acción en curso (jutsu, nivel, dirección...)
 var recargas: Dictionary = {}
-var sharingan := false
-var nivel_poder := 1
+var sharingan := false          # modo ocular que ralentiza proyectiles (ojo rojo) activo
+var nivel_poder := 0             # depuración: nivel forzado 1..3 (0 = automático por maestría)
+var modo := ""                   # modo equipado en la ranura de modo
+var modo_activo := false
+var modo_nivel := 1
+var repertorio: Dictionary = {}  # {activos, modo, niveles_max}
+var maestria: Dictionary = {}    # {jutsu: xp}
+var efectos: Dictionary = {}     # estados temporales: ardiendo, susanoo, vulnerable, armadura_negra, puertas
+var ceguera := 0.0
+var xp_modo_acum := 0.0
 var combo_paso := 0
 var combo_ventana := 0.0
 var invulnerable_t := 0.0
@@ -52,6 +60,8 @@ func configurar(plantilla: String, p_id: int) -> void:
 	attrs = d.get("atributos", {}).duplicate()
 	naturalezas = d.get("naturalezas", []).duplicate()
 	jutsus = d.get("jutsus", []).duplicate()
+	if tipo == "jugador":
+		aplicar_repertorio(Repertorio.repertorio_por_defecto(plantilla))
 	stats = Combate.estadisticas(attrs)
 	if d.has("vida_fija"):
 		stats["vida_max"] = float(d["vida_fija"])
@@ -71,10 +81,27 @@ func reiniciar() -> void:
 	accion = {}
 	recargas = {}
 	sharingan = false
+	modo_activo = false
+	efectos = {}
+	ceguera = 0.0
 	combo_paso = 0
 	combo_ventana = 0.0
 	invulnerable_t = 0.0
 	apuntado = {}
+
+
+## Equipa un repertorio ya validado: técnicas base + activos + modo.
+func aplicar_repertorio(rep: Dictionary) -> void:
+	repertorio = rep
+	jutsus = Repertorio.MODOS_BASE.duplicate()
+	for a in rep.get("activos", []):
+		if str(a) != "":
+			jutsus.append(str(a))
+	modo = str(rep.get("modo", ""))
+	if modo != "":
+		jutsus.append(modo)
+	modo_activo = false
+	sharingan = false
 
 
 func vivo() -> bool:
@@ -108,6 +135,23 @@ func recarga(jutsu_id: String) -> float:
 	return float(recargas.get(jutsu_id, 0.0))
 
 
+func _efectos_estado() -> Dictionary:
+	var r := {}
+	for k in efectos.keys():
+		r[k] = {"t": snappedf(minf(float(efectos[k]["t"]), 999.0), 0.01), "nivel": int(efectos[k].get("nivel", 1))}
+	return r
+
+
+## Nivel efectivo de cada técnica equipada (para que el cliente muestre costos y efectos).
+func _niveles_estado() -> Dictionary:
+	var r := {}
+	for j in jutsus:
+		if j in Repertorio.MODOS_BASE:
+			continue
+		r[j] = Repertorio.nivel_efectivo(j, float(maestria.get(j, 0.0)), int(repertorio.get("niveles_max", {}).get(j, 3)), nivel_poder)
+	return r
+
+
 func a_estado() -> Dictionary:
 	var r := {}
 	for k in recargas.keys():
@@ -132,6 +176,12 @@ func a_estado() -> Dictionary:
 		"paso": int(accion.get("paso", 0)),
 		"nivel": nivel_poder,
 		"sharingan": sharingan,
+		"modo": modo,
+		"modo_activo": modo_activo,
+		"ceguera": ceguera,
+		"efectos": _efectos_estado(),
+		"niveles": _niveles_estado(),
+		"maestria": maestria.duplicate(),
 		"recargas": r,
 		"en_suelo": en_suelo,
 		"en_charco": en_charco,
