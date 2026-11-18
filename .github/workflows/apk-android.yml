@@ -139,5 +139,5 @@ jobs:
           gh release create demo-latest "build/${APK_NOMBRE}" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "Demo más reciente (v0.1)" \
+            --title "Demo más reciente (v0.2)" \
             --notes "$NOTAS"

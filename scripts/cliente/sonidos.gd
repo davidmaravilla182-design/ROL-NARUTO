@@ -21,6 +21,15 @@ func _ready() -> void:
 	lluvia.volume_db = -14.0
 	add_child(lluvia)
 	lluvia.play()
+	# Pregenera el resto de sonidos de a uno por fotograma para evitar tirones al usarlos.
+	_pregenerar(["chidori", "fuego", "explosion", "golpe", "chapoteo", "agua", "trueno"])
+
+
+func _pregenerar(lista: Array) -> void:
+	if lista.is_empty() or not is_inside_tree():
+		return
+	Sonidos.stream(str(lista.pop_front()))
+	get_tree().process_frame.connect(_pregenerar.bind(lista), CONNECT_ONE_SHOT)
 
 
 func tocar(nombre: String, volumen_db := 0.0, tono := 1.0) -> void:

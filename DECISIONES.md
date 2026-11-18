@@ -39,3 +39,41 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - La keystore de debug se genera en el workflow y se **guarda en la caché de Actions** para que los APK sucesivos tengan la misma firma y se puedan instalar encima. Si la caché expira (7 días sin uso) se genera otra y habrá que desinstalar la versión anterior.
 - El release `demo-latest` se borra y se vuelve a crear en cada compilación, con el APK en un enlace fijo.
 - `tools/verificar.sh` (importar + pruebas + humo) corre en el hook de pre-commit (`.githooks/pre-commit`) y también en CI antes de exportar.
+
+## v0.2 — interfaz, apuntado y gráficos
+
+### Apuntado
+- La dirección del disparo va en el comando `accion` (`dir`, `objetivo`, `exacto`). El servidor tiene la última palabra: objetivo fijado válido > dirección exacta del arrastre > asistencia en cono. Así funciona igual en red.
+- **Toque rápido**: el cliente propone el enemigo más cercano dentro de 65° frente a la cámara y al alcance del jutsu; prefiere enemigos sobre muñecos. Sin candidato, usa la dirección de la cámara (el servidor todavía aplica su asistencia en cono).
+- **Arrastrar**: umbral de 26 px para entrar en modo apuntado (por debajo, cuenta como toque). Al soltar se dispara en la dirección exacta del dedo relativa a la cámara, sin asistencia.
+- **Cancelar**: un círculo a la izquierda del arco de botones; aparece solo mientras apuntas. Cancelar no envía ningún comando, por eso no gasta chakra ni inicia la recarga.
+- **Fijar objetivo**: el ciclo es «más cercano → siguiente → … → liberar». Se libera solo si el objetivo muere. La cámara gira suave para mantenerlo delante; el arrastre de cámara sigue cambiando la inclinación.
+- El golpe también usa el objetivo fijado para orientarse.
+
+### Interfaz
+- Tipografías con licencia **SIL OFL** descargadas de google/fonts: **Shojumaru** (títulos con trazo de pincel) y **Rajdhani** (interfaz, aire metálico). Están en `assets/fuentes/` con sus licencias.
+- Marcos de "metal de la aldea" dibujados por código: placa biselada, remaches, filo rojo y las 4 líneas del símbolo. El aviso legal y los carteles grandes van sobre un pergamino.
+- Iconos 100 % vectoriales por código (llama, rayo, ojo con tomoe, puño, esquiva, salto, mira, cancelar).
+- Botones en arco: el golpe grande en la esquina; anillo interior con esquivar, bola de fuego, Chidori y saltar; anillo exterior con Sharingan y fijar. Todo escala con el ajuste de tamaño.
+- Áreas seguras: se usa `DisplayServer.get_display_safe_area()` con un margen mínimo de 18 px (+6 px laterales por los bordes curvos).
+- La vibración usa `Input.vibrate_handheld` (permiso VIBRATE añadido al preset de Android).
+- Los ajustes se guardan en `user://ajustes.cfg`. Cambiar la calidad reinicia la escena de entrenamiento porque los materiales y efectos se construyen según la calidad.
+
+### Gráficos
+- Cel shading con `light()` propio en vez de `diffuse_toon` para tener 3 bandas, sombra azulada y rim. Las luces puntuales usan bandas sin color de sombra para no iluminar objetos lejanos.
+- Contorno por casco invertido en espacio mundo (sirve también para MultiMesh). En calidad media/baja solo los personajes tienen contorno.
+- Reflejos: `ReflectionProbe` en modo UPDATE_ONCE (se calcula una vez) en lugar de reflejos en pantalla, por rendimiento.
+- Las nubes van en un plano alto con shader y no en el shader del cielo: un cielo animado obligaría a recalcular la radiancia cada fotograma.
+- Las intensidades de fuego y rayo se bajaron tras ver capturas: con glow, un nivel 3 a máxima intensidad dejaba la pantalla en blanco.
+- Ojos: un quad con shader que dibuja esclerótica, iris y pupila; con el modo ocular se vuelve rojo con anillo y 3 tomoe que giran.
+
+### Sonido
+- No había forma de descargar efectos CC0 (los sitios no son accesibles desde el entorno de desarrollo), así que **todos los sonidos se sintetizan por código** al iniciar: el rayo combina chisporroteo, zumbido y cientos de trinos agudos que imitan "mil pájaros". Son creación propia, dedicados al dominio público (CC0). No se usa audio del anime.
+
+### Sensación de impacto
+- La pausa de impacto (0.07–0.09 s) y la cámara lenta (×0.3 durante 0.45 s en jutsus nivel 3) cambian `Engine.time_scale` solo en el cliente. El servidor compensa el `time_scale` y sigue en tiempo real. En modo offline las posiciones se ponen al día tras la pausa.
+
+### Pruebas y verificación
+- Nuevas pruebas de la dirección del disparo en el servidor (dirección exacta, objetivo fijado, asistencia del toque, flecha del Chidori, saneado del comando).
+- La prueba de humo carga la partida en las tres calidades y ejercita toque, arrastre, cancelar, fijar, pausa de impacto, cámara lenta y el menú de ajustes.
+- Los shaders se compilaron también con el renderizador **Mobile (Vulkan)** usando el Vulkan por software de Mesa, además de OpenGL.

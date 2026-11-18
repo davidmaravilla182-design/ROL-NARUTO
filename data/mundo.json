@@ -2,8 +2,8 @@
   "_nota": "Nombres del mundo. Cambiar aquí renombra todo el juego sin tocar código.",
   "juego": {
     "titulo": "Sombras de la Lluvia",
-    "subtitulo": "Demo de entrenamiento v0.1",
-    "version": "0.1"
+    "subtitulo": "Demo de entrenamiento v0.2",
+    "version": "0.2"
   },
   "aldeas": {
     "lluvia": {
@@ -17,40 +17,104 @@
   "clanes": {
     "uchiha": {
       "nombre": "Uchiha",
-      "naturalezas_afines": ["fuego", "rayo"],
+      "naturalezas_afines": [
+        "fuego",
+        "rayo"
+      ],
       "ojos": "Sharingan",
-      "emblema": { "color_superior": "#c8102e", "color_inferior": "#f2f2f2" }
+      "emblema": {
+        "color_superior": "#c8102e",
+        "color_inferior": "#f2f2f2"
+      }
     },
     "sin_clan": {
       "nombre": "Shinobi de la Lluvia",
-      "naturalezas_afines": ["agua"],
+      "naturalezas_afines": [
+        "agua"
+      ],
       "ojos": "",
       "emblema": null
     }
   },
   "naturalezas": {
     "_nota": "Cada naturaleza vence a la siguiente del ciclo: fuego > viento > rayo > tierra > agua > fuego.",
-    "ciclo": ["fuego", "viento", "rayo", "tierra", "agua"],
+    "ciclo": [
+      "fuego",
+      "viento",
+      "rayo",
+      "tierra",
+      "agua"
+    ],
     "ventaja": 1.25,
     "desventaja": 0.75,
     "datos": {
-      "fuego": { "nombre": "Fuego", "prefijo": "Katon", "color": "#ff6a1a" },
-      "viento": { "nombre": "Viento", "prefijo": "Fuuton", "color": "#9be7c4" },
-      "rayo": { "nombre": "Rayo", "prefijo": "Raiton", "color": "#8fd3ff" },
-      "tierra": { "nombre": "Tierra", "prefijo": "Doton", "color": "#b08a55" },
-      "agua": { "nombre": "Agua", "prefijo": "Suiton", "color": "#3a8dff" }
+      "fuego": {
+        "nombre": "Fuego",
+        "prefijo": "Katon",
+        "color": "#ff6a1a"
+      },
+      "viento": {
+        "nombre": "Viento",
+        "prefijo": "Fuuton",
+        "color": "#9be7c4"
+      },
+      "rayo": {
+        "nombre": "Rayo",
+        "prefijo": "Raiton",
+        "color": "#8fd3ff"
+      },
+      "tierra": {
+        "nombre": "Tierra",
+        "prefijo": "Doton",
+        "color": "#b08a55"
+      },
+      "agua": {
+        "nombre": "Agua",
+        "prefijo": "Suiton",
+        "color": "#3a8dff"
+      }
     }
   },
   "sellos": {
-    "tigre": { "nombre": "Tigre", "color": "#e0a030" },
-    "serpiente": { "nombre": "Serpiente", "color": "#58b05a" },
-    "carnero": { "nombre": "Carnero", "color": "#d8d0b8" },
-    "mono": { "nombre": "Mono", "color": "#b07848" },
-    "jabali": { "nombre": "Jabalí", "color": "#8a6a5a" },
-    "caballo": { "nombre": "Caballo", "color": "#c06040" },
-    "buey": { "nombre": "Buey", "color": "#6a7ab0" },
-    "liebre": { "nombre": "Liebre", "color": "#c0c0e0" },
-    "perro": { "nombre": "Perro", "color": "#a09070" },
-    "pajaro": { "nombre": "Pájaro", "color": "#70b0d0" }
+    "tigre": {
+      "nombre": "Tigre",
+      "color": "#e0a030"
+    },
+    "serpiente": {
+      "nombre": "Serpiente",
+      "color": "#58b05a"
+    },
+    "carnero": {
+      "nombre": "Carnero",
+      "color": "#d8d0b8"
+    },
+    "mono": {
+      "nombre": "Mono",
+      "color": "#b07848"
+    },
+    "jabali": {
+      "nombre": "Jabalí",
+      "color": "#8a6a5a"
+    },
+    "caballo": {
+      "nombre": "Caballo",
+      "color": "#c06040"
+    },
+    "buey": {
+      "nombre": "Buey",
+      "color": "#6a7ab0"
+    },
+    "liebre": {
+      "nombre": "Liebre",
+      "color": "#c0c0e0"
+    },
+    "perro": {
+      "nombre": "Perro",
+      "color": "#a09070"
+    },
+    "pajaro": {
+      "nombre": "Pájaro",
+      "color": "#70b0d0"
+    }
   }
 }
