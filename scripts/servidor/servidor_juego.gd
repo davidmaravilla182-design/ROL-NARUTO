@@ -373,11 +373,17 @@ func _disparar_proyectil(e: EntidadServidor, id: String, nivel: int) -> void:
 	var escala := Combate.escala_tamano(id, e.attrs, clima)
 	var yaw_base := e.yaw
 	var obj := _buscar_objetivo(e, yaw_base, Combate.precision_grados(e.attrs), float(j.get("alcance", 25.0)))
-	var origen := e.pos + Vector3(0, 1.4, 0) + e.adelante() * 0.8
+	var radio := float(nd["radio"]) * escala
+	# Los proyectiles grandes salen más altos y por delante para no tocar el suelo ni al lanzador.
+	var origen := e.pos + Vector3(0, 1.4 + radio * 0.5, 0) + e.adelante() * (0.8 + radio)
 	var dir := e.adelante()
 	if obj != null:
-		dir = (obj.centro() - origen).normalized()
 		e.yaw = _yaw_hacia(e.pos, obj.pos)
+		origen = e.pos + Vector3(0, 1.4 + radio * 0.5, 0) + e.adelante() * (0.8 + radio)
+		dir = (obj.centro() - origen)
+		if radio > 0.8:
+			dir.y = 0.0   # las bolas grandes vuelan horizontales
+		dir = dir.normalized()
 	var p := {
 		"id": _siguiente_id,
 		"jutsu": id,
@@ -387,7 +393,7 @@ func _disparar_proyectil(e: EntidadServidor, id: String, nivel: int) -> void:
 		"pos": origen,
 		"dir": dir,
 		"velocidad": float(nd["velocidad"]),
-		"radio": float(nd["radio"]) * escala,
+		"radio": radio,
 		"radio_explosion": float(nd["radio_explosion"]) * escala,
 		"recorrido": 0.0,
 		"alcance": float(j.get("alcance", 25.0)),
@@ -503,7 +509,7 @@ func _actualizar_proyectiles(dt: float) -> void:
 				impacto = e
 				break
 		var choca := impacto != null
-		if not choca and pos.y - radio * 0.5 <= 0.0:
+		if not choca and pos.y - radio * 0.25 <= 0.0:
 			choca = true
 		if not choca and mapa.punto_bloqueado(Vector2(pos.x, pos.z), radio * 0.6, pos.y):
 			choca = true
@@ -534,7 +540,7 @@ func _explotar(p: Dictionary, directo: EntidadServidor) -> void:
 		var dano := Combate.dano_jutsu(id, nivel, attrs, e.naturaleza_principal(), clima) * caida
 		var dir := (e.pos - pos)
 		dir.y = 0
-		_aplicar_dano(e, dano, dueno, {"jutsu": id, "naturaleza": nat, "derriba": id == "bola_fuego" and nivel >= 2, "dir": dir.normalized() if dir.length() > 0.01 else p["dir"], "empuje": 3.0 + nivel * 2.0, "nivel": nivel})
+		_aplicar_dano(e, dano, dueno, {"jutsu": id, "naturaleza": nat, "derriba": id == "bola_fuego" and nivel >= 2, "dir": dir.normalized() if dir.length() > 0.01 else p["dir"], "empuje": (1.5 + nivel * 1.5) if id == "bola_fuego" else 0.8, "nivel": nivel})
 	var suelo := Vector3(pos.x, 0, pos.z)
 	_evento({"tipo": "explosion", "jutsu": id, "nivel": nivel, "pos": pos, "suelo": suelo, "radio": r, "proyectil": p["id"], "escala": p["escala"]})
 
@@ -572,7 +578,7 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		o.empuje = dir * float(info.get("empuje", 4.0))
 	else:
 		o.poner_estado("golpeado", Datos.reglas["estados"]["golpeado_duracion"])
-		o.empuje = dir * float(info.get("empuje", 1.0)) * 2.0
+		o.empuje = dir * float(info.get("empuje", 1.0))
 	if atacante != null and atacante.tipo != "muneco":
 		o.yaw = _yaw_hacia(o.pos, atacante.pos)
 

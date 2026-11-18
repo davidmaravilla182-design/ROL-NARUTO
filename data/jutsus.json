@@ -70,10 +70,10 @@
     "naturaleza": "agua",
     "sellos": ["tigre", "pajaro"],
     "tiempo_sellos": 0.5,
-    "recarga": 1.7,
+    "recarga": 2.6,
     "alcance": 26.0,
     "niveles": [
-      { "costo": 8.0, "dano": 8.0, "velocidad": 15.0, "radio": 0.35, "radio_explosion": 0.9, "rafaga": 3, "intervalo_rafaga": 0.2, "sacudida": 0.2, "luz": 0.0, "luz_rango": 0.0, "particulas": 20, "marca": 0.0 }
+      { "costo": 8.0, "dano": 5.5, "velocidad": 14.0, "radio": 0.3, "radio_explosion": 0.8, "rafaga": 2, "intervalo_rafaga": 0.2, "sacudida": 0.2, "luz": 0.0, "luz_rango": 0.0, "particulas": 20, "marca": 0.0 }
     ]
   }
 }

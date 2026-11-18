@@ -27,7 +27,7 @@ func _init(entidad: EntidadServidor) -> void:
 func reiniciar() -> void:
 	lado = 1.0
 	t_lado = float(conf.get("cambio_lateral", 2.5))
-	t_reaccion = 1.0
+	t_reaccion = 2.5
 	amenazas_vistas.clear()
 	anuncio_huida = false
 
