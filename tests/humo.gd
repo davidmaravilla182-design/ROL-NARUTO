@@ -6,6 +6,7 @@ extends SceneTree
 
 var pasos := [
 	["res://escenas/menu.tscn", ""],
+	["res://escenas/repertorio.tscn", ""],
 	["res://escenas/juego.tscn", "alta"],
 	["res://escenas/juego.tscn", "media"],
 	["res://escenas/juego.tscn", "baja"],
@@ -46,9 +47,20 @@ func _cargar(i: int) -> void:
 
 func _process(_delta: float) -> bool:
 	_frames += 1
+	if _indice == 1 and _actual != null:
+		# Menú del repertorio: abrir detalle, equipar, ciclar nivel, quitar y cambiar de repertorio.
+		match _frames:
+			3: _actual.abrir_detalle("kirin")
+			6: _actual.equipar("rasengan", 3)
+			8: _actual.ciclar_nivel(0)
+			10: _actual.quitar(3)
+			12: _actual._elegir_rep(1)
+			14: _actual._elegir_rep(0)
+			16: _actual.equipar("byakugan", -1)
+			18: _actual.equipar("sharingan", -1)
 	if _actual != null and _actual.has_method("prueba_humo"):
 		_actual.prueba_humo(_frames)
-	var limite := 30 if _indice == 0 else (640 if _indice == 1 else 90)
+	var limite := 30 if _indice <= 1 else (640 if _indice == 2 else 90)
 	if _frames >= limite:
 		_cargar(_indice + 1)
 	return false

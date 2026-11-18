@@ -108,6 +108,8 @@ static func _agarre(resaltado: bool) -> Texture2D:
 
 ## Marco de metal remachado con filo rojo y el símbolo de la aldea (líneas verticales).
 static func dibujar_marco(ci: CanvasItem, r: Rect2, opacidad := 0.92, con_simbolo := true) -> void:
+	if r.size.x < 24.0 or r.size.y < 24.0:
+		return
 	var biselado := 10.0
 	var pts := PackedVector2Array([
 		r.position + Vector2(biselado, 0), r.position + Vector2(r.size.x, 0),

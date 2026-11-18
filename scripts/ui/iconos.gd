@@ -49,8 +49,14 @@ static func dibujar_icono(ci: CanvasItem, icono: String, c: Vector2, r: float, a
 			ci.draw_string(f, c + Vector2(-r, r * 0.4), nombre.substr(0, 1), HORIZONTAL_ALIGNMENT_CENTER, r * 2, int(r * 1.2), Color.WHITE)
 
 
+## Rellena un polígono solo si es triangulable (a escalas muy pequeñas algunos contornos degeneran).
+static func relleno(ci: CanvasItem, pts: PackedVector2Array, color: Color) -> void:
+	if pts.size() >= 3 and not Geometry2D.triangulate_polygon(pts).is_empty():
+		ci.draw_colored_polygon(pts, color)
+
+
 static func _poligono(ci: CanvasItem, pts: PackedVector2Array, color: Color, borde := Color(0, 0, 0, 0.85), grosor := 3.0) -> void:
-	ci.draw_colored_polygon(pts, color)
+	Iconos.relleno(ci, pts, color)
 	var cerrado := pts.duplicate()
 	cerrado.append(pts[0])
 	ci.draw_polyline(cerrado, borde, grosor, true)
@@ -77,7 +83,7 @@ static func llama(ci: CanvasItem, c: Vector2, r: float, negra := false) -> void:
 		if capa == 0:
 			_poligono(ci, pts, col, Color(0.3, 0.03, 0.0, 0.95), 3.0)
 		else:
-			ci.draw_colored_polygon(pts, col)
+			Iconos.relleno(ci, pts, col)
 
 
 ## Rayo en zigzag.
@@ -266,7 +272,7 @@ static func ojo_patron(ci: CanvasItem, c: Vector2, r: float, activo: bool, patro
 			for k in 3:
 				var a := giro + TAU * k / 3.0
 				var aspa := PackedVector2Array([c, c + Vector2(cos(a), sin(a)) * ri * 0.95, c + Vector2(cos(a + 0.9), sin(a + 0.9)) * ri * 0.45])
-				ci.draw_colored_polygon(aspa, Color(0.05, 0, 0))
+				Iconos.relleno(ci, aspa, Color(0.05, 0, 0))
 			ci.draw_circle(c, ri * 0.18, Color(0.85, 0.05, 0.08))
 		3:
 			ci.draw_circle(c, ri, Color(0.62, 0.52, 0.85))

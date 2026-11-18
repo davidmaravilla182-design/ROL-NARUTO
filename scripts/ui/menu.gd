@@ -47,7 +47,7 @@ func _ready() -> void:
 	boton.name = "BotonEntrenar"
 	boton.text = Datos.texto("menu_entrenar")
 	boton.add_theme_font_size_override("font_size", 38)
-	boton.custom_minimum_size = Vector2(460, 96)
+	boton.custom_minimum_size = Vector2(420, 96)
 	boton.focus_mode = Control.FOCUS_NONE
 	boton.add_theme_font_override("font", Estilo.fuente_titulo())
 	boton.pressed.connect(_entrenar)
@@ -55,15 +55,23 @@ func _ready() -> void:
 	ajustes.name = "BotonAjustes"
 	ajustes.text = Datos.texto("menu_ajustes")
 	ajustes.add_theme_font_size_override("font_size", 30)
-	ajustes.custom_minimum_size = Vector2(260, 96)
+	ajustes.custom_minimum_size = Vector2(200, 96)
 	ajustes.focus_mode = Control.FOCUS_NONE
 	ajustes.pressed.connect(func():
 		var m := MenuAjustes.new()
 		add_child(m)
 		m.construir())
+	var repertorio := Button.new()
+	repertorio.name = "BotonRepertorio"
+	repertorio.text = Datos.texto("menu_repertorio")
+	repertorio.add_theme_font_size_override("font_size", 30)
+	repertorio.custom_minimum_size = Vector2(260, 96)
+	repertorio.focus_mode = Control.FOCUS_NONE
+	repertorio.pressed.connect(func(): get_tree().change_scene_to_file("res://escenas/repertorio.tscn"))
 	var fila := HBoxContainer.new()
-	fila.add_theme_constant_override("separation", 24)
+	fila.add_theme_constant_override("separation", 20)
 	fila.add_child(boton)
+	fila.add_child(repertorio)
 	fila.add_child(ajustes)
 	var centro := CenterContainer.new()
 	centro.add_child(fila)
