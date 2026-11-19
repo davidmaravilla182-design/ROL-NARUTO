@@ -147,13 +147,15 @@ func _on_estado_servidor(peer_id: int, estado: Dictionary) -> void:
 	var mia := int(est.get("tu_entidad", -1))
 	var ents: Array = []
 	for e in est.get("entidades", []):
-		if int(e["id"]) != mia and e.has("recargas"):
-			var c: Dictionary = (e as Dictionary).duplicate()
+		var c: Dictionary = (e as Dictionary).duplicate()
+		if int(e["id"]) != mia:
 			c.erase("recargas")
 			c.erase("niveles")
-			ents.append(c)
-		else:
-			ents.append(e)
+		# Los campos que valen lo de siempre no viajan (se rellenan al recibir): la instantánea cabe en un paquete.
+		for k in DEFECTO.keys():
+			if c.has(k) and c[k] == DEFECTO[k]:
+				c.erase(k)
+		ents.append(c)
 	est["entidades"] = ents
 	# Comprimido: cabe en un solo paquete (sin fragmentar) y se pierde menos.
 	var crudo := var_to_bytes(est)
@@ -247,7 +249,17 @@ func _process(delta: float) -> void:
 				_rpc_ping.rpc_id(1, t)
 
 
+## Valores por defecto de los campos de cada entidad que no se envían cuando valen esto.
+const DEFECTO := {"pared": Vector2.ZERO, "agua": 0, "escalando": false, "en_charco": false, "empuje": false,
+	"sharingan": false, "modo_activo": false, "ceguera": 0.0, "jutsu": "", "paso": 0, "estado_t": 0.0,
+	"estado_total": 0.0, "modo": "", "efectos": {}, "recargas": {}, "niveles": {}, "nivel": 0, "en_suelo": true}
+
+
 func _recibir_estado(estado: Dictionary) -> void:
+	for e in estado.get("entidades", []):
+		for k in DEFECTO.keys():
+			if not (e as Dictionary).has(k):
+				e[k] = DEFECTO[k]
 	var n := int(estado.get("n", -1))
 	if n <= _ultimo_seq:
 		return   # llegó tarde: ya hay uno más nuevo

@@ -84,7 +84,8 @@
       "prob_esquivar": 0.4,
       "umbral_huida": 0.25,
       "cambio_lateral": 2.5,
-      "pausa_reaccion": 0.35
+      "pausa_reaccion": 0.35,
+      "aggro": 30.0
     },
     "aspecto": {
       "piel": "#dcbb98",

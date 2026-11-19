@@ -216,3 +216,20 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
   `tools/meshy_lote.py` vuelve atrás la fase y reintenta (un 4xx no cobra).
 - **Niebla** 0,0055 (antes 0,016) y plano lejano de la cámara a 700 m para que la torre se vea desde todo el mapa;
   las capas de niebla siguen a la cámara.
+
+
+## v0.7 — personaje por piezas, NPCs y jutsus con modelo
+- **Piezas sobre un solo esqueleto**: cuerpo base + peinado + prenda + parche de emblema por prenda, todo en
+  `ninja_piezas.glb`; el juego muestra las piezas elegidas (≈4 llamadas de dibujo por ninja). Las prendas se hacen
+  copiando las caras del cuerpo con sus pesos e inflándolas: se deforman exactamente igual que el cuerpo, sin
+  atravesarlo. Los peinados de Meshy traen un maniquí: se recorta la cara, el cráneo y los hombros con el cuerpo como
+  referencia (BVH).
+- **Texturas en GLB**: Blender conserva el formato JPEG de origen y Godot no lo carga incrustado: se guarda una copia PNG.
+- **NPCs**: perfiles de IA en datos (`ia.perfil`, `aggro`); los enemigos de la aldea los crea `poblar_aldea()` (el
+  juego la llama; las pruebas de combate no, para no mezclarlos). El rebelde vive oculto (no se envía ni simula) y
+  aparece cada 90–180 s. Genjutsu y humo son habilidades de NPC (eventos), no jutsus del repertorio.
+- **Red — interés por distancia**: con los NPC la instantánea pasaba el MTU (1.543 bytes) y en CI se perdía. Ahora cada
+  jugador recibe a los demás jugadores siempre y a los enemigos a menos de 70 m, y los campos con su valor de siempre
+  no viajan (se rellenan al recibir).
+- **Jutsus con modelo**: Meshy solo malla (5 créditos) cuando el material lo pone el juego (Susanoo, Kirin, dragón de
+  agua); con textura (15) cuando la textura importa (madera, roca).

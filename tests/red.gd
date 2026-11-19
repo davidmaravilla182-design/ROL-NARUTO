@@ -119,6 +119,12 @@ func _process(_d: float) -> bool:
 		_preparar()
 		return false
 	var t := _seg()
+	# Pasada la fase de movimiento, los bots mandan «quieto» a ritmo de tick como el cliente real (la entrada
+	# viaja sin garantía: un solo «quieto» perdido dejaba al bot caminando).
+	if _fase >= 2 and Time.get_ticks_msec() - _t_entrada >= 33:
+		_t_entrada = Time.get_ticks_msec()
+		for b in bots:
+			(b["red"] as TransporteENet).enviar({"t": Protocolo.C_ENTRADA, "mov": Vector2.ZERO, "mira": 0.0, "seq": Engine.get_process_frames()})
 	match _fase:
 		0:
 			# Esperar a que los dos bots estén conectados y configurados.
@@ -185,7 +191,7 @@ func _process(_d: float) -> bool:
 				_fase = 6
 				_t0 = Time.get_ticks_msec()
 		6:
-			if t > 1.5:
+			if t > 2.5:
 				_comprobar_distritos()
 				# Llenar la partida: anfitrión + 2 bots + 1 más = 4; el quinto se rechaza.
 				_extra.append(_crear_bot("Bot3", false))
@@ -236,10 +242,14 @@ func _comprobar_distritos() -> void:
 	for b in bots:
 		var otro := j2 if b == bots[0] else j1
 		var visto := false
+		var detalle := "no está"
 		for e in (b["ultimo"] as Dictionary).get("entidades", []):
-			if int(e["id"]) == otro.id and (e["pos"] as Vector3).distance_to(otro.pos) < 0.05:
+			if int(e["id"]) == otro.id:
+				detalle = "a %.2f m de su posición real" % (e["pos"] as Vector3).distance_to(otro.pos)
+			# Margen de 0,3 m: el bot 2 simula mala conexión (latencia y pérdida) y su última instantánea puede ir un tick atrás.
+			if int(e["id"]) == otro.id and (e["pos"] as Vector3).distance_to(otro.pos) < 0.3:
 				visto = true
-		comprobar(visto, "%s ve al otro jugador en su distrito (%s)" % [b["nombre"], servidor.mapa.distrito_en(otro.pos2())])
+		comprobar(visto, "%s ve al otro jugador en su distrito (%s)%s" % [b["nombre"], servidor.mapa.distrito_en(otro.pos2()), "" if visto else " — " + detalle])
 
 
 func _comprobar_mismo_estado() -> void:
@@ -262,7 +272,14 @@ func _comprobar_mismo_estado() -> void:
 			max_err = maxf(max_err, absf(float(e["vida"]) - se.vida) * 0.01)
 			if se.tipo == "jugador" and str(e.get("nombre", "")) != se.nombre:
 				nombres_ok = false
-		comprobar(ids.size() == ref.size() and max_err < 0.05, "%s ve el mismo estado que el servidor (%d entidades, error %.3f)" % [b["nombre"], ids.size(), max_err])
+		# Todos los jugadores y lo que está cerca (los enemigos lejanos no se envían: interés por distancia).
+		var faltan := 0
+		var yo: EntidadServidor = ref.get(int(b["id"]))
+		for id in ref.keys():
+			var se2: EntidadServidor = ref[id]
+			if not ids.has(id) and (se2.tipo != "enemigo" or (yo != null and se2.pos.distance_to(yo.pos) <= ServidorJuego.RADIO_INTERES - 5.0)):
+				faltan += 1
+		comprobar(faltan == 0 and max_err < 0.05, "%s ve el mismo estado que el servidor (%d entidades, error %.3f)" % [b["nombre"], ids.size(), max_err])
 	comprobar(nombres_ok, "todos ven el nombre de cada jugador")
 	# Cada invitado recibe el aspecto (personalización) de los demás jugadores.
 	for b in bots:

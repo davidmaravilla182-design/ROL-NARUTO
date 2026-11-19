@@ -56,6 +56,7 @@ func poblar_entrenamiento() -> void:
 		m.yaw = 0.0
 
 
+const RADIO_INTERES := 70.0
 var _rebelde: EntidadServidor
 var _rebelde_t := 0.0
 
@@ -1089,5 +1090,16 @@ func publicar_estado() -> void:
 	for peer in _peers.keys():
 		var est := base.duplicate()
 		est["tu_entidad"] = _peers[peer]
+		# Interés por distancia: los enemigos de la aldea solo se envían a quien está a menos de RADIO_INTERES
+		# (la instantánea debe caber en un paquete: con todos los NPC superaba el MTU y se perdía en redes reales).
+		var yo := entidad(int(_peers[peer]))
+		if yo != null:
+			var filtradas: Array = []
+			for i in ents.size():
+				var ed: Dictionary = ents[i]
+				if ed["tipo"] == "enemigo" and (ed["pos"] as Vector3).distance_to(yo.pos) > RADIO_INTERES:
+					continue
+				filtradas.append(ed)
+			est["entidades"] = filtradas
 		estado_generado.emit(int(peer), est)
 	eventos = []
