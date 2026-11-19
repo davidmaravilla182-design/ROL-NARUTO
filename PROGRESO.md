@@ -26,7 +26,7 @@
         NPCs), revisión cuadro a cuadro, correcciones, antes/después en la bitácora; 60 FPS estimados con 3 enemigos
         y un jutsu N3.
   Hecho: BITACORA_GRAFICOS.md → M4 (14 problemas corregidos, medidas: 134 llamadas con guardias + Susanoo y gólem N3).
-- [ ] Cierre: APK, workflow, reporte.
+- [x] Cierre: APK en demo-latest (commit 3eeb7b7, workflow correcto), reporte. Meshy: 145 créditos, saldo 604.
 
 ---
 
