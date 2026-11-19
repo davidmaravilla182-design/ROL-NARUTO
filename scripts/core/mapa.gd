@@ -166,8 +166,10 @@ func _trazado(tz: Dictionary) -> void:
 		var ct := _v2(t["pos"])
 		var gt := float(t.get("giro", 0.0))
 		tubos.append({"centro": ct, "giro": gt, "altura": float(t.get("altura", 0.6))})
-		var medio_t := Vector2(6.0, 0.6) if int(round(gt / 90.0)) % 2 == 0 else Vector2(0.6, 6.0)
-		obstaculos.append({"centro": ct, "medio": medio_t, "alto": float(t.get("altura", 0.6)) + 0.6, "tipo": "tubo"})
+		# Solo las tuberías a ras del suelo estorban; las elevadas pasan por encima de las calles.
+		if float(t.get("altura", 0.6)) < 2.0:
+			var medio_t := Vector2(6.0, 0.6) if int(round(gt / 90.0)) % 2 == 0 else Vector2(0.6, 6.0)
+			obstaculos.append({"centro": ct, "medio": medio_t, "alto": float(t.get("altura", 0.6)) + 0.6, "tipo": "tubo"})
 	canal = tz.get("canal", {})
 	if not canal.is_empty():
 		var cx := (float(canal["x_min"]) + float(canal["x_max"])) * 0.5

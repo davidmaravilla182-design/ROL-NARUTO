@@ -73,9 +73,20 @@ static func construir(e: Escenario, m: Mapa) -> void:
 		arcos_t.append(Transform3D(Basis(Vector3.UP, deg_to_rad(float(a["giro"]))), Vector3(ca.x, 0.0, ca.y)))
 	if not arcos_t.is_empty():
 		e.add_child(Kit.multimalla("tubo_arco", arcos_t, true))
+	var tubos_t: Array = []
+	var soportes: Array = []
 	for tb in m.tubos:
 		var ct: Vector2 = tb["centro"]
-		e.add_child(Kit.instancia("tubo_largo", Transform3D(Basis(Vector3.UP, deg_to_rad(float(tb["giro"]))), Vector3(ct.x, float(tb["altura"]), ct.y)), true))
+		var tr := Transform3D(Basis(Vector3.UP, deg_to_rad(float(tb["giro"]))), Vector3(ct.x, float(tb["altura"]), ct.y))
+		tubos_t.append(tr)
+		# Las elevadas cuelgan de un pórtico a un lado de la calle cada 12 m.
+		if float(tb["altura"]) > 2.0:
+			var lado := tr.basis * Vector3(0, 0, 2.6)
+			soportes.append(Transform3D(Basis.from_scale(Vector3(0.7, float(tb["altura"]) + 0.4, 0.7)), Vector3(ct.x, 0, ct.y) + lado))
+	if not tubos_t.is_empty():
+		e.add_child(Kit.multimalla("tubo_largo", tubos_t, Ajustes.calidad == "alta"))
+	if not soportes.is_empty():
+		e.add_child(Kit.multimalla("columna", soportes, false))
 	if not m.canal.is_empty():
 		_canal(e, m, rng)
 	_muralla(e, m)
@@ -109,6 +120,47 @@ static func _oclusores(e: Escenario, ts: Array, h: Array) -> void:
 		oc.occluder = bo
 		oc.transform = Transform3D(tr.basis, tr.origin + Vector3(0, float(h[2]) * 0.85 * 0.5 * tr.basis.get_scale().y, 0))
 		e.add_child(oc)
+
+
+## Calle techada (mercado): farolillos de papel colgando bajo el techo a ambos lados y luces cálidas
+## repartidas a lo largo (pocas, para el móvil).
+static func _farolillos(e: Escenario, c: Vector2, md: Vector2, h: float) -> void:
+	var largo_x := md.x >= md.y
+	var largo := (md.x if largo_x else md.y) * 2.0
+	var ts: Array = []
+	var colores: Array = []
+	var n := int(largo / 3.0)
+	for lado in [-1.0, 1.0]:
+		for i in n:
+			var a := -largo * 0.5 + (float(i) + 0.5) * largo / n
+			var off := (md.y if largo_x else md.x) - 1.2
+			var p := Vector3(c.x + a, h - 1.3 - 0.25 * float(i % 2), c.y + lado * off) if largo_x else Vector3(c.x + lado * off, h - 1.3, c.y + a)
+			ts.append(Transform3D(Basis.from_scale(Vector3(0.42, 0.55, 0.42)), p))
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	var esf := SphereMesh.new()
+	esf.radius = 0.5
+	esf.height = 1.0
+	esf.radial_segments = 10
+	esf.rings = 5
+	esf.material = Materiales.emisivo(Color(1.0, 0.42, 0.18), 2.6)
+	mm.mesh = esf
+	mm.instance_count = ts.size()
+	for i in ts.size():
+		mm.set_instance_transform(i, ts[i])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	e.sectores.agregar(mmi, c)
+	var luces := {"baja": 2, "media": 3}.get(Ajustes.calidad, 5) as int
+	for i in luces:
+		var a2 := -largo * 0.5 + (float(i) + 0.5) * largo / luces
+		var l := OmniLight3D.new()
+		l.light_color = Color(1.0, 0.55, 0.25)
+		l.light_energy = 2.6
+		l.omni_range = 12.0
+		e.sectores.agregar(l, c)
+		l.global_position = Vector3(c.x + a2, h - 2.0, c.y) if largo_x else Vector3(c.x, h - 2.0, c.y + a2)
 
 
 ## Farol en la puerta del edificio especial (Meshy, primer modelo).
@@ -181,6 +233,8 @@ static func _plataformas(e: Escenario, m: Mapa) -> void:
 			var largo := (md.x if por_x else md.y) * 2.0
 			escaleras.append(Transform3D(Basis(Vector3.UP, ang).scaled_local(Vector3(ancho, sube, largo)), Vector3(c.x, bajo, c.y)))
 			continue
+		if tipo == "techo" and maxf(md.x, md.y) > 20.0:
+			_farolillos(e, c, md, h)
 		var grosor := 0.6 if tipo == "puente" else 0.35
 		losas.append(Transform3D(Basis.from_scale(Vector3(md.x * 2.0, grosor, md.y * 2.0)), Vector3(c.x, h, c.y)))
 		# Columnas en las esquinas y cada ~9 m a lo largo (el puente baja hasta el fondo del lago).

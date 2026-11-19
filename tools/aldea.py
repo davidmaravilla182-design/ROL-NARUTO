@@ -365,9 +365,15 @@ def main():
     tz["obstaculos_extra"] = extra
     tz["arcos"] = [{"pos": [27.0, 5.0], "giro": 90}, {"pos": [-27.0, -4.5], "giro": 90}, {"pos": [0.0, 26.5], "giro": 0},
                    {"pos": [0.0, 48.0], "giro": 0}, {"pos": [70.0, 5.0], "giro": 90}, {"pos": [-70.0, -4.5], "giro": 90}]
-    tz["tubos"] = [{"pos": [-6.0, -21.6], "altura": 0.6, "giro": 0}, {"pos": [6.5, -21.6], "altura": 0.6, "giro": 0},
-                   {"pos": [86.0, -100.0], "altura": 4.0, "giro": 90}, {"pos": [86.0, -160.0], "altura": 4.0, "giro": 90},
-                   {"pos": [120.0, -131.0], "altura": 3.0, "giro": 0}]
+    tubos = [{"pos": [-6.0, -21.6], "altura": 0.6, "giro": 0}, {"pos": [6.5, -21.6], "altura": 0.6, "giro": 0}]
+    # Distrito industrial: tuberías elevadas sobre sus dos calles (tramos de 12 m, a dos alturas).
+    for z in range(-190, -64, 12):
+        tubos.append({"pos": [87.0, float(z)], "altura": 6.2, "giro": 90})
+        if z % 24 == 2:
+            tubos.append({"pos": [85.2, float(z) + 6.0], "altura": 4.6, "giro": 90})
+    for x in range(46, 146, 12):
+        tubos.append({"pos": [float(x), -131.0], "altura": 5.4, "giro": 0})
+    tz["tubos"] = tubos
     tz["horizonte"] = {"cantidad": 40, "radio_min": 250.0, "radio_max": 330.0, "escala_min": 1.6, "escala_max": 3.2}
     tz["cables"] = 40
     esc["aldea"] = {"_nota": "Generado por tools/aldea.py. Isla circular en el lago: se camina dentro de radio_caminable y en zonas_extra.",

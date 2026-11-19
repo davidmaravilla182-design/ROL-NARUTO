@@ -11,8 +11,8 @@
 - [x] 0b. Lote Meshy (18 modelos, ~270 créditos) en segundo plano + procesado en Blender (1024/512 px, LOD lejano).
 - [x] 1. Plaza y campo de entrenamiento (ampliado y lleno de objetos).
 - [x] 2. Distrito del canal (más puentes, cascadas de desagües).            → APK
-- [ ] 3. Mercado (calle techada, puestos, luz cálida).
-- [ ] 4. Zona residencial (torres apiladas, pasarelas).                      → APK
+- [x] 3. Mercado (calle techada, puestos, luz cálida).
+- [x] 4. Zona residencial (torres apiladas, pasarelas).                      → APK
 - [ ] 5. Distrito industrial (tuberías, chimeneas con vapor, tanques).
 - [ ] 6. Academia ninja (edificio + patio de prácticas).                     → APK
 - [ ] 7. Puerta principal y muralla (puente sobre el lago).
@@ -31,6 +31,10 @@
   hasta la muralla con 8 puentes, cascadas cada dos módulos en ambos muros, pasarela elevada de 80 m con escaleras.
   Texturas CC0 de Poly Haven (suelo, concreto, lámina, techo). Niebla 0,0055 y cámara con plano lejano a 700 m
   para que la torre se vea desde todo el mapa. Prueba de red: bots en distritos distintos se ven (182 m).
+- **Distritos 3 y 4**: mercado con calle techada de 83 m (techo caminable a 5,5 m con escalera), 18 puestos de
+  Meshy a ambos lados, 56 farolillos de papel y 5 luces cálidas, entrada emblemática (arco sin colisión central);
+  residencial con 6 torres cilíndricas de Meshy, 4 pasarelas a 10–14 m y escalera de 12 m.
+  Industrial: 28 tramos de tubería elevada sobre sus calles con pórticos.
 - **Meshy**: 18 modelos (Text to 3D, Smart Topology meshy-t2.5, 15 créditos c/u = 270). Saldo 1135 → 865.
 
 ---

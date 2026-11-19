@@ -10,6 +10,17 @@ var t := 0.0
 var paso := 0
 var guion: Array = []
 var _medidas: Array = []
+## Vista de calle propia de cada distrito: [cámara, punto al que mira].
+const VISTAS := {
+	"mercado": [Vector3(-54, 2.4, -3.0), Vector3(-110, 2.0, -5.0)],
+	"residencial": [Vector3(-40, 13, -100), Vector3(-80, 10, -126)],
+	"industrial": [Vector3(60, 4, -60), Vector3(95, 12, -110)],
+	"academia": [Vector3(0, 3, -112), Vector3(0, 7, -152)],
+	"puerta": [Vector3(0, 3, 40), Vector3(0, 8, 72)],
+	"torre": [Vector3(0, 2, -45), Vector3(0, 40, -80)],
+	"canal": [Vector3(46, 3, -24), Vector3(110, 0, -28)],
+	"plaza": [Vector3(14, 3, 30), Vector3(-6, 2, 0)],
+}
 
 
 func _initialize() -> void:
@@ -43,7 +54,8 @@ func _initialize() -> void:
 		guion.append([tt + 1.0, func(): _foto_medida(etq + "_a_pie")])
 		guion.append([tt + 1.05, func(): _libre(Vector3(c.x + r.size.x * 0.35, 38.0, c.y + r.size.y * 0.45), Vector3(c.x, 0, c.y))])
 		guion.append([tt + 1.6, func(): _foto_medida(etq + "_aereo")])
-		guion.append([tt + 1.65, func(): _libre(Vector3(pie.x + 6, 2.2, pie.z + 9), Vector3(pie.x - 6, 4.5, pie.z - 14))])
+		var vista: Array = VISTAS.get(id, [Vector3(pie.x + 6, 2.2, pie.z + 9), Vector3(pie.x - 6, 4.5, pie.z - 14)])
+		guion.append([tt + 1.65, func(): _libre(vista[0], vista[1])])
 		guion.append([tt + 2.2, func(): _foto_medida(etq + "_calle")])
 		guion.append([tt + 2.25, func(): _seguir()])
 		tt += 2.6
