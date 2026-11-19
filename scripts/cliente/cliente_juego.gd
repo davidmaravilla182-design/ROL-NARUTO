@@ -246,12 +246,15 @@ func _on_accion(id: String) -> void:
 			dir = Vector2(p.x, p.z).normalized()
 		cmd["dir"] = dir
 		cmd["objetivo"] = obj
+	elif id == "esquivar" and objetivo_fijado >= 0 and _vivo(objetivo_fijado):
+		# Con un objetivo fijado, esquivar es el shunshin: aparece detrás de él.
+		cmd["objetivo"] = objetivo_fijado
 	transporte.enviar(cmd)
 
 
 func _alcance(id: String) -> float:
 	if id == "golpe":
-		return 3.5
+		return float(Datos.jutsu("golpe").get("acercar", 3.5))
 	var j := Datos.jutsu(id)
 	if str(j.get("mecanica", "")) == "embiste":
 		return float(Datos.nivel_jutsu(id, _nivel_local(id)).get("distancia", 6.0)) + 3.0
@@ -483,12 +486,11 @@ func _interpolar(delta: float) -> void:
 				_orientar(n, v, float(p[1]), k, delta, true)
 				continue
 		var kp := k
-		if prediccion != null and id == mi_id:
-			var dist := n.position.distance_to(v["destino"])
-			if dist > float(Datos.red["prediccion"].get("teletransporte", 3.0)):
-				kp = 1.0
-			else:
-				kp = minf(1.0, delta * float(Datos.red["prediccion"].get("suavizado", 12.0)))
+		var dist_v := n.position.distance_to(v["destino"])
+		if dist_v > float(Datos.red["prediccion"].get("teletransporte", 3.0)):
+			kp = 1.0   # shunshin, sustitución, reaparecer: salto instantáneo (sin deslizarse)
+		elif prediccion != null and id == mi_id:
+			kp = minf(1.0, delta * float(Datos.red["prediccion"].get("suavizado", 12.0)))
 		n.position = n.position.lerp(v["destino"], kp)
 		_orientar(n, v, float(v["yaw"]), k, delta, false)
 	# Corriendo por una pared, la cámara se aparta de ella y mira un poco hacia arriba (acompaña el giro).
@@ -516,6 +518,8 @@ func _muestra(buf: Array, t: float) -> Array:
 		var b: Array = buf[i + 1]
 		if t >= float(a[0]) and t <= float(b[0]):
 			var u := (t - float(a[0])) / maxf(float(b[0]) - float(a[0]), 0.001)
+			if (a[1] as Vector3).distance_to(b[1]) > 3.0:
+				return [b[1], b[2]] if u > 0.0 else [a[1], a[2]]   # teletransporte: sin interpolar
 			return [(a[1] as Vector3).lerp(b[1], u), lerp_angle(float(a[2]), float(b[2]), u)]
 	var ult: Array = buf[buf.size() - 1]
 	return [ult[1], ult[2]]
@@ -708,15 +712,23 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 	tecnicas.sincronizar(int(e["id"]), pv, e)
 	genericas.sincronizar(int(e["id"]), pv, e)
 	match estado:
-		"muerto", "caido":
-			pv.reproducir("caer", 0.08)
+		"muerto":
+			pv.reproducir_primera(["muerte", "caer"], 0.08)
+		"caido":
+			pv.reproducir_primera(["derribado", "caer"], 0.08)
+		"lanzado":
+			pv.reproducir_primera(["lanzado", "caer"], 0.06)
 		"golpeado":
 			if cambio:
-				pv.reproducir_forzado("golpeado")
+				pv.reproducir_forzado(pv._resolver_nombre("golpeado_cara" if randf() < 0.5 else "golpeado"))
 		"golpe":
 			var paso := int(e["paso"])
 			if cambio or paso != int(v["paso"]):
-				pv.reproducir_forzado("golpe%d" % (paso + 1))
+				var pg := Combate.paso_golpe(paso)
+				var seg: Array = pg.get("segmento", [])
+				if seg.size() < 2 or not pv.reproducir_segmento("m/" + str(pg.get("anim", "")), float(seg[0]), float(seg[1]), float(pg["duracion"])):
+					pv.reproducir_forzado("golpe%d" % (mini(paso, 2) + 1))
+				efectos.golpe_estela(pv, pg, int(e["id"]) == mi_id)
 			v["paso"] = paso
 		"sellos":
 			pv.reproducir("sellos", 0.1)
@@ -841,6 +853,22 @@ func _procesar_evento(ev: Dictionary) -> void:
 				efectos.aviso(ev["desde"], ev["hacia"], float(ev["duracion"]), str(ev.get("subtipo", "")) == "melee")
 		"esquiva", "salto":
 			efectos.polvo(_pos_entidad(id), 10)
+		"golpe":
+			if bool(ev.get("avance", false)):
+				efectos.estela_avance(_pos_entidad(id), _visuales[id]["nodo"] if _visuales.has(id) else null)
+		"shunshin":
+			efectos.shunshin(ev["desde"], ev["hasta"])
+			if id == mi_id:
+				camara.sacudir(0.12)
+		"choque":
+			efectos.choque(ev["pos"])
+			sonidos.tocar("golpe", 0.0, 1.9)
+			pausa_impacto(float(ev.get("pausa", 0.12)))
+			camara.sacudir(0.35)
+		"estrellar":
+			efectos.estrellar(ev["pos"])
+			sonidos.tocar("explosion", -8.0, 1.5)
+			efectos.sacudir_desde(ev["pos"], 0.6)
 		"derrota":
 			efectos.polvo(_pos_entidad(id), 24)
 		"sharingan":
@@ -901,11 +929,17 @@ func _evento_impacto(ev: Dictionary) -> void:
 			if involucra_me:
 				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)))
 		_:
-			var fuerte := cant > 10.0
+			var fuerte := cant > 10.0 or bool(ev.get("fuerte", false))
 			efectos.golpe_fisico(pos, fuerte)
 			sonidos.tocar("golpe", -2.0 if fuerte else -6.0, 0.8 if fuerte else 1.1)
-			if fuerte and involucra_me:
-				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)))
+			if involucra_me:
+				# Hitstop: breve en cada golpe, largo en los fuertes; líneas de velocidad de anime en los fuertes.
+				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)) * (1.6 if fuerte else 0.45))
+				if fuerte:
+					hud.lineas_velocidad(0.35)
+					camara.sacudir(0.35)
+			if fuerte:
+				efectos.onda_golpe(pos, ev.get("dir", Vector3.ZERO))
 	var mult := float(ev["naturaleza_mult"])
 	efectos.numero(pos, cant, color, mult)
 	var objetivo := int(ev["entidad"])

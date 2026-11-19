@@ -354,13 +354,7 @@ func _accion(e: EntidadServidor, id: String) -> void:
 
 ## Paso del combo de taijutsu: 0–4 combo en el suelo, 10 lanzador, 11 golpe aéreo, 12 remate contra el suelo.
 func paso_golpe(paso: int) -> Dictionary:
-	var j := Datos.jutsu("golpe")
-	match paso:
-		10: return j["lanzador"]
-		11: return j["aereo"]
-		12: return j["remate"]
-	var pasos: Array = j["pasos"]
-	return pasos[clampi(paso, 0, pasos.size() - 1)]
+	return Combate.paso_golpe(paso)
 
 
 func _accion_golpe(e: EntidadServidor) -> void:
@@ -986,6 +980,7 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		"tipo": "impacto", "entidad": o.id, "atacante": atacante.id if atacante != null else -1,
 		"cantidad": cantidad, "pos": o.centro(), "jutsu": str(info.get("jutsu", "")),
 		"naturaleza_mult": mult, "cadena": bool(info.get("cadena", false)), "nivel": int(info.get("nivel", 1)),
+		"fuerte": bool(info.get("fuerte", false)), "lanza": str(info.get("lanza", "")), "dir": info.get("dir", Vector3.ZERO),
 	})
 	var dir: Vector3 = info.get("dir", Vector3.ZERO)
 	if info.get("dot", false) and o.vida > 0.0:

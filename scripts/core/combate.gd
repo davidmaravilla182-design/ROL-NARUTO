@@ -155,3 +155,14 @@ static func estadisticas(attrs: Dictionary) -> Dictionary:
 		"reserva": r,
 		"control": c,
 	}
+
+
+## Paso del combo de taijutsu: 0–4 combo en el suelo, 10 lanzador, 11 golpe aéreo, 12 remate contra el suelo.
+static func paso_golpe(paso: int) -> Dictionary:
+	var j := Datos.jutsu("golpe")
+	match paso:
+		10: return j["lanzador"]
+		11: return j["aereo"]
+		12: return j["remate"]
+	var pasos: Array = j["pasos"]
+	return pasos[clampi(paso, 0, pasos.size() - 1)]

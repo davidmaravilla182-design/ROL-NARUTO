@@ -35,6 +35,9 @@ var _boton_interactuar: Button
 var _dialogo: Label
 var _dialogo_txt: Label
 var _dialogo_t := 0.0
+var _lineas: Control
+var _lineas_t := 0.0
+var _lineas_total := 0.3
 var _genjutsu: ColorRect
 var _genjutsu_t := 0.0
 var _genjutsu_total := 1.0
@@ -533,6 +536,11 @@ func _dibujar_banner() -> void:
 
 
 func _process(delta: float) -> void:
+	if _lineas_t > 0.0 and _lineas != null:
+		# En tiempo real: el hitstop no las congela.
+		_lineas_t -= delta / maxf(Engine.time_scale, 0.05)
+		_lineas.visible = _lineas_t > 0.0
+		_lineas.queue_redraw()
 	if _genjutsu_t > 0.0 and _genjutsu != null:
 		_genjutsu_t -= delta
 		var k := clampf(minf(_genjutsu_t, _genjutsu_total - _genjutsu_t) / 0.5, 0.0, 1.0)
@@ -688,6 +696,33 @@ func dialogo(texto: String, segundos := 4.5) -> void:
 
 
 ## Genjutsu: nubla y hace girar la pantalla durante «segundos» (entra y sale suave).
+## Líneas de velocidad de anime (golpes fuertes): rayas radiales desde los bordes hacia el centro.
+func lineas_velocidad(segundos: float) -> void:
+	if _lineas == null:
+		_lineas = Control.new()
+		_lineas.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_lineas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_lineas.draw.connect(_dibujar_lineas)
+		add_child(_lineas)
+		move_child(_lineas, 0)
+	_lineas_total = segundos
+	_lineas_t = segundos
+	_lineas.visible = true
+
+
+func _dibujar_lineas() -> void:
+	var tam := _lineas.size
+	var c := tam * 0.5
+	var radio := tam.length() * 0.55
+	var k := clampf(_lineas_t / maxf(_lineas_total, 0.01), 0.0, 1.0)
+	for i in 46:
+		var a := randf() * TAU
+		var dirv := Vector2(cos(a), sin(a))
+		var interior := radio * randf_range(0.42, 0.62)
+		var col := Color(1, 1, 1, 0.55 * k) if i % 3 else Color(0.05, 0.05, 0.08, 0.45 * k)
+		_lineas.draw_line(c + dirv * interior, c + dirv * radio, col, randf_range(1.5, 4.5))
+
+
 func genjutsu(segundos: float) -> void:
 	_genjutsu_total = segundos
 	_genjutsu_t = segundos

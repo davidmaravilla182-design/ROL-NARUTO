@@ -467,6 +467,107 @@ func golpe_fisico(pos: Vector3, fuerte: bool) -> void:
 		camara.sacudir(0.25 if fuerte else 0.1)
 
 
+## Estela de la mano o el pie que golpea (según la animación del paso del combo).
+func golpe_estela(pv: PersonajeVisual, paso: Dictionary, mio: bool) -> void:
+	if pv == null or pv.esqueleto == null:
+		return
+	var an := str(paso.get("anim", ""))
+	var hueso := "ManoD"
+	if "patada" in an or "barrido" in an:
+		hueso = "PieI" if an == "m_patada_frontal" else "PieD"
+	elif "izq" in an or "gancho" in an:
+		hueso = "ManoI"
+	if pv.esqueleto.find_bone(hueso) < 0:
+		return
+	var fuerte := bool(paso.get("fuerte", false))
+	var ba := BoneAttachment3D.new()
+	ba.bone_name = hueso
+	pv.esqueleto.add_child(ba)
+	var p := particulas({"cantidad": 48 if fuerte else 28, "vida": 0.16 if not fuerte else 0.22, "radio": 0.05, "vel_min": 0.0, "vel_max": 0.2,
+		"tam_min": 0.16 if fuerte else 0.11, "tam_max": 0.24 if fuerte else 0.16, "escala_inicio": 1.0,
+		"color": Color(1.0, 0.97, 0.88, 0.75 if mio else 0.5), "color_fin": Color(0.6, 0.8, 1.0, 0.0)})
+	ba.add_child(p)
+	p.emitting = true
+	var dur := float(paso.get("duracion", 0.4))
+	var tw := create_tween()
+	tw.tween_interval(dur * 0.85)
+	tw.tween_callback(func(): if is_instance_valid(p): p.emitting = false)
+	_borrar_en(ba, dur + 0.4)
+
+
+## Avance rápido hacia el rival: polvo a los pies y un rastro de líneas.
+func estela_avance(pos: Vector3, pv: Node3D) -> void:
+	polvo(pos, 12)
+	if pv == null:
+		return
+	var atras := -pv.global_transform.basis.z
+	rafaga(pos + Vector3(0, 1.0, 0), {"cantidad": 18, "vida": 0.25, "radio": 0.35, "direccion": atras, "dispersion": 8.0,
+		"vel_min": 6.0, "vel_max": 10.0, "tam_min": 0.25, "tam_max": 0.4, "estirado": true, "tam_quad": Vector2(0.06, 1.2),
+		"color": Color(0.9, 0.95, 1.0, 0.45)})
+
+
+## Shunshin: humo donde estaba y donde aparece, con una estela de humo entre ambos.
+func shunshin(desde: Vector3, hasta: Vector3) -> void:
+	for k in 6:
+		var t := float(k) / 5.0
+		var pt := desde.lerp(hasta, t) + Vector3(0, 0.9, 0)
+		rafaga(pt, {"cantidad": 10, "vida": 0.6 + t * 0.3, "radio": 0.35, "direccion": Vector3.UP, "dispersion": 80.0, "vel_min": 0.3,
+			"vel_max": 1.2, "tam_min": 0.5, "tam_max": 0.9, "color": Color(0.72, 0.74, 0.78, 0.6), "aditivo": false, "escala_fin": 1.8})
+	for pt2 in [desde, hasta]:
+		rafaga(pt2 + Vector3(0, 0.9, 0), {"cantidad": 26, "vida": 0.9, "radio": 0.5, "dispersion": 180.0, "vel_min": 0.8, "vel_max": 2.5,
+			"tam_min": 0.7, "tam_max": 1.2, "color": Color(0.8, 0.82, 0.86, 0.8), "aditivo": false, "escala_fin": 2.0, "frenado": 3.0})
+	_sonido("golpe", -10.0, 2.2)
+
+
+## Choque de golpes: chispas anaranjadas en abanico y un destello.
+func choque(pos: Vector3) -> void:
+	rafaga(pos, {"cantidad": 40, "vida": 0.35, "radio": 0.05, "vel_min": 5.0, "vel_max": 11.0, "gravedad": Vector3(0, -9, 0),
+		"tam_min": 0.15, "tam_max": 0.3, "estirado": true, "tam_quad": Vector2(0.04, 0.5), "color": Color(1.0, 0.85, 0.45, 1.0)})
+	rafaga(pos, {"cantidad": 6, "vida": 0.12, "radio": 0.02, "vel_min": 0.0, "vel_max": 0.1, "tam_min": 1.2, "tam_max": 1.8,
+		"escala_inicio": 1.0, "color": Color(1, 1, 0.95, 0.9)})
+	luz_temporal(pos, Color(1.0, 0.85, 0.6), 4.0, 6.0, 0.25)
+
+
+## Remate contra el suelo: cráter, anillo de polvo y piedras.
+func estrellar(pos: Vector3) -> void:
+	marca_suelo(pos, 1.7, Color(0.08, 0.08, 0.1, 0.85), true)
+	rafaga(pos + Vector3(0, 0.2, 0), {"cantidad": 36, "vida": 0.9, "radio": 0.6, "direccion": Vector3.UP, "dispersion": 85.0,
+		"vel_min": 2.0, "vel_max": 5.0, "gravedad": Vector3(0, -3, 0), "tam_min": 0.6, "tam_max": 1.1, "frenado": 2.0,
+		"color": Color(0.55, 0.58, 0.62, 0.55), "aditivo": false, "escala_fin": 1.6})
+	rafaga(pos + Vector3(0, 0.2, 0), {"cantidad": 16, "vida": 0.8, "radio": 0.4, "direccion": Vector3.UP, "dispersion": 50.0,
+		"vel_min": 4.0, "vel_max": 8.0, "gravedad": Vector3(0, -18, 0), "tam_min": 0.1, "tam_max": 0.2,
+		"color": Color(0.3, 0.3, 0.33, 1.0), "aditivo": false})
+
+
+## Golpe fuerte: onda expansiva y líneas que salen en la dirección del golpe.
+func onda_golpe(pos: Vector3, dir: Vector3) -> void:
+	var d := dir.normalized() if dir.length() > 0.1 else Vector3.FORWARD
+	rafaga(pos, {"cantidad": 22, "vida": 0.22, "radio": 0.1, "direccion": d, "dispersion": 35.0, "vel_min": 9.0, "vel_max": 15.0,
+		"tam_min": 0.2, "tam_max": 0.35, "estirado": true, "tam_quad": Vector2(0.05, 0.9), "color": Color(1, 1, 1, 0.85)})
+	var anillo := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 0.47
+	tm.outer_radius = 0.5
+	tm.rings = 24
+	tm.ring_segments = 4
+	anillo.mesh = tm
+	anillo.material_override = Materiales.emisivo(Color(0.9, 0.95, 1.0), 1.5)
+	anillo.transparency = 0.55
+	anillo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(anillo)
+	anillo.global_position = pos
+	# El anillo queda perpendicular a la dirección del golpe.
+	var eje := d.cross(Vector3.UP)
+	if eje.length() > 0.01:
+		anillo.global_transform.basis = Basis(eje.normalized(), PI * 0.5)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	anillo.scale = Vector3(0.6, 0.6, 0.6)
+	tw.tween_property(anillo, "scale", Vector3(2.6, 2.6, 2.6), 0.2).set_ease(Tween.EASE_OUT)
+	tw.tween_property(anillo, "transparency", 1.0, 0.2)
+	tw.chain().tween_callback(anillo.queue_free)
+
+
 ## Bomba de humo: nube gris densa que se expande y se disipa.
 func humo(pos: Vector3) -> void:
 	rafaga(pos + Vector3(0, 0.8, 0), {"cantidad": 40, "vida": 1.6, "radio": 0.8, "direccion": Vector3.UP, "dispersion": 90.0,

@@ -36,6 +36,9 @@ func _initialize() -> void:
 	if OS.get_environment("GUION") == "comparar":
 		_guion_comparar()
 		return
+	if OS.get_environment("GUION") == "combate":
+		_guion_combate()
+		return
 	if OS.get_environment("GUION") == "todos":
 		_guion_todos(OS.get_environment("FILTRO"))
 		return
@@ -93,6 +96,11 @@ func _initialize() -> void:
 func _guardar(nombre: String) -> void:
 	root.get_viewport().get_texture().get_image().save_png(salida.path_join(nombre + ".png"))
 	print("captura ", nombre, " t=", snappedf(t, 0.01))
+	if OS.get_environment("GUION") == "combate":
+		for e in juego.servidor.entidades:
+			if e.tipo == "jugador" or (e.tipo == "enemigo" and e.pos.y > -10):
+				var vis = juego._visuales.get(e.id, {}).get("nodo", null)
+				print("   ", e.tipo, " ", e.id, " srv=", e.pos.snappedf(0.1), " ", e.estado, " vida=", int(e.vida), " vis=", (vis.global_position.snappedf(0.1) if vis != null else "—"), " visible=", (vis.visible if vis != null else false))
 
 
 func _cam(yaw: float, dist: float, pitch: float, alt: float) -> void:
@@ -215,6 +223,78 @@ func _guion_rendimiento() -> void:
 			var f := FileAccess.open(salida.path_join("medidas.txt"), FileAccess.WRITE)
 			f.store_string("\n".join(_medidas))
 			quit(0)]]
+
+
+## Guion GUION=combate: combo de 5 golpes, lanzador + combo aéreo + remate, shunshin y choque.
+## Úsese con --fixed-fps 30 para que cada captura caiga en el mismo instante de juego.
+func _guion_combate() -> void:
+	var g := [[0.85, func(): menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[1.4, func(): _enemigo(false)],
+		[1.5, func(): _listo(Vector3(0, 0, 12)); _rival1(Vector3(0, 0, 8.6)); _seguir(); _cam(0.75, 5.0, -0.15, 1.4)]]
+	var t0 := 2.2
+	# Combo de 5: cada golpe se pulsa al terminar el anterior; dos capturas por golpe.
+	var dur := [0.36, 0.36, 0.4, 0.55, 0.55]
+	for i in 5:
+		var k := i
+		g.append([t0, func(): _accion("golpe")])
+		g.append([t0 + dur[k] * 0.35, func(): _guardar("c%d_a" % k)])
+		g.append([t0 + dur[k] * 0.7, func(): _guardar("c%d_b" % k)])
+		t0 += dur[k] + 0.05
+	g.append([t0 + 0.4, func(): _guardar("c5_tras_final")])
+	t0 += 1.6
+	# Lanzador y combo aéreo.
+	g.append([t0, func(): _listo(Vector3(0, 0, 12)); _rival1(Vector3(0, 0, 10.4))])
+	for i in 3:
+		g.append([t0 + 0.1 + i * 0.45, func(): _accion("golpe")])
+	t0 += 0.1 + 3 * 0.45
+	g.append([t0, func(): juego._on_accion("saltar")])
+	g.append([t0 + 0.25, func(): _guardar("l0_lanzador")])
+	g.append([t0 + 0.5, func(): juego._on_accion("saltar")])
+	g.append([t0 + 0.75, func(): _guardar("l1_persecucion"); _accion("golpe")])
+	g.append([t0 + 0.95, func(): _guardar("l2_aereo")])
+	g.append([t0 + 1.2, func(): _accion("golpe")])
+	g.append([t0 + 1.65, func(): _accion("golpe")])
+	g.append([t0 + 1.9, func(): _guardar("l3_remate")])
+	g.append([t0 + 2.3, func(): _guardar("l4_estrellar")])
+	t0 += 3.2
+	# Shunshin hacia el rival fijado.
+	g.append([t0, func(): _listo(Vector3(0, 0, 16)); _rival1(Vector3(0, 0, 8.0)); juego._ciclar_objetivo()])
+	g.append([t0 + 0.3, func(): _accion("esquivar")])
+	g.append([t0 + 0.4, func(): _guardar("s0_shunshin")])
+	g.append([t0 + 0.7, func(): _guardar("s1_shunshin_b")])
+	t0 += 1.5
+	# Choque: los dos golpean a la vez.
+	g.append([t0, func(): _listo(Vector3(0, 0, 10)); _rival1(Vector3(0, 0, 8.8))])
+	g.append([t0 + 0.1, func():
+		var r = null
+		for e in juego.servidor.entidades:
+			if e.tipo == "enemigo" and e.pos.distance_to(Vector3(0, 0, 8.8)) < 0.5:
+				r = e
+		if r != null:
+			juego.servidor._iniciar_golpe(r, 0)
+		_accion("golpe")])
+	g.append([t0 + 0.3, func(): _guardar("x0_choque")])
+	g.append([t0 + 0.6, func(): quit(0)])
+	guion = g
+
+
+## Un solo enemigo quieto (con vida de sobra) en `pos`; el resto, lejos y quietos.
+func _rival1(pos: Vector3) -> void:
+	var primero := true
+	var orden: Array = juego.servidor.entidades.filter(func(x): return x.tipo == "enemigo" and x.plantilla_id == "ninja_lluvia")
+	orden.append_array(juego.servidor.entidades.filter(func(x): return x.tipo == "enemigo" and x.plantilla_id != "ninja_lluvia"))
+	for e in orden:
+		if e.tipo == "enemigo":
+			e.reiniciar()
+			e.oculto = false
+			e.entrada_mov = Vector2.ZERO
+			e.ia = null
+			e.yaw = 0.0
+			e.pos = pos if primero else Vector3(300, -50, 300)
+			if primero:
+				e.vida = 9999.0
+				print("RIVAL ", e.id, " ", e.plantilla_id, " ", e.pos)
+			primero = false
 
 
 ## Enemigo quieto y con vida completa en `pos`, mirando al jugador.

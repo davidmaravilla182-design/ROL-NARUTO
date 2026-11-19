@@ -505,14 +505,50 @@ func _pieza(nombre_hueso: String, mi: Node3D, pos: Vector3) -> void:
 	hueso(nombre_hueso).add_child(mi)
 
 
+## Animaciones de la biblioteca de Meshy (más naturales) que sustituyen a las propias cuando el modelo es por piezas.
+const ALIAS_MESHY := {"correr": "m/m_correr", "golpeado": "m/m_golpeado", "esquivar": "m/m_esquiva", "guardia": "m/m_guardia",
+	"derribado": "m/m_derribado", "muerte": "m/m_muerte", "lanzado": "m/m_lanzado", "golpeado_cara": "m/m_golpeado_cara"}
+
+
+func _resolver_nombre(nombre: String) -> String:
+	if por_piezas and ALIAS_MESHY.has(nombre) and anim.has_animation(ALIAS_MESHY[nombre]):
+		return ALIAS_MESHY[nombre]
+	return nombre
+
+
+func tiene_anim(nombre: String) -> bool:
+	return anim != null and anim.has_animation(_resolver_nombre(nombre))
+
+
 func reproducir(nombre: String, mezcla := 0.12, velocidad := 1.0) -> void:
+	nombre = _resolver_nombre(nombre)
 	anim.speed_scale = velocidad
-	if nombre == anim_actual and anim.is_playing():
-		return
+	if nombre == anim_actual:
+		# Una animación de una sola vez que ya terminó se queda en su última pose (no se reinicia).
+		if anim.is_playing() or anim.get_animation(nombre).loop_mode == Animation.LOOP_NONE:
+			return
 	if not anim.has_animation(nombre):
 		return
 	anim_actual = nombre
 	anim.play(nombre, mezcla)
+
+
+## La primera animación disponible de la lista (p. ej. ["muerte", "caer"]).
+func reproducir_primera(nombres: Array, mezcla := 0.12) -> void:
+	for n in nombres:
+		if tiene_anim(str(n)):
+			reproducir(str(n), mezcla)
+			return
+
+
+## Reproduce un tramo [inicio, fin] (s) de una animación, acelerado para que dure «duracion» (golpes del combo).
+func reproducir_segmento(nombre: String, inicio: float, fin: float, duracion: float, mezcla := 0.06) -> bool:
+	if anim == null or not anim.has_animation(nombre):
+		return false
+	anim_actual = nombre + "#tramo"
+	anim.speed_scale = 1.0
+	anim.play_section(nombre, inicio, fin, mezcla, (fin - inicio) / maxf(duracion, 0.05))
+	return true
 
 
 var _brillo_pies: Array = []
