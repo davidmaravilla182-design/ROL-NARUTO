@@ -167,16 +167,19 @@ static func _farolillos(e: Escenario, c: Vector2, md: Vector2, h: float) -> void
 static func _edificio_ia_luz(e: Escenario, m: Mapa) -> void:
 	for p in m.piezas:
 		# Solo el edificio original de la plaza lleva su farol con luz real (las copias usan los faroles del distrito).
-		if p["tipo"] != "edificio_ia" or (p["centro"] as Vector2).length() > 40.0:
+		# Los edificios de Meshy de la plaza (el original y sus variantes) llevan la luz ámbar de sus faroles.
+		var tipo := str(p["tipo"])
+		if not (tipo == "edificio_ia" or tipo.begins_with("plaza_")) or (p["centro"] as Vector2).length() > 48.0:
 			continue
 		var c: Vector2 = p["centro"]
 		var t := Transform3D(Basis(Vector3.UP, deg_to_rad(float(p["giro"]))), Vector3(c.x, 0, c.y))
+		var fondo := float((Datos.escenario.get("trazado", {}).get("huellas", {}).get(tipo, [7, 7, 8]) as Array)[1])
 		var luz := OmniLight3D.new()
 		luz.light_color = Color(1.0, 0.68, 0.35)
-		luz.light_energy = 1.6
-		luz.omni_range = 6.0
+		luz.light_energy = 1.6 if tipo != "plaza_b" else 2.2   # el puesto de fideos tiene una fila de faroles
+		luz.omni_range = 6.0 if tipo != "plaza_b" else 8.0
 		e.sectores.agregar(luz, c)
-		luz.global_position = t * Vector3(0.6, 2.6, 4.2)
+		luz.global_position = t * (Vector3(0.6, 2.6, 4.2) if tipo == "edificio_ia" else Vector3(0.0, 2.4, fondo * 0.5 + 0.8))
 
 
 ## Muralla de la aldea: tramos de concreto alrededor de la isla y torres de vigilancia con foco.

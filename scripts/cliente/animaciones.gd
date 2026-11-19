@@ -133,6 +133,8 @@ const PADRES := {"Columna": "Caderas", "Pecho": "Columna", "Cuello": "Pecho", "C
 	"PiernaI": "Caderas", "RodillaI": "PiernaI", "PieI": "RodillaI", "PiernaD": "Caderas", "RodillaD": "PiernaD", "PieD": "RodillaD"}
 const HIJOS := {"BrazoI": "AntebrazoI", "AntebrazoI": "ManoI", "BrazoD": "AntebrazoD", "AntebrazoD": "ManoD",
 	"PiernaI": "RodillaI", "RodillaI": "PieI", "PiernaD": "RodillaD", "RodillaD": "PieD"}
+## Altura máxima de la cadera (m) en animaciones de Meshy cuyo salto ya lo hace el servidor (si no, sube el doble).
+const TOPE_ALTURA := {"m_lanzado": 0.15, "m_derribado": 0.15, "m_patada_voladora": 0.4, "m_golpe_suelo": 0.4}
 static var _cache_meshy: Dictionary = {}
 static var _datos_meshy: Dictionary = {}
 
@@ -197,7 +199,11 @@ static func libreria_meshy(clave: String, ruta_esqueleto: String, rest_global: C
 					var rp: Quaternion = (reposo[padre] as Transform3D).basis.get_rotation_quaternion()
 					local = rp.inverse() * (dglob[padre] as Quaternion).inverse() * (dglob[h] as Quaternion) * rb
 				anim.rotation_track_insert_key(pistas[h], t, local.normalized())
-			anim.position_track_insert_key(pista_pos, t, rest_caderas + Vector3(0, float(c["y"]), 0))
+			# Lanzado y derribado: el vuelo lo pone el servidor; de la animación solo se toma la caída al suelo.
+			var y_cad := float(c["y"])
+			if nombre in TOPE_ALTURA:
+				y_cad = minf(y_cad, float(TOPE_ALTURA[nombre]))
+			anim.position_track_insert_key(pista_pos, t, rest_caderas + Vector3(0, y_cad, 0))
 		lib.add_animation(nombre, anim)
 	_cache_meshy[clave] = lib
 	return lib

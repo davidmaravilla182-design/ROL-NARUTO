@@ -324,6 +324,21 @@
     1.8,
     1.2,
     2.6
+   ],
+   "plaza_a": [
+    7.07,
+    8.05,
+    11.0
+   ],
+   "plaza_b": [
+    9.4,
+    7.75,
+    8.5
+   ],
+   "plaza_c": [
+    6.2,
+    7.36,
+    13.0
    ]
   },
   "canal": {
@@ -345,7 +360,7 @@
   ],
   "piezas": [
    {
-    "tipo": "edificio",
+    "tipo": "plaza_c",
     "pos": [
      26.0,
      -14.0
@@ -353,7 +368,7 @@
     "giro": 270
    },
    {
-    "tipo": "edificio",
+    "tipo": "plaza_b",
     "pos": [
      27.0,
      -3.0
@@ -361,7 +376,7 @@
     "giro": 270
    },
    {
-    "tipo": "edificio",
+    "tipo": "plaza_a",
     "pos": [
      26.0,
      13.0
@@ -377,7 +392,7 @@
     "giro": 90
    },
    {
-    "tipo": "edificio",
+    "tipo": "plaza_a",
     "pos": [
      -27.0,
      4.0
@@ -401,7 +416,7 @@
     "giro": 0
    },
    {
-    "tipo": "edificio",
+    "tipo": "plaza_b",
     "pos": [
      -12.0,
      27.0
@@ -409,7 +424,7 @@
     "giro": 180
    },
    {
-    "tipo": "edificio",
+    "tipo": "plaza_c",
     "pos": [
      12.0,
      26.0
@@ -425,7 +440,7 @@
     "giro": 30
    },
    {
-    "tipo": "edificio",
+    "tipo": "plaza_a",
     "pos": [
      -30.0,
      -38.0
@@ -433,7 +448,7 @@
     "giro": 0
    },
    {
-    "tipo": "edificio",
+    "tipo": "plaza_c",
     "pos": [
      -12.0,
      -37.0
@@ -449,7 +464,7 @@
     "giro": 0
    },
    {
-    "tipo": "edificio",
+    "tipo": "plaza_b",
     "pos": [
      26.0,
      -38.0
@@ -10021,6 +10036,18 @@
    "jutsu_golem": [
     7999,
     2000
+   ],
+   "plaza_a": [
+    9000,
+    899
+   ],
+   "plaza_b": [
+    9000,
+    900
+   ],
+   "plaza_c": [
+    9000,
+    900
    ]
   },
   "props_base": [

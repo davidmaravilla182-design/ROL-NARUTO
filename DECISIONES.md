@@ -233,3 +233,26 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
   no viajan (se rellenan al recibir).
 - **Jutsus con modelo**: Meshy solo malla (5 créditos) cuando el material lo pone el juego (Susanoo, Kirin, dragón de
   agua); con textura (15) cuando la textura importa (madera, roca).
+
+## v0.8 — ronda de calidad premium
+- **Animaciones de Meshy en nuestro esqueleto**: no se importa su rig (24 huesos, pose A). Se guardan por cuadro la
+  orientación del tronco y la *dirección* de cada hueso de brazos y piernas (`data/animaciones_meshy.json`) y el juego
+  arma la biblioteca para cualquier esqueleto de 17 huesos (`Animaciones.libreria_meshy`). Así sirven las mismas
+  animaciones para jugador y NPCs aunque cambien las proporciones. El desplazamiento horizontal se descarta (lo pone el
+  servidor); la altura de cadera se limita en las animaciones de vuelo (si no, sube el doble).
+- **Combo con tramos de animación**: cada paso del combo es un tramo [inicio, fin] de una animación de Meshy
+  reproducido a la duración que fija el servidor (`play_section`); el instante del impacto del servidor coincide con
+  el golpe visible.
+- **Movimientos de combate en el servidor**: avance hacia el rival, lanzador/aéreos/remate, shunshin, sustitución y
+  choques son autoritativos (la IA usa los mismos comandos). La sustitución solo funciona contra golpes cuerpo a
+  cuerpo (contra proyectiles gastaba chakra y desequilibraba el combate).
+- **Anticipación sincronizada**: los ataques de criaturas y del Susanoo emiten un evento previo (`criatura_prepara`,
+  `susanoo_alza`, `susanoo_tensa`) con el tiempo que falta; el cliente ajusta la animación para que el golpe visible
+  caiga en el mismo instante que el daño.
+- **Cadena de huesos automática** para modelos serpentinos de Meshy (columna por medianas de rebanadas + pesos por
+  distancia a segmentos) en lugar de pedir un rig a Meshy (su rig es solo humanoide). El gólem sí usa el rig de
+  Meshy (es humanoide).
+- **Susanoo**: sus modelos traen el arma fundida en la malla y no tienen rig; las armas que se animan son de chakra,
+  aparte, y se materializan al atacar.
+- **Plaza**: variantes del edificio que gustó generadas con imagen a imagen desde su imagen de referencia (mismo
+  estilo) + imagen a 3D con textura; sus espaldas son lisas (vienen de una sola vista), por eso miran a la plaza.

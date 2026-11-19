@@ -20,6 +20,30 @@
   "anim_golem": [
    "01a1f460-54bc-72ae-9762-6be969bc8d8b",
    12
+  ],
+  "img_plaza_a": [
+   "01a1f4c3-95d3-733f-a77d-6c363c1d9c26",
+   6
+  ],
+  "img_plaza_b": [
+   "01a1f4c3-9ca9-7031-ad87-a36d9a4988eb",
+   6
+  ],
+  "img_plaza_c": [
+   "01a1f4c3-a5e4-777d-b7ed-99aaf0b810e2",
+   6
+  ],
+  "plaza_a": [
+   "01a1f4c4-c5c8-751a-af1f-306e8d1c7bee",
+   15
+  ],
+  "plaza_b": [
+   "01a1f4c4-cb06-746e-b16e-fb7b19f8ae31",
+   15
+  ],
+  "plaza_c": [
+   "01a1f4c4-cf9f-7438-9f17-6d260d2835b8",
+   15
   ]
  }
 }

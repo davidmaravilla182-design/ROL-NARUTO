@@ -2,16 +2,26 @@
 
 > Meshy: saldo inicial 749, tope 250 (preguntar si una operación pasa de 40 o si el saldo bajaría de 150).
 
-- [ ] 1. Peinados que cubran todo el cuero cabelludo (coleta y revisión de los demás); Kirin con nubes que se
+- [x] 1. Peinados que cubran todo el cuero cabelludo (coleta y revisión de los demás); Kirin con nubes que se
         arremolinan, dragón de relámpagos con cabeza visible, destello blanco, trueno, cráter y chispas.
-- [ ] 2. Poderes con movimiento: dragones con cadena de huesos que ondulan; golem con esqueleto y animaciones
+  Hecho: búsqueda de colocación de cada peinado + «gorro» de cuero cabelludo copiado del cuerpo (cobertura 96–100 %).
+  Kirin: tormenta que gira y se cierra sobre el objetivo durante la carga (1,1–1,5 s), dragón de rayo (modelo con
+  cadena de huesos) que baja en espiral, destello blanco a pantalla completa, cráter con grietas y chispas residuales.
+- [x] 2. Poderes con movimiento: dragones con cadena de huesos que ondulan; golem con esqueleto y animaciones
         (levantarse, caminar, golpear, desmoronarse); Susanoo que se forma por capas con espada y arco animados;
         anticipación, impacto y desvanecimiento en todos.
-- [ ] 3. Combate como en la serie: combos de 4–5 golpes con desplazamientos, patada giratoria y remate que lanza;
+  Hecho: `tools/blender/cadena_jutsu.py` + DragonVivo; `tools/blender/golem_animado.py` + GolemVivo (rig y
+  animaciones de Meshy); Susanoo por capas con arco que se tensa y espada que se alza y tajea (eventos de
+  anticipación del servidor). Los dragones iban de espaldas: corregido.
+- [x] 3. Combate como en la serie: combos de 4–5 golpes con desplazamientos, patada giratoria y remate que lanza;
         combos aéreos; shunshin tras el enemigo; sustitución con tronco; choques; pausa de impacto, sacudida, líneas
         de velocidad, estelas y retroceso. Animaciones de la biblioteca de Meshy retargeteadas al esqueleto de 17 huesos.
         Enemigos con estos movimientos según su tipo.
-- [ ] 4. Plaza con modelos de Meshy (casa de la plaza + 2–3 edificios nuevos del mismo estilo).
+  Hecho: 22 animaciones de Meshy retargeteadas (`tools/blender/retarget_meshy.py`, `data/animaciones_meshy.json`);
+  servidor con combo de 5, lanzador/aéreos/remate, shunshin, sustitución, choques (10 pruebas nuevas); IA por perfil.
+- [x] 4. Plaza con modelos de Meshy (casa de la plaza + 2–3 edificios nuevos del mismo estilo).
+  Hecho: 3 variantes (tienda de 3 pisos, puesto de fideos con escalera, torre de 4 pisos) desde la imagen del
+  edificio_ia; reemplazan los 9 edificios procedurales del anillo de la plaza.
 - [ ] 5. Pruebas de calidad con secuencias de cuadros (caminar, correr, saltar, pared, agua, combos, jutsus ×3,
         NPCs), revisión cuadro a cuadro, correcciones, antes/después en la bitácora; 60 FPS estimados con 3 enemigos
         y un jutsu N3.

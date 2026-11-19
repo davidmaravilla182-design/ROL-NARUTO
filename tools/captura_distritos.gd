@@ -20,6 +20,9 @@ const VISTAS := {
 	"torre": [Vector3(0, 2, -45), Vector3(0, 40, -80)],
 	"canal": [Vector3(46, 3, -24), Vector3(110, 0, -28)],
 	"plaza": [Vector3(14, 3, 30), Vector3(-6, 2, 0)],
+	"plaza_este": [Vector3(-8, 2.6, 4), Vector3(27, 5, -2)],
+	"plaza_norte": [Vector3(4, 2.6, -8), Vector3(0, 5, 27)],
+	"plaza_sur": [Vector3(-4, 2.6, 6), Vector3(-14, 5, -38)],
 }
 
 

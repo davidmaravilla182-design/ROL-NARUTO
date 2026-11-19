@@ -47,7 +47,7 @@ static func textura(m: Mapa) -> ImageTexture:
 				col = Color(0.42, 0.42, 0.46)
 			"torre_ia":
 				col = Color(0.75, 0.55, 0.6)
-			"casa_chica", "edificio", "edificio_ia":
+			"casa_chica", "edificio", "edificio_ia", "plaza_a", "plaza_b", "plaza_c":
 				col = Color(0.6, 0.5, 0.48)
 			"torre_vivienda_a", "torre_vivienda_b":
 				col = Color(0.62, 0.55, 0.72)

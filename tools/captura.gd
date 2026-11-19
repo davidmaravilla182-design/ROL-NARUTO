@@ -36,6 +36,9 @@ func _initialize() -> void:
 	if OS.get_environment("GUION") == "comparar":
 		_guion_comparar()
 		return
+	if OS.get_environment("GUION") == "locomocion":
+		_guion_locomocion()
+		return
 	if OS.get_environment("GUION") == "kirin":
 		_guion_kirin()
 		return
@@ -279,6 +282,85 @@ func _guion_combate() -> void:
 	g.append([t0 + 0.3, func(): _guardar("x0_choque")])
 	g.append([t0 + 0.6, func(): quit(0)])
 	guion = g
+
+
+## Guion GUION=locomocion: caminar, correr, saltar, correr por una pared y sobre el agua (cámara fija lateral),
+## y un guardia que patrulla, ataca y cae. Cuadros cada 0,1–0,15 s. Úsese con --fixed-fps 30.
+func _guion_locomocion() -> void:
+	var g := [[0.85, func(): menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[1.4, func(): _enemigo(false); _rival1(Vector3(300, -50, 300))]]
+	var t0 := 1.6
+	# Caminar (joystick a medias) y correr, de lado.
+	for caso in [["caminar", 0.45], ["correr", 1.0]]:
+		g.append([t0, func():
+			_listo(Vector3(-6, 0, 6)); juego.camara.libre = true; juego.camara.yaw = -PI * 0.5
+			juego.camara.global_position = Vector3(0, 1.4, 11.5); juego.camara.look_at(Vector3(0, 1.0, 6), Vector3.UP)
+			juego._mov_prueba = Vector2(0, -float(caso[1]))])
+		for k in 6:
+			g.append([t0 + 0.6 + k * 0.12, func(): _guardar("loc_%s_%d" % [caso[0], k])])
+		g.append([t0 + 1.4, func(): juego._mov_prueba = Vector2.ZERO])
+		t0 += 1.6
+	# Salto corriendo.
+	g.append([t0, func():
+		_listo(Vector3(-7, 0, 6)); juego.camara.global_position = Vector3(0, 1.8, 13.0); juego.camara.look_at(Vector3(0, 1.6, 6), Vector3.UP)
+		juego._mov_prueba = Vector2(0, -1)])
+	g.append([t0 + 0.4, func(): juego._on_accion("saltar")])
+	for k in 7:
+		g.append([t0 + 0.45 + k * 0.12, func(): _guardar("loc_saltar_%d" % k)])
+	g.append([t0 + 1.4, func(): juego._mov_prueba = Vector2.ZERO])
+	t0 += 1.6
+	# Pared: empuja contra la casa de la plaza y sube corriendo.
+	g.append([t0, func():
+		var o := _obstaculo_cerca(Vector2(26, 13))
+		var c: Vector2 = o["centro"]
+		var md: Vector2 = o["medio"]
+		_listo(Vector3(c.x - md.x - 2.5, 0, c.y))
+		juego.camara.libre = true; juego.camara.yaw = -PI * 0.5   # adelante = +X (hacia la pared)
+		juego.camara.global_position = Vector3(c.x - md.x - 9.0, 4.0, c.y + 9.0); juego.camara.look_at(Vector3(c.x - md.x, 4.5, c.y), Vector3.UP)
+		juego._mov_prueba = Vector2(0, -1)])
+	for k in 8:
+		g.append([t0 + 0.4 + k * 0.2, func(): _guardar("loc_pared_%d" % k)])
+	g.append([t0 + 2.2, func(): juego._mov_prueba = Vector2.ZERO])
+	t0 += 2.4
+	# Agua del canal con chakra.
+	g.append([t0, func():
+		_listo(Vector3(30.0, 0, -18.0))
+		juego.camara.libre = true; juego.camara.yaw = 0.0   # adelante = -Z (cruza el canal)
+		juego.camara.global_position = Vector3(36.0, 2.2, -22.0); juego.camara.look_at(Vector3(30.0, 0.8, -23.0), Vector3.UP)
+		juego._mov_prueba = Vector2(0, -0.8)])
+	for k in 6:
+		g.append([t0 + 0.4 + k * 0.15, func(): _guardar("loc_agua_%d" % k)])
+	g.append([t0 + 1.4, func(): juego._mov_prueba = Vector2.ZERO])
+	t0 += 1.6
+	# Guardia: se acerca (patrulla/persecución), ataca y cae derrotado.
+	g.append([t0, func():
+		_listo(Vector3(0, 0, 10)); juego.servidor.entidad_de_peer(1).invulnerable_t = 999.0
+		juego.camara.libre = true; juego.camara.global_position = Vector3(7, 2.2, 5); juego.camara.look_at(Vector3(0, 1.0, 5), Vector3.UP)
+		for e in juego.servidor.entidades:
+			if e.tipo == "enemigo" and e.plantilla_id == "guardia_lluvia":
+				e.reiniciar(); e.oculto = false; e.pos = Vector3(0, 0, -2); e.ia = IaEnemigo.new(e); e.ia.t_reaccion = 0.0
+				break])
+	for k in 10:
+		g.append([t0 + 0.3 + k * 0.2, func(): _guardar("npc_guardia_%d" % k)])
+	g.append([t0 + 2.4, func():
+		for e in juego.servidor.entidades:
+			if e.tipo == "enemigo" and e.plantilla_id == "guardia_lluvia" and e.pos.distance_to(Vector3(0, 0, 8)) < 8.0:
+				juego.servidor._aplicar_dano(e, 9999.0, juego.servidor.entidad_de_peer(1), {"jutsu": "golpe", "derriba": true, "dir": Vector3(0, 0, -1), "empuje": 6.0})])
+	for k in 5:
+		g.append([t0 + 2.5 + k * 0.2, func(): _guardar("npc_muerte_%d" % k)])
+	g.append([t0 + 3.8, func(): quit(0)])
+	guion = g
+
+
+func _obstaculo_cerca(p: Vector2) -> Dictionary:
+	var mejor: Dictionary = {}
+	var md := INF
+	for o in juego.servidor.mapa.obstaculos:
+		var d := (o["centro"] as Vector2).distance_to(p)
+		if d < md and float(o.get("alto", 0.0)) > 4.0:
+			md = d
+			mejor = o
+	return mejor
 
 
 ## Guion GUION=kirin: tormenta, dragón de rayo e impacto en N1, N2 y N3 (secuencia de 6 cuadros por nivel).

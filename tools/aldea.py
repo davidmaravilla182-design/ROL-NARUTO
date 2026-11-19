@@ -46,15 +46,16 @@ RESERVAS = [
 ]
 
 # Piezas hechas a mano de la plaza original (sin el silo que tapaba la avenida a la puerta ni el de la salida este).
+# v0.8: los edificios del anillo son variantes de Meshy del edificio_ia (plaza_a/b/c, mismo estilo).
 PLAZA_BASE = [
-    {"tipo": "edificio", "pos": [26.0, -14.0], "giro": 270}, {"tipo": "edificio", "pos": [27.0, -3.0], "giro": 270},
-    {"tipo": "edificio", "pos": [26.0, 13.0], "giro": 270},
-    {"tipo": "edificio_ia", "pos": [-26.0, -13.0], "giro": 90}, {"tipo": "edificio", "pos": [-27.0, 4.0], "giro": 90},
+    {"tipo": "plaza_c", "pos": [26.0, -14.0], "giro": 270}, {"tipo": "plaza_b", "pos": [27.0, -3.0], "giro": 270},
+    {"tipo": "plaza_a", "pos": [26.0, 13.0], "giro": 270},
+    {"tipo": "edificio_ia", "pos": [-26.0, -13.0], "giro": 90}, {"tipo": "plaza_a", "pos": [-27.0, 4.0], "giro": 90},
     {"tipo": "silo", "pos": [-34.0, 16.0], "giro": 40}, {"tipo": "tanque", "pos": [-24.0, 15.0], "giro": 0},
-    {"tipo": "edificio", "pos": [-12.0, 27.0], "giro": 180}, {"tipo": "edificio", "pos": [12.0, 26.0], "giro": 180},
+    {"tipo": "plaza_b", "pos": [-12.0, 27.0], "giro": 180}, {"tipo": "plaza_c", "pos": [12.0, 26.0], "giro": 180},
     {"tipo": "tanque", "pos": [21.0, 23.0], "giro": 30},
-    {"tipo": "edificio", "pos": [-30.0, -38.0], "giro": 0}, {"tipo": "edificio", "pos": [-12.0, -37.0], "giro": 0},
-    {"tipo": "silo", "pos": [12.0, -42.0], "giro": 0}, {"tipo": "edificio", "pos": [26.0, -38.0], "giro": 0},
+    {"tipo": "plaza_a", "pos": [-30.0, -38.0], "giro": 0}, {"tipo": "plaza_c", "pos": [-12.0, -37.0], "giro": 0},
+    {"tipo": "silo", "pos": [12.0, -42.0], "giro": 0}, {"tipo": "plaza_b", "pos": [26.0, -38.0], "giro": 0},
     {"tipo": "torre_ia", "pos": [0.0, -80.0], "giro": 0},
 ]
 
