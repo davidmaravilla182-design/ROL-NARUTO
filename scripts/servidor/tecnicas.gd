@@ -270,7 +270,12 @@ static func _tick_susanoo(s: ServidorJuego, e: EntidadServidor, ef: Dictionary, 
 		return
 	if float(nd.get("flecha_cada", 0.0)) > 0.0:
 		ef["flecha"] = float(ef["flecha"]) - dt
+		# Anticipación: tensa el arco un instante antes de disparar.
+		if float(ef["flecha"]) <= 0.35 and not ef.get("tensado", false) and s._buscar_objetivo(e, e.yaw, 180.0, 28.0) != null:
+			ef["tensado"] = true
+			s._evento({"tipo": "susanoo_tensa", "entidad": e.id, "nivel": nivel, "tiempo": maxf(float(ef["flecha"]), 0.05)})
 		if float(ef["flecha"]) <= 0.0:
+			ef["tensado"] = false
 			var obj := s._buscar_objetivo(e, e.yaw, 180.0, 28.0)
 			if obj != null:
 				ef["flecha"] = float(nd["flecha_cada"])
@@ -281,7 +286,16 @@ static func _tick_susanoo(s: ServidorJuego, e: EntidadServidor, ef: Dictionary, 
 				e.yaw = antes
 	if float(nd.get("espada_cada", 0.0)) > 0.0:
 		ef["espada"] = float(ef["espada"]) - dt
+		var radio_a := float(nd.get("espada_radio", 4.5))
+		# Anticipación: alza la espada si hay alguien a su alcance.
+		if float(ef["espada"]) <= 0.3 and not ef.get("alzada", false):
+			for o in s.entidades:
+				if o != e and o.vivo() and o.equipo != e.equipo and o.pos.distance_to(e.pos) <= radio_a + 0.6:
+					ef["alzada"] = true
+					s._evento({"tipo": "susanoo_alza", "entidad": e.id, "nivel": nivel, "tiempo": maxf(float(ef["espada"]), 0.05)})
+					break
 		if float(ef["espada"]) <= 0.0:
+			ef["alzada"] = false
 			var radio := float(nd.get("espada_radio", 4.5))
 			var hubo := false
 			for o in s.entidades:

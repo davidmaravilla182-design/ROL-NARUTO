@@ -108,6 +108,7 @@ class Criatura extends Node3D:
 	var salta := false
 	var cuerpo: Node3D
 	var anim: PersonajeVisual
+	var golem: GolemVivo
 	func _process(d: float) -> void:
 		t += d
 		var antes := global_position
@@ -118,6 +119,8 @@ class Criatura extends Node3D:
 			cuerpo.position.y = (absf(sin(t * 6.0)) * 0.6 if salta and vel > 0.3 else sin(t * 2.0) * 0.04)
 		if anim != null:
 			anim.reproducir("correr" if vel > 0.5 else "guardia", 0.15)
+		if golem != null and is_instance_valid(golem):
+			golem.moverse(vel)
 
 
 # ============================================================================ proyectiles
@@ -292,13 +295,20 @@ func _dragon(nodo: Node3D, radio: float, c: Color, n: int, fuego: bool) -> void:
 			var ma := Shaders.material("agua_cuerpo")
 			ma.set_shader_parameter("color", Color(c.r, c.g, c.b).darkened(0.2))
 			mat_modelo = ma
-		modelo = DragonVivo.crear("dragon_madera" if madera else "dragon_agua", mat_modelo)
+		modelo = DragonVivo.crear("dragon_madera" if madera else "dragon_agua", mat_modelo if not madera else Kit.material_para("jutsu_dragon_madera"))
 		if modelo == null:
 			modelo = Kit.modelo_jutsu("dragon_madera") if madera else Kit.modelo_jutsu("dragon_agua", mat_modelo)
 	if modelo != null:
-		var esc_m := radio * (1.1 if not madera else 0.9)
-		modelo.position = Vector3(0, -radio * 1.2, radio * 0.6)
+		var esc_m := radio * (2.0 if not madera else 0.9)
 		nodo.add_child(modelo)
+		# El nodo avanza hacia su -Z (Movil); los modelos miran a +Z: se giran para ir de frente.
+		if madera:
+			modelo.rotation.y = PI
+			modelo.position = Vector3(0, -radio * 1.2, -radio * 0.6)
+		else:
+			# El de agua es una serpiente erguida: se tumba hacia delante para avanzar con la cabeza por delante.
+			modelo.rotation.x = -PI * 0.5
+			modelo.position = Vector3(0, radio * 0.2, esc_m * 2.0)
 		if modelo is DragonVivo:
 			(modelo as DragonVivo).anticipar(esc_m)
 			nodo.set_meta("dragon_color", c)
@@ -309,6 +319,8 @@ func _dragon(nodo: Node3D, radio: float, c: Color, n: int, fuego: bool) -> void:
 		else:
 			_espuma(nodo, radio, 50)
 			_sonar("chapoteo", -6.0, 0.6)
+		if modelo is DragonVivo:
+			return   # el propio modelo ondula: sin bolas de cola
 		var cuerpo_m := Cuerpo.new()
 		cuerpo_m.separacion = radio * 1.0
 		nodo.add_child(cuerpo_m)
@@ -543,6 +555,10 @@ func evento(ev: Dictionary, mi_id: int, pos_entidad: Callable, visual_de: Callab
 				efectos.polvo(p0, 30)
 			_extras_nivel(ev, p0, float(ev["escala"]) * 2.0, color_de(ev), nd)
 			_sonar("golpe", -2.0, 0.5)
+		"criatura_prepara":
+			var cp: Node3D = _criaturas.get(int(ev["criatura"]))
+			if cp != null and is_instance_valid(cp) and cp is Criatura and (cp as Criatura).golem != null:
+				(cp as Criatura).golem.preparar_golpe(float(ev.get("anticipo", 0.45)))
 		"criatura_golpe":
 			var cr: Node3D = _criaturas.get(int(ev["criatura"]))
 			if cr != null and is_instance_valid(cr):
@@ -1251,7 +1267,16 @@ func sincronizar_criaturas(lista: Array) -> void:
 	for id in _criaturas.keys():
 		if not vistos.has(id):
 			var n2: Node3D = _criaturas[id]
-			if is_instance_valid(n2):
+			if is_instance_valid(n2) and n2 is Criatura and (n2 as Criatura).golem != null and is_instance_valid((n2 as Criatura).golem):
+				# El gólem no se encoge: se derrumba en rocas y se hunde.
+				var g: GolemVivo = (n2 as Criatura).golem
+				var tr := g.global_transform
+				g.get_parent().remove_child(g)
+				add_child(g)
+				g.global_transform = tr
+				g.derrumbar()
+				n2.queue_free()
+			elif is_instance_valid(n2):
 				var tw := create_tween()
 				tw.tween_property(n2, "scale", Vector3.ONE * 0.01, 0.2)
 				tw.tween_callback(n2.queue_free)
@@ -1272,6 +1297,21 @@ func crear_criatura(c: Dictionary) -> Criatura:
 	match forma:
 		"golem", "golem_lava":
 			var lava := forma == "golem_lava"
+			var vivo_g: GolemVivo = null if lava else GolemVivo.crear(efectos)
+			if vivo_g != null:
+				# Gólem con esqueleto: sube del suelo entre polvo y piedras y se golpea el pecho.
+				cuerpo.add_child(vivo_g)
+				n.golem = vivo_g
+				vivo_g.position.y = -2.8
+				var tw_v := vivo_g.create_tween()
+				tw_v.tween_property(vivo_g, "position:y", 0.0, 0.8).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+				vivo_g.surgir()
+				efectos.polvo(n.global_position, 40)
+				efectos.rafaga(n.global_position + Vector3(0, 0.3, 0), {"cantidad": 24, "vida": 0.9, "radio": 0.8, "direccion": Vector3.UP, "dispersion": 40.0,
+					"vel_min": 3.0, "vel_max": 7.0, "gravedad": Vector3(0, -14, 0), "tam_min": 0.12, "tam_max": 0.28, "color": Color(0.45, 0.38, 0.3), "aditivo": false})
+				efectos.marca_suelo(n.global_position, 1.6 * esc, Color(0.12, 0.1, 0.08, 0.8), true)
+				n.scale = Vector3.ONE * esc
+				return n
 			var modelo_g: MeshInstance3D = null if lava else Kit.modelo_jutsu("golem")
 			if modelo_g != null:
 				# Golem de roca de Meshy: se levanta del suelo (sube desde abajo) entre polvo y piedras.

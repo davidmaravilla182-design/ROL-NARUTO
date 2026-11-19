@@ -80,6 +80,17 @@ func evento(ev: Dictionary, mi_id: int, pos_entidad: Callable, visual_de: Callab
 					lenta.call(0.3, 0.5)
 		"susanoo_espada":
 			espada(ev["pos"], float(ev["radio"]), nivel)
+			var sz := _susanoo_de(int(ev["entidad"]))
+			if sz != null and sz.has_meta("espada"):
+				tajo_espada(sz.get_meta("espada"))
+		"susanoo_alza":
+			var sz2 := _susanoo_de(int(ev["entidad"]))
+			if sz2 != null and sz2.has_meta("espada"):
+				alzar_espada(sz2.get_meta("espada"), float(ev.get("tiempo", 0.3)))
+		"susanoo_tensa":
+			var sz3 := _susanoo_de(int(ev["entidad"]))
+			if sz3 != null and sz3.has_meta("arco"):
+				tensar_arco(sz3.get_meta("arco"), float(ev.get("tiempo", 0.35)))
 		"shinra":
 			shinra(ev["pos"], float(ev["radio"]), nivel, float(ev.get("crater", 0.0)))
 			if propio and nivel >= 3:
@@ -375,22 +386,23 @@ func crear_susanoo(nivel: int) -> Node3D:
 	mat.set_shader_parameter("color", COLOR_ESPECTRAL)
 	mat.set_shader_parameter("intensidad", 1.2 + nivel * 0.3)
 	var esc: float = [1.0, 1.8, 3.0][nivel - 1]
-	# Modelo de Meshy del nivel (costillas / torso con arco / armadura con espada) con el chakra translúcido.
-	var modelo := Kit.modelo_jutsu("susanoo_%d" % nivel, mat)
-	if modelo != null:
-		modelo.position = Vector3(0, 0, -0.25 * nivel)
-		raiz.add_child(modelo)
-		for lado in [-1.0, 1.0]:
-			if nivel >= 2:
-				var ojo := Materiales.caja(Vector3(0.18, 0.05, 0.05) * (nivel - 0.5), Materiales.emisivo(Color(1.0, 0.85, 0.3), 4.0))
-				ojo.position = Vector3(0.18 * lado * (nivel - 0.5), [0.0, 4.35, 7.7][nivel - 1], [0.0, 0.25, 0.6][nivel - 1])
-				raiz.add_child(ojo)
+	# Se forma por capas: esqueleto → guerrero → armadura completa (modelos de Meshy con el chakra translúcido).
+	if ResourceLoader.exists("res://assets/modelos/jutsu_susanoo_%d.glb" % nivel):
+		_formar_capas(raiz, nivel)
 		var luz_m := OmniLight3D.new()
 		luz_m.light_color = COLOR_ESPECTRAL
 		luz_m.light_energy = 1.5 + nivel
 		luz_m.omni_range = 4.0 * esc
 		luz_m.position = Vector3(0, 1.5 * esc, 0)
 		raiz.add_child(luz_m)
+		var alto: float = [2.8, 5.2, 9.0][nivel - 1]
+		if nivel >= 2:
+			raiz.set_meta("arco", _crear_arco(Vector3(-0.33 * alto, 0.5 * alto, 0.2 * alto), 0.32 * alto))
+			raiz.add_child(raiz.get_meta("arco"))
+		if nivel >= 3:
+			raiz.set_meta("espada", _crear_espada(Vector3(0.29 * alto, 0.42 * alto, 0.13 * alto), 0.62 * alto))
+			raiz.add_child(raiz.get_meta("espada"))
+		raiz.set_meta("capas", true)
 		return raiz
 	# Costillas: arcos alrededor del torso.
 	for k in 5:
@@ -457,6 +469,153 @@ func crear_susanoo(nivel: int) -> Node3D:
 	luz.position = Vector3(0, 1.5, 0)
 	raiz.add_child(luz)
 	return raiz
+
+
+## Capas del Susanoo: cada forma aparece (escala con rebote y brillo) y la anterior se desvanece dentro de ella.
+func _formar_capas(raiz: Node3D, nivel: int) -> void:
+	var intensidad := 1.2 + nivel * 0.3
+	var capas: Array = []
+	for k in range(1, nivel + 1):
+		var mk := Shaders.material("espectral").duplicate() as ShaderMaterial   # uno por capa (se apagan por separado)
+		mk.set_shader_parameter("color", COLOR_ESPECTRAL)
+		mk.set_shader_parameter("intensidad", 0.0)
+		var m := Kit.modelo_jutsu("susanoo_%d" % k, mk)
+		if m == null:
+			continue
+		m.position = Vector3(0, 0, -0.25 * k)
+		m.visible = false
+		raiz.add_child(m)
+		capas.append([m, mk])
+	var llamas := efectos.particulas({"cantidad": 60, "vida": 0.8, "radio": 1.2 + nivel * 0.6, "direccion": Vector3.UP, "dispersion": 15.0,
+		"vel_min": 2.0, "vel_max": 5.0 + nivel, "tam_min": 0.3, "tam_max": 0.7, "color": Color(0.65, 0.4, 1.0, 0.6), "local": true})
+	raiz.add_child(llamas)
+	llamas.emitting = true
+	var tw := raiz.create_tween()
+	for i in capas.size():
+		var m: MeshInstance3D = capas[i][0]
+		var mk: ShaderMaterial = capas[i][1]
+		var ultima := i == capas.size() - 1
+		tw.tween_callback(func():
+			m.visible = true
+			m.scale = Vector3.ONE * 0.85
+			var t2 := m.create_tween()
+			t2.set_parallel(true)
+			t2.tween_property(m, "scale", Vector3.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			t2.tween_method(func(v: float): mk.set_shader_parameter("intensidad", v), 0.0, intensidad * (1.0 if ultima else 1.5), 0.25))
+		if not ultima:
+			tw.tween_interval(0.32)
+			tw.tween_callback(func():
+				var t3 := m.create_tween()
+				t3.tween_method(func(v: float): mk.set_shader_parameter("intensidad", v), intensidad * 1.5, 0.0, 0.3)
+				t3.tween_callback(func(): m.visible = false))
+	tw.tween_interval(0.5)
+	tw.tween_callback(func(): llamas.emitting = false)
+
+
+## Arco de chakra (oculto hasta que dispara): palas en arco, cuerda y flecha.
+func _crear_arco(pos: Vector3, r: float) -> Node3D:
+	var arco := Node3D.new()
+	arco.position = pos
+	var mat := Materiales.emisivo(Color(0.72, 0.5, 1.0), 3.0)
+	var n := 9
+	var puntos: Array = []
+	for i in n + 1:
+		var a := deg_to_rad(lerpf(-70.0, 70.0, float(i) / n))
+		puntos.append(Vector3(0, r * sin(a), r * cos(a) * 0.45))
+	for i in n:
+		var a: Vector3 = puntos[i]
+		var b: Vector3 = puntos[i + 1]
+		var seg := Materiales.caja(Vector3(r * 0.05, a.distance_to(b) * 1.05, r * 0.07), mat)
+		seg.position = (a + b) * 0.5
+		seg.basis = Basis(Quaternion(Vector3.UP, (b - a).normalized()))
+		arco.add_child(seg)
+	var cuerda := Node3D.new()   # pivote en el centro de la cuerda (se tensa hacia atrás)
+	cuerda.position = Vector3(0, 0, (puntos[0] as Vector3).z)
+	cuerda.name = "cuerda"
+	arco.add_child(cuerda)
+	var alto_c := (puntos[n] as Vector3).y - (puntos[0] as Vector3).y
+	for lado in [-1.0, 1.0]:
+		var hilo := Materiales.caja(Vector3(r * 0.015, alto_c * 0.5, r * 0.015), Materiales.emisivo(Color(0.9, 0.85, 1.0), 3.0))
+		hilo.position = Vector3(0, lado * alto_c * 0.25, 0)
+		hilo.name = "hilo%d" % (0 if lado < 0 else 1)
+		cuerda.add_child(hilo)
+	var flecha := Materiales.caja(Vector3(r * 0.04, r * 0.04, r * 1.3), Materiales.emisivo(Color(0.85, 0.7, 1.0), 4.0))
+	flecha.position = Vector3(0, 0, r * 0.65)
+	flecha.name = "flecha"
+	cuerda.add_child(flecha)
+	arco.scale = Vector3.ONE * 0.01
+	arco.visible = false
+	arco.set_meta("r", r)
+	return arco
+
+
+## Tensa el arco durante «tiempo» y suelta la flecha (justo cuando el servidor la dispara).
+func tensar_arco(arco: Node3D, tiempo: float) -> void:
+	var r := float(arco.get_meta("r", 1.0))
+	var cuerda: Node3D = arco.get_node("cuerda")
+	var flecha: Node3D = cuerda.get_node("flecha")
+	var z0 := cuerda.position.z
+	arco.visible = true
+	flecha.visible = true
+	var tw := arco.create_tween()
+	tw.tween_property(arco, "scale", Vector3.ONE, minf(0.12, tiempo * 0.4)).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(cuerda, "position:z", z0 - r * 0.55, maxf(tiempo - 0.12, 0.05)).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func(): flecha.visible = false)
+	tw.tween_property(cuerda, "position:z", z0 + r * 0.12, 0.05)
+	tw.tween_property(cuerda, "position:z", z0, 0.12).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.3)
+	tw.tween_property(arco, "scale", Vector3.ONE * 0.01, 0.2)
+	tw.tween_callback(func(): arco.visible = false)
+
+
+## Espada de chakra: hoja con guarda; pivote en la empuñadura (la hoja va por +Y).
+func _crear_espada(pos: Vector3, largo: float) -> Node3D:
+	var piv := Node3D.new()
+	piv.position = pos
+	var hoja := Materiales.caja(Vector3(largo * 0.1, largo, largo * 0.045), Materiales.emisivo(Color(0.78, 0.6, 1.0), 3.5))
+	hoja.position = Vector3(0, largo * 0.55, 0)
+	piv.add_child(hoja)
+	var filo := Materiales.caja(Vector3(largo * 0.015, largo * 0.98, largo * 0.02), Materiales.emisivo(Color(1, 0.95, 1.0), 5.0))
+	filo.position = Vector3(largo * 0.05, largo * 0.55, 0)
+	piv.add_child(filo)
+	# Estela en la punta (solo emite durante el tajo).
+	var estela := efectos.particulas({"cantidad": 60, "vida": 0.25, "radio": largo * 0.08, "vel_min": 0.0, "vel_max": 0.2,
+		"tam_min": largo * 0.08, "tam_max": largo * 0.14, "escala_inicio": 1.0, "color": Color(0.85, 0.7, 1.0, 0.8), "color_fin": Color(0.5, 0.3, 1.0, 0.0)})
+	estela.position = Vector3(0, largo * 0.85, 0)
+	estela.name = "estela"
+	estela.emitting = false
+	piv.add_child(estela)
+	var guarda := Materiales.caja(Vector3(largo * 0.18, largo * 0.03, largo * 0.06), Materiales.emisivo(Color(0.55, 0.35, 0.9), 2.5))
+	guarda.position = Vector3(0, largo * 0.04, 0)
+	piv.add_child(guarda)
+	piv.visible = false
+	piv.scale = Vector3.ONE * 0.01
+	return piv
+
+
+## Alza la espada sobre el hombro (anticipación) durante «tiempo».
+func alzar_espada(esp: Node3D, tiempo: float) -> void:
+	esp.visible = true
+	esp.rotation_degrees = Vector3(10, 0, -10)
+	var tw := esp.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(esp, "scale", Vector3.ONE, minf(0.12, tiempo * 0.5)).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(esp, "rotation_degrees", Vector3(-35, 0, 35), tiempo).set_ease(Tween.EASE_OUT)
+
+
+## Tajo: barre de arriba-derecha hacia abajo-izquierda en un instante y se desvanece.
+func tajo_espada(esp: Node3D) -> void:
+	esp.visible = true
+	esp.scale = Vector3.ONE
+	var estela: GPUParticles3D = esp.get_node_or_null("estela")
+	if estela != null:
+		estela.emitting = true
+	var tw := esp.create_tween()
+	tw.tween_property(esp, "rotation_degrees", Vector3(95, 0, -70), 0.12).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func(): if estela != null: estela.emitting = false)
+	tw.tween_interval(0.25)
+	tw.tween_property(esp, "scale", Vector3.ONE * 0.01, 0.25)
+	tw.tween_callback(func(): esp.visible = false)
 
 
 func espada(pos: Vector3, radio: float, nivel: int) -> void:
@@ -590,6 +749,30 @@ func sincronizar(eid: int, nodo: Node3D, e: Dictionary) -> void:
 		_sync(eid, clave, nodo, true, func(): return crear_aura_puertas(nv))
 
 
+## El Susanoo se apaga: el chakra pierde brillo y se deshace en partículas moradas.
+func _desvanecer_susanoo(n: Node3D) -> void:
+	efectos.rafaga(n.global_position + Vector3(0, 2.0 * n.scale.y, 0), {"cantidad": 70, "vida": 0.9, "radio": 1.5, "direccion": Vector3.UP,
+		"dispersion": 60.0, "vel_min": 1.0, "vel_max": 4.0, "tam_min": 0.2, "tam_max": 0.5, "color": Color(0.65, 0.4, 1.0, 0.7)})
+	var tw := n.create_tween()
+	tw.set_parallel(true)
+	for c in n.get_children():
+		if c is MeshInstance3D and (c as MeshInstance3D).visible and (c as MeshInstance3D).material_override is ShaderMaterial:
+			var mk: ShaderMaterial = (c as MeshInstance3D).material_override
+			var v0 := float(mk.get_shader_parameter("intensidad"))
+			tw.tween_method(func(v: float): mk.set_shader_parameter("intensidad", v), v0, 0.0, 0.45)
+		elif c is OmniLight3D:
+			tw.tween_property(c, "light_energy", 0.0, 0.45)
+	tw.tween_property(n, "scale", n.scale * Vector3(1.08, 1.12, 1.08), 0.45)
+	tw.chain().tween_callback(n.queue_free)
+
+
+func _susanoo_de(eid: int) -> Node3D:
+	var clave := "%d:susanoo" % eid
+	if _adjuntos.has(clave) and is_instance_valid(_adjuntos[clave]):
+		return _adjuntos[clave]
+	return null
+
+
 func _sync(eid: int, efecto: String, nodo: Node3D, activo: bool, crear: Callable) -> void:
 	var clave := "%d:%s" % [eid, efecto]
 	var existe := _adjuntos.has(clave) and is_instance_valid(_adjuntos[clave])
@@ -597,13 +780,17 @@ func _sync(eid: int, efecto: String, nodo: Node3D, activo: bool, crear: Callable
 		var n: Node3D = crear.call()
 		nodo.add_child(n)
 		_adjuntos[clave] = n
-		if efecto == "susanoo":
+		if efecto == "susanoo" and not n.has_meta("capas"):
 			n.scale *= 0.2
 			var tw := n.create_tween()
 			tw.tween_property(n, "scale", n.scale * 5.0, 0.35).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	elif not activo and existe:
-		(_adjuntos[clave] as Node).queue_free()
+		var viejo: Node3D = _adjuntos[clave]
 		_adjuntos.erase(clave)
+		if efecto == "susanoo":
+			_desvanecer_susanoo(viejo)
+		else:
+			viejo.queue_free()
 
 
 ## Zonas del suelo (suelo ardiente, llamas negras) a partir de la instantánea.

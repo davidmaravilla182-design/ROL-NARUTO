@@ -472,7 +472,14 @@ static func actualizar_criaturas(s: ServidorJuego, dt: float) -> void:
 		if v.length() > alcance + 0.4:
 			_avanzar(s, c, v.normalized(), float(nd.get("velocidad", 4.0)), dt)
 		c["acum"] = float(c["acum"]) + dt
-		if float(c["acum"]) >= float(nd.get("intervalo_golpe", 1.2)) and v.length() <= alcance + Datos.sim("radio_cuerpo") + 0.5:
+		# Anticipación: avisa un poco antes del golpe para que el cliente prepare el puñetazo.
+		var anticipo := float(nd.get("anticipo", 0.45))
+		var cerca := v.length() <= alcance + Datos.sim("radio_cuerpo") + 0.5
+		if cerca and not c.get("preparado", false) and float(c["acum"]) >= float(nd.get("intervalo_golpe", 1.2)) - anticipo:
+			c["preparado"] = true
+			s._evento({"tipo": "criatura_prepara", "criatura": c["id"], "anticipo": anticipo, "forma": c["forma"]})
+		if float(c["acum"]) >= float(nd.get("intervalo_golpe", 1.2)) and cerca:
+			c["preparado"] = false
 			c["acum"] = 0.0
 			c["golpe"] = int(c["golpe"]) + 1
 			golpear(s, dueno, obj, str(c["jutsu"]), int(c["nivel"]), {"empuje": 3.0 + float(c["escala"]) * 2.0,

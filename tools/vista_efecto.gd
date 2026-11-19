@@ -91,6 +91,94 @@ func _caso(c: String, t0: float) -> float:
 		guion.append([t0 + carga, func(): tecnicas.kirin(punto, n, float(nd.get("radio", 3.0)), bool(nd.get("bestia", false)))])
 		guion.sort_custom(func(a, b): return a[0] < b[0])
 		return t0 + carga + 2.5
+	if c.begins_with("dragon_"):
+		# Dragón como proyectil: aparece (anticipación), avanza ondulando y se desvanece al llegar.
+		var jutsu := "dragon_agua" if c == "dragon_agua" else "madera"
+		var nivel := 2 if c == "dragon_agua" else 3
+		var radio := float(Datos.nivel_jutsu(jutsu, nivel).get("radio", 1.0))
+		var datos := {"forma": "dragon", "radio": radio, "nivel": nivel, "jutsu": jutsu, "pos": Vector3(-10, 1.5, 0)}
+		var nodo_ref: Array = []
+		guion.append([t0, func():
+			_cam(Vector3(2, 4.5, 15), Vector3(0, 2.0, 0))
+			var nodo := genericas.crear_proyectil(datos)
+			nodo_ref.append(nodo)
+			var tw := nodo.create_tween()
+			tw.tween_property(nodo, "global_position", Vector3(10, 1.5, 0), 1.6)])
+		for i in 7:
+			var k := i
+			guion.append([t0 + 0.12 + i * 0.25, func(): _foto("%s_%d" % [c, k])])
+		guion.append([t0 + 1.62, func():
+			for ch in (nodo_ref[0] as Node3D).get_children():
+				if ch is DragonVivo:
+					(ch as DragonVivo).desvanecer(Color(0.5, 0.7, 1.0), efectos)])
+		guion.append([t0 + 1.75, func(): _foto("%s_7" % c)])
+		guion.append([t0 + 2.0, func(): _foto("%s_8" % c); (nodo_ref[0] as Node3D).queue_free()])
+		guion.sort_custom(func(a, b): return a[0] < b[0])
+		return t0 + 2.4
+	if c.begins_with("susanoo"):
+		var n := int(c.substr(7))
+		var alto: float = [2.8, 5.2, 9.0][n - 1]
+		var pv_ref: Array = []
+		var on := {"efectos": {"susanoo": {"nivel": n}}}
+		guion.append([t0, func():
+			var pv := PersonajeVisual.new()
+			root.add_child(pv)
+			pv.construir("jugador_uchiha")
+			pv.rotation.y = PI * 0.5
+			pv_ref.append(pv)
+			_cam(Vector3(alto * 0.4, alto * 0.55, alto * 1.35 + 3.0), Vector3(0, alto * 0.45, 0))
+			tecnicas.sincronizar(77, pv, on)])
+		for f in [0.1, 0.35, 0.65, 1.0]:
+			var nom := "%s_forma_%02d" % [c, int(f * 100)]
+			guion.append([t0 + f, func(): _foto(nom)])
+		var ev_base := func(tipo: String, extra: Dictionary) -> void:
+			var ev := {"tipo": tipo, "entidad": 77, "nivel": n}
+			ev.merge(extra)
+			tecnicas.evento(ev, -1, func(_i): return Vector3.ZERO, func(_i): return null, func(_a, _b): pass)
+		if n >= 2:
+			guion.append([t0 + 1.3, func(): ev_base.call("susanoo_tensa", {"tiempo": 0.35})])
+			guion.append([t0 + 1.45, func(): _foto("%s_arco_tensa" % c)])
+			guion.append([t0 + 1.7, func(): _foto("%s_arco_suelta" % c)])
+		if n >= 3:
+			guion.append([t0 + 2.2, func(): ev_base.call("susanoo_alza", {"tiempo": 0.3})])
+			guion.append([t0 + 2.4, func(): _foto("%s_espada_alza" % c)])
+			guion.append([t0 + 2.5, func(): ev_base.call("susanoo_espada", {"pos": Vector3.ZERO, "radio": 4.5})])
+			guion.append([t0 + 2.56, func(): _foto("%s_espada_tajo" % c)])
+		guion.append([t0 + 3.0, func(): tecnicas.sincronizar(77, pv_ref[0], {"efectos": {}})])
+		guion.append([t0 + 3.2, func(): _foto("%s_fin" % c)])
+		guion.append([t0 + 3.6, func(): (pv_ref[0] as Node).queue_free()])
+		guion.sort_custom(func(a, b): return a[0] < b[0])
+		return t0 + 3.8
+	if c.begins_with("golem"):
+		var n := int(c.substr(5))
+		var esc: float = [0.8, 1.4, 2.6][n - 1]
+		var cr := {"id": 900 + n, "forma": "golem", "escala": esc, "pos": Vector3(-4, 0, 0), "yaw": PI * 0.5}
+		guion.append([t0, func():
+			_cam(Vector3(1, 1.5 + esc, 3.5 + esc * 2.2), Vector3(-1, esc * 1.2, 0))
+			genericas.sincronizar_criaturas([cr])])
+		var fotos := [0.2, 0.5, 0.9, 1.4]
+		for f in fotos:
+			var nom := "%s_surgir_%d" % [c, int(f * 10)]
+			guion.append([t0 + f, func(): _foto(nom)])
+		# Camina hacia la derecha.
+		for k in 12:
+			var x := -4.0 + k * 0.3
+			guion.append([t0 + 1.6 + k * 0.1, func():
+				cr["pos"] = Vector3(x, 0, 0)
+				genericas.sincronizar_criaturas([cr])])
+		guion.append([t0 + 2.05, func(): _foto("%s_caminar_a" % c)])
+		guion.append([t0 + 2.4, func(): _foto("%s_caminar_b" % c)])
+		guion.append([t0 + 2.8, func(): genericas.evento({"tipo": "criatura_prepara", "criatura": 900 + n, "anticipo": 0.45, "forma": "golem"}, -1, func(_i): return Vector3.ZERO, func(_i): return null, func(_a, _b): pass)])
+		guion.append([t0 + 2.95, func(): _foto("%s_golpe_a" % c)])
+		guion.append([t0 + 3.2, func(): _foto("%s_golpe_b" % c)])
+		guion.append([t0 + 3.25, func(): genericas.evento({"tipo": "criatura_golpe", "criatura": 900 + n, "jutsu": "golem_tierra", "nivel": n, "pos": Vector3(0, 1, 1.5), "escala": esc, "forma": "golem"}, -1, func(_i): return Vector3.ZERO, func(_i): return null, func(_a, _b): pass)])
+		guion.append([t0 + 3.35, func(): _foto("%s_golpe_c" % c)])
+		guion.append([t0 + 3.8, func(): genericas.sincronizar_criaturas([])])
+		for f in [0.2, 0.7, 1.3, 1.9]:
+			var nom2 := "%s_derrumbe_%d" % [c, int(f * 10)]
+			guion.append([t0 + 3.8 + f, func(): _foto(nom2)])
+		guion.sort_custom(func(a, b): return a[0] < b[0])
+		return t0 + 6.0
 	return t0
 
 

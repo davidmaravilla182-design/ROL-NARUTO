@@ -195,5 +195,16 @@
       "largo": 6.88,
       "eje": "y"
     }
+  },
+  "golem_animado": {
+    "_nota": "Generado por tools/blender/golem_animado.py",
+    "altura": 2.6,
+    "golpe_impacto": 1.667,
+    "duraciones": {
+      "surgir": 4.833,
+      "derrumbe": 2.967,
+      "golpe": 3.467,
+      "caminar": 1.033
+    }
   }
 }
