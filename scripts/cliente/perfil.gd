@@ -74,6 +74,73 @@ static func sumar_xp(cantidad: float) -> void:
 	pj["xp_rango"] = float(pj.get("xp_rango", 0.0)) + cantidad
 
 
+## Resultado de una misión que manda el servidor: experiencia ya llegó aparte (evento "xp"); aquí ryō, pergaminos,
+## cosméticos, capítulo de la historia, pruebas de ascenso y punto de atributo. Devuelve el rango nuevo si asciende.
+static func aplicar_mision(ev: Dictionary) -> String:
+	cargar()
+	if indice < 0 or not bool(ev.get("exito", false)):
+		return ""
+	var pj: Dictionary = personajes[indice]
+	var rec: Dictionary = ev.get("recompensa", {})
+	pj["ryo"] = int(pj.get("ryo", 0)) + int(rec.get("ryo", 0))
+	var perg: Array = pj.get("pergaminos", [])
+	for p in rec.get("pergaminos", []):
+		if not (str(p) in perg):
+			perg.append(str(p))
+	pj["pergaminos"] = perg
+	var cos: Array = pj.get("cosmeticos", [])
+	for c in rec.get("cosmeticos", []):
+		if not (str(c) in cos):
+			cos.append(str(c))
+	pj["cosmeticos"] = cos
+	var mis: Dictionary = pj.get("misiones", {"capitulo": 0, "completadas": [], "pruebas": {}})
+	if str(ev.get("tipo_mision", "")) == "capitulo":
+		var i := Misiones.indice_capitulo(str(ev["id"]))
+		mis["capitulo"] = maxi(int(mis.get("capitulo", 0)), i + 1)
+		var comp: Array = mis.get("completadas", [])
+		if not (str(ev["id"]) in comp):
+			comp.append(str(ev["id"]))
+		mis["completadas"] = comp
+	if str(ev.get("prueba", "")) != "":
+		var pr: Dictionary = mis.get("pruebas", {})
+		pr[str(ev["prueba"])] = true
+		mis["pruebas"] = pr
+	pj["misiones"] = mis
+	if int(rec.get("punto_atributo", 0)) > 0:
+		pj["puntos_bonus_rango"] = mini(int(pj.get("puntos_bonus_rango", 0)) + 1, 2)
+	return intentar_ascenso()
+
+
+## Asciende si ya tiene la experiencia y superó la prueba de su rango. Devuelve el rango nuevo o "".
+static func intentar_ascenso() -> String:
+	if indice < 0:
+		return ""
+	var pj: Dictionary = personajes[indice]
+	var a := Creacion.ascenso(pj)
+	var pr: Dictionary = pj.get("misiones", {}).get("pruebas", {})
+	if str(a["siguiente"]) != "" and bool(a["listo_xp"]) and bool(pr.get(str(a["prueba"]), false)):
+		if Creacion.ascender(pj):
+			return str(pj["rango"])
+	return ""
+
+
+## Equipa un cosmético ganado (cambia el aspecto del personaje).
+static func equipar_cosmetico(id: String) -> bool:
+	cargar()
+	if indice < 0:
+		return false
+	var pj: Dictionary = personajes[indice]
+	if not (id in (pj.get("cosmeticos", []) as Array)):
+		return false
+	var cd: Dictionary = Misiones.conf().get("cosmeticos", {}).get(id, {})
+	if cd.is_empty():
+		return false
+	var asp: Dictionary = pj.get("aspecto", {})
+	asp[str(cd["tipo"])] = cd["valor"]
+	pj["aspecto"] = asp
+	return true
+
+
 ## Barra de entrenamiento de un atributo (0-1).
 static func poner_entreno(atributo: String, valor: float) -> void:
 	cargar()

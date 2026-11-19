@@ -12,7 +12,12 @@
   Entrada Dinámica que interrumpe); Remolino, Pavo Real y Tigre Diurno con mecánicas genéricas; genjutsu que duermen,
   ciegan (la IA pierde al jugador), dan miedo (huye) y Romper genjutsu (inmunidad, N3 lo devuelve); requisitos de
   puertas abiertas / Manto de Rayo; taijutsu cuesta estamina. Puertas: piel roja, grietas al abrir y al moverse, estelas.
-- [ ] 3. Misiones: motor por fases, 6 capítulos, 4 eventos dinámicos, recompensas (XP, ryō, pergaminos, cosméticos).
+- [x] 3. Misiones: motor por fases, 6 capítulos, 4 eventos dinámicos, recompensas (XP, ryō, pergaminos, cosméticos).
+  Hecho: `scripts/servidor/misiones.gd` + `data/misiones.json` (escena con pájaro de papel, duelos con rendición,
+  oleadas con líder, persecución por ruta de techos, defensa con capitanes, jefe); eventos que aparecen solos
+  (emboscada con aviso en el minimapa por Inteligencia 4, alarma de intruso, cazarrecompensas con nombre) y duelo con el
+  instructor (+1 punto de atributo o prueba de ascenso); 8 NPC nuevos; recompensas aplicadas al perfil (ryō, pergaminos
+  que saltan el requisito de rango, cosméticos equipables, ascenso con XP + prueba); pantalla Misiones; 21 pruebas.
 - [ ] 4. Jefe Tres Colas: 4 fases, sellado (Sellos 3+), música y cámara de jefe; marcador hasta tener su imagen.
 - [ ] 5. Guardado completo, interfaz premium (ficha, misiones, pergaminos, recompensas), QA por cuadros.
 - [ ] Cierre: APK en demo-latest, workflow, reporte con la lista de imágenes para GPT.

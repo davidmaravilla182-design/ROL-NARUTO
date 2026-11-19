@@ -8,3 +8,4 @@ extends RefCounted
 static var modo := "offline"
 static var direccion := ""
 static var tras_personaje := ""   # escena a la que ir después de crear el personaje
+static var mision_pendiente := ""   # capítulo elegido en el menú de misiones (se empieza al entrar)

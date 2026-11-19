@@ -670,7 +670,20 @@ func configurar_mapa(m: Mapa) -> void:
 
 
 ## Posiciones para el minimapa y el mapa completo (cada snapshot).
+var _marcas: Array = []   # [{pos: Vector2, color, hasta (ms)}] — emboscadas vistas antes de tiempo (Inteligencia 4)
+
+
+func marca_minimapa(pos: Vector3, segundos: float, color: Color) -> void:
+	_marcas.append({"pos": Vector2(pos.x, pos.z), "color": color, "hasta": Time.get_ticks_msec() + int(segundos * 1000.0)})
+
+
 func actualizar_mapa(yo: Vector2, yaw: float, otros: Array) -> void:
+	var ahora := Time.get_ticks_msec()
+	_marcas = _marcas.filter(func(m): return int(m["hasta"]) > ahora)
+	if not _marcas.is_empty():
+		otros = otros.duplicate()
+		for m in _marcas:
+			otros.append({"pos": m["pos"], "color": m["color"] if (ahora / 250) % 2 == 0 else Color(1, 1, 1)})
 	if minimapa != null:
 		minimapa.actualizar(yo, yaw, otros)
 	if mapa_completo != null and is_instance_valid(mapa_completo):

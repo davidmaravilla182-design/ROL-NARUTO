@@ -31,6 +31,7 @@ var _estado: Dictionary = {}
 var _ultimo_mov := Vector2.ZERO
 var _t_envio := 0.0
 var _mov_prueba := Vector2.ZERO
+var ui_mision: UiMision
 var _anuncio_fin := ""
 var red: TransporteENet = null       # anfitrión: servidor para los invitados; invitado: su transporte
 var descubrimiento: Descubrimiento = null
@@ -101,6 +102,9 @@ func _ready() -> void:
 	Perfil.cargar()
 	hud.configurar_mapa(mapa)
 	hud.construir(Perfil.repertorio())
+	ui_mision = UiMision.new()
+	ui_mision.sonidos = sonidos
+	hud.add_child(ui_mision)
 	var attrs_pj: Dictionary = Perfil.atributos().duplicate()
 	var ent_pj: Dictionary = Perfil.personaje().get("entreno", {})
 	var bonus := {}
@@ -152,7 +156,10 @@ func _conectar_transporte() -> void:
 			hud.poner_info_red("")
 		if not Perfil.personaje().is_empty():
 			transporte.enviar(Perfil.comando_personaje())
-		transporte.enviar(Perfil.comando()))
+		transporte.enviar(Perfil.comando())
+		if Sesion.mision_pendiente != "":
+			transporte.enviar({"t": Protocolo.C_MISION, "accion": "empezar", "id": Sesion.mision_pendiente})
+			Sesion.mision_pendiente = "")
 	transporte.estado_recibido.connect(_on_estado)
 
 
@@ -874,6 +881,9 @@ func _procesar_evento(ev: Dictionary) -> void:
 		"xp":
 			if id == mi_id:
 				Perfil.sumar_xp(float(ev["cantidad"]))
+				var asc2 := Perfil.intentar_ascenso()
+				if asc2 != "":
+					ui_mision.anuncio(Datos.texto("msg_ascenso", [Datos.texto("rango_" + asc2)]))
 				Perfil.guardar()
 				hud.mensaje(Datos.texto("msg_xp", [int(ev["cantidad"])]), 1.2)
 		"entreno":
@@ -893,6 +903,21 @@ func _procesar_evento(ev: Dictionary) -> void:
 				camara.sacudir(0.12)
 		"tai":
 			_evento_tai(ev)
+		"mision":
+			_evento_mision(ev)
+		"escena":
+			ui_mision.escena(ev.get("lineas", []), bool(ev.get("pajaro", false)), float(ev.get("duracion", 4.0)))
+		"anuncio":
+			ui_mision.anuncio(str(ev.get("titulo", "")))
+		"emboscada_aviso":
+			if id == mi_id:
+				hud.marca_minimapa(ev["pos"], float(ev.get("duracion", 6.0)), Color(1.0, 0.3, 0.3))
+				hud.mensaje(Datos.texto("msg_emboscada"), 2.0)
+		"aparece":
+			efectos.humo(ev["pos"])
+		"rendicion":
+			efectos.numero(ev["pos"] + Vector3(0, 0.6, 0), 0.0, Color.WHITE, 1.0)
+			hud.mensaje(Datos.texto("msg_rendicion"), 1.5)
 		"interrumpido":
 			efectos.choque(ev["pos"])
 			efectos.onda_golpe(ev["pos"], Vector3.ZERO)
@@ -1049,6 +1074,26 @@ func _evento_tai(ev: Dictionary) -> void:
 				efectos.estrellar(Vector3(ev["pos"].x, 0.0, ev["pos"].z))
 
 
+func _evento_mision(ev: Dictionary) -> void:
+	match str(ev.get("accion", "")):
+		"inicio":
+			ui_mision.mision_inicio(str(ev.get("titulo", "")))
+		"objetivo":
+			ui_mision.objetivo(str(ev.get("objetivo", "")), str(ev.get("contador", "")), float(ev.get("limite", 0.0)), float(ev.get("t", 0.0)))
+		"fin":
+			ui_mision.mision_fin()
+			var asc := Perfil.aplicar_mision(ev)
+			Perfil.guardar()
+			# El servidor ve el progreso nuevo (capítulo, pergaminos) en el personaje.
+			transporte.enviar(Perfil.comando_personaje())
+			var extra := ""
+			if asc != "":
+				extra = Datos.texto("msg_ascenso", [Datos.texto("rango_" + asc)])
+			elif bool(ev.get("sellado", false)):
+				extra = Datos.texto("msg_sellado_ok")
+			ui_mision.recompensa(str(ev.get("titulo", "")), ev.get("recompensa", {}), bool(ev.get("exito", false)), extra)
+
+
 func _sharingan_local() -> bool:
 	for e in _estado.get("entidades", []):
 		if int(e["id"]) == mi_id:
@@ -1175,4 +1220,23 @@ func _interactuar() -> void:
 		(n as Aldeano)._pausa = 5.0
 		n.rotation.y = atan2(yo.x - n.global_position.x, yo.z - n.global_position.z)
 	var d := mapa.distrito(str(_cercano["distrito"]))
+	# Puntos de misión: empiezan el capítulo de la historia de ese distrito (si toca) o el duelo con el instructor.
+	if str(_cercano["tipo"]) in ["mision", "npc_mision"]:
+		var cap := _capitulo_del_distrito(str(_cercano["distrito"]))
+		if not cap.is_empty():
+			transporte.enviar({"t": Protocolo.C_MISION, "accion": "empezar", "id": str(cap["id"])})
+			return
+		if str(_cercano["tipo"]) == "npc_mision" and str(_cercano["distrito"]) == "academia":
+			transporte.enviar({"t": Protocolo.C_MISION, "accion": "evento", "id": "duelo_instructor"})
+			return
 	hud.dialogo(Puntos.texto(_cercano, str(d.get("nombre", ""))))
+
+
+## Capítulo siguiente de la historia si se da en ese distrito.
+func _capitulo_del_distrito(distrito: String) -> Dictionary:
+	var pj := Perfil.personaje()
+	var sig := int(pj.get("misiones", {}).get("capitulo", 0)) if not pj.is_empty() else 0
+	var caps: Array = Misiones.conf().get("capitulos", [])
+	if sig < caps.size() and str(caps[sig].get("distrito", "")) == distrito:
+		return caps[sig]
+	return {}

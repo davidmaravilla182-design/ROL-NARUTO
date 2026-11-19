@@ -374,6 +374,7 @@ func _limpiar_entidades() -> void:
 	for id in activa.get("ent", []):
 		var e := s.entidad(int(id))
 		if e != null:
+			e.ia = null   # rompe el ciclo entidad ↔ IA (si no, quedan en memoria)
 			s.entidades.erase(e)
 			s._evento({"tipo": "quitar", "entidad": int(id)})
 	if hay_activa():

@@ -14,6 +14,7 @@ var pasos := [
 	["red", ""],
 	["res://escenas/red.tscn", ""],
 	["res://escenas/ficha.tscn", ""],
+	["res://escenas/misiones.tscn", ""],
 ]
 var _frames := 0
 var _indice := 0

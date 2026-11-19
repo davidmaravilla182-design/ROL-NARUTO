@@ -27,7 +27,7 @@ var ruta_i := 0
 
 func _init(entidad: EntidadServidor) -> void:
 	e = entidad
-	conf = Datos.personaje(e.plantilla_id).get("ia", {})
+	conf = (Datos.personaje(e.plantilla_id).get("ia", {}) as Dictionary).duplicate()   # copia: las misiones lo ajustan por entidad
 	perfil = str(conf.get("perfil", ""))
 	rng.seed = 777 + e.id
 	reiniciar()
