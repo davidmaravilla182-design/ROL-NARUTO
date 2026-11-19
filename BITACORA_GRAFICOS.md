@@ -224,3 +224,71 @@ deforman igual que el cuerpo) e infladas 2–3 cm, suavizadas y reducidas a ~3.5
 Estimación: en el S26 Ultra la plaza va a 60 FPS con 558–635 llamadas (medido por el usuario); estas escenas están
 por debajo de eso, así que se espera 60 en alta. Cada ninja por piezas cuesta ~4 llamadas y ~24k triángulos
 (cuerpo 16,8k + prenda 3,5k + pelo 2,5k); los modelos de jutsus, 6–9k.
+
+## M4 — ronda de calidad premium (v0.8)
+
+Revisión cuadro a cuadro con herramientas nuevas: `tools/secuencia_anim.gd` (tiras de una animación con `seek`),
+`tools/vista_efecto.gd` (efectos aislados con cámara fija, `--fixed-fps 30`) y guiones de `tools/captura.gd`
+(`GUION=combate`, `kirin`, `locomocion`).
+
+### Combate (combo de 5, lanzador + aéreos + remate, shunshin, choque)
+![](docs/capturas/v08/combate_despues.jpg)
+
+### Kirin: tormenta en remolino → dragón de rayo en espiral → destello → cráter con chispas (N2)
+| Antes (rayo y destello, sin tormenta ni dragón visible) | Después |
+|---|---|
+| ![](docs/capturas/v08/kirin_antes_en_partida.jpg) | ![](docs/capturas/v08/kirin_despues.jpg) |
+
+### Poderes con movimiento
+| Dragones (agua / madera) con cadena de huesos | Gólem: surgir, caminar, golpe, derrumbe | Susanoo N3 por capas + espada |
+|---|---|---|
+| ![](docs/capturas/v08/dragones_despues.jpg) | ![](docs/capturas/v08/golem_despues.jpg) | ![](docs/capturas/v08/susanoo_n3_despues.jpg) |
+
+### Plaza con edificios de Meshy
+| Conceptos (imagen a imagen desde el edificio que gustó) | Antes / después (a pie, calle, aérea) |
+|---|---|
+| ![](docs/capturas/v08/plaza_variantes_concepto.jpg) | ![](docs/capturas/v08/plaza_antes_despues.jpg) |
+
+### Locomoción y NPC (pared, agua, correr, guardia que ataca y cae)
+![](docs/capturas/v08/locomocion_y_npc.jpg)
+
+### Animaciones (antes de corregir: caer, correr viejo, caminar/correr/derribado/esquiva/golpeado/guardia/lanzado/muerte de Meshy, saltar)
+![](docs/capturas/v08/animaciones_antes.jpg)
+Lanzado y derribado, antes / después del tope de cadera:
+![](docs/capturas/v08/lanzado_derribado_antes_despues.jpg)
+
+### Problemas encontrados y corregidos
+1. **Peinados con calva** (la coleta cubría el 88 %): búsqueda de colocación + gorro de cuero cabelludo → 96–100 %.
+2. **Correr rígido** (animación propia): sustituida por la de Meshy retargeteada; golpes con tramos de animación real.
+3. **Doble altura en «lanzado»** (la animación de Meshy ya sube 3 m y el servidor también lanza): tope de cadera.
+4. **Dragones de espaldas**: el nodo avanza por −Z y los modelos miran a +Z; girados. El de agua (erguido) se tumba.
+5. **Bolas de cola** sueltas detrás de los dragones: quitadas (el modelo ondula solo).
+6. **Kirin invisible**: el sombreador espectral dejaba el dragón casi transparente → cuerpo emisivo sólido.
+7. **Nubes de tormenta lavadas por la niebla** a 24 m de altura → material sin niebla y con brillo azul interior.
+8. **Destellos apilados** en el Kirin N3 (varios rayos): uno por ráfaga.
+9. **Shunshin que se deslizaba** (la interpolación unía las dos posiciones) → salto instantáneo a más de 3 m.
+10. **Anillo de onda demasiado grueso y opaco** en los golpes fuertes → más fino y breve.
+11. **Susanoo que aparecía de golpe** → capas que se encienden una tras otra; al apagarse, se deshace en partículas.
+12. **Espada del Susanoo casi invisible de canto** → hoja más gruesa y estela en la punta.
+13. **Gólem que «encoge» al terminar** → se derrumba en rocas y se hunde.
+14. **Rival que seguía corriendo** en las capturas (entrada de IA sin limpiar) — solo en la herramienta.
+
+### Rendimiento (calidad alta, 1280×720, renderizador móvil)
+| Vista | Llamadas | Primitivas | v0.7 |
+|---|---|---|---|
+| Puente con guardias | 231 | 438k | 270 / 484k |
+| Guardias + Susanoo N3 | 114 | 248k | 95 / 239k |
+| Guardias + Susanoo N3 + gólem N3 | 134 | 259k | 122 / 261k |
+| Plaza a pie / aérea | 237 / 342 | 520k / 571k | 236 / 341 · 497k / 521k |
+
+![](docs/capturas/v08/rendimiento_guardias_susanoo_golem_n3.jpg)
+
+Estimación: todas por debajo de las 558–635 llamadas que el usuario midió a 60 FPS en la plaza del S26 Ultra; con 3
+enemigos y un jutsu N3 se espera 60 FPS en alta. Lo nuevo que más cuesta: los 3 edificios de la plaza (9k triángulos
+cada uno con LOD de 900) y la tormenta del Kirin (≈100 partículas grandes durante 2 s).
+
+### Pendiente
+- El puñetazo del gólem estira la malla del brazo (pesos del rig automático de Meshy).
+- El dragón de agua se lee poco de lejos (serpiente translúcida y fina).
+- Las capturas de este entorno van a ~2–4 fps reales: los tiempos se fijan con `--fixed-fps`, pero conviene ver
+  los efectos en el teléfono.

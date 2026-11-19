@@ -22,9 +22,10 @@
 - [x] 4. Plaza con modelos de Meshy (casa de la plaza + 2–3 edificios nuevos del mismo estilo).
   Hecho: 3 variantes (tienda de 3 pisos, puesto de fideos con escalera, torre de 4 pisos) desde la imagen del
   edificio_ia; reemplazan los 9 edificios procedurales del anillo de la plaza.
-- [ ] 5. Pruebas de calidad con secuencias de cuadros (caminar, correr, saltar, pared, agua, combos, jutsus ×3,
+- [x] 5. Pruebas de calidad con secuencias de cuadros (caminar, correr, saltar, pared, agua, combos, jutsus ×3,
         NPCs), revisión cuadro a cuadro, correcciones, antes/después en la bitácora; 60 FPS estimados con 3 enemigos
         y un jutsu N3.
+  Hecho: BITACORA_GRAFICOS.md → M4 (14 problemas corregidos, medidas: 134 llamadas con guardias + Susanoo y gólem N3).
 - [ ] Cierre: APK, workflow, reporte.
 
 ---
