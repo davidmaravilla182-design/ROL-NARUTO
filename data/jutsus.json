@@ -3062,6 +3062,34 @@
     "derriba": false
    },
    {
+    "anim": "m_patada_alta",
+    "segmento": [
+     0.5,
+     1.3
+    ],
+    "dano": 9.0,
+    "alcance": 2.3,
+    "angulo": 110.0,
+    "duracion": 0.5,
+    "impacto": 0.31,
+    "empuje": 1.8,
+    "derriba": false
+   },
+   {
+    "anim": "m_barrido",
+    "segmento": [
+     0.95,
+     1.75
+    ],
+    "dano": 9.0,
+    "alcance": 2.4,
+    "angulo": 140.0,
+    "duracion": 0.5,
+    "impacto": 0.32,
+    "empuje": 1.2,
+    "derriba": false
+   },
+   {
     "anim": "m_patada_giro",
     "segmento": [
      0.95,
@@ -3094,7 +3122,7 @@
    }
   ],
   "interno": true,
-  "_nota_combo": "Combo de taijutsu: 5 pasos encadenados (cada paso se desplaza hacia el objetivo si está a menos de 'acercar' m). 'anim' es la animación de Meshy y 'segmento' el tramo [inicio, fin] (s) que se reproduce en 'duracion'. 'lanza': lejos (derriba y empuja) o arriba (al aire: el atacante puede saltar tras él y seguir con golpes aéreos). Tras el paso 3, «saltar» hace el lanzador; en el aire, golpe = patada aérea y el 3.er golpe aéreo remata contra el suelo.",
+  "_nota_combo": "Combo de 2 a 7 golpes según Taijutsu (Atributos.secuencia_combo). El índice 6 es siempre la patada final que lanza lejos. 'segmento' = tramo [s] de la animación de Meshy; se reproduce en 'duracion'.",
   "acercar": 4.5,
   "lanzador": {
    "anim": "m_uppercut",

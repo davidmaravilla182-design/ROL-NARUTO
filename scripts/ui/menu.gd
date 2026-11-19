@@ -54,6 +54,8 @@ func _ready() -> void:
 		func(): get_tree().change_scene_to_file(ESCENA_PERSONAJE))
 	var repertorio := _boton_menu("BotonRepertorio", Datos.texto("menu_repertorio"), 22, Vector2(220, 66),
 		func(): get_tree().change_scene_to_file("res://escenas/repertorio.tscn"))
+	var ficha := _boton_menu("BotonFicha", Datos.texto("menu_ficha"), 22, Vector2(160, 66),
+		func(): get_tree().change_scene_to_file("res://escenas/ficha.tscn"))
 	var ajustes := _boton_menu("BotonAjustes", Datos.texto("menu_ajustes"), 22, Vector2(180, 66), func():
 		var m := MenuAjustes.new()
 		add_child(m)
@@ -66,6 +68,7 @@ func _ready() -> void:
 	var fila2 := HBoxContainer.new()
 	fila2.add_theme_constant_override("separation", 14)
 	fila2.add_child(personaje)
+	fila2.add_child(ficha)
 	fila2.add_child(repertorio)
 	fila2.add_child(ajustes)
 	var centro_b := CenterContainer.new()

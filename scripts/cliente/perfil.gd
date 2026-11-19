@@ -46,7 +46,43 @@ static func cargar() -> void:
 		if typeof(v) == TYPE_DICTIONARY:
 			_practica = v
 			modo_prueba = bool((v as Dictionary).get("modo_prueba", false))
+	_migrar_puntos()
 	_usar_progreso(_progreso_activo())
+
+
+## v0.9: el tope de puntos depende del rango (14 al crear). Los personajes creados antes conservan sus puntos.
+static func _migrar_puntos() -> void:
+	for p in personajes:
+		var pj: Dictionary = p
+		if not pj.has("puntos_legado"):
+			var total := Creacion.total_puntos(pj.get("atributos", {}))
+			pj["puntos_legado"] = total if total > 14 else 0
+			for k in ["xp_total", "xp_rango"]:
+				if not pj.has(k):
+					pj[k] = 0.0
+			if not pj.has("entreno"):
+				pj["entreno"] = {}
+
+
+## Experiencia de combate y misiones que llega del servidor (cuenta para el rango y los puntos de atributo).
+static func sumar_xp(cantidad: float) -> void:
+	cargar()
+	if indice < 0:
+		return
+	var pj: Dictionary = personajes[indice]
+	pj["xp_total"] = float(pj.get("xp_total", 0.0)) + cantidad
+	pj["xp_rango"] = float(pj.get("xp_rango", 0.0)) + cantidad
+
+
+## Barra de entrenamiento de un atributo (0-1).
+static func poner_entreno(atributo: String, valor: float) -> void:
+	cargar()
+	if indice < 0:
+		return
+	var pj: Dictionary = personajes[indice]
+	var ent: Dictionary = pj.get("entreno", {})
+	ent[atributo] = clampf(valor, 0.0, 1.0)
+	pj["entreno"] = ent
 
 
 static func recargar() -> void:

@@ -368,10 +368,11 @@ func probar_ocho_puertas() -> void:
 	j.pos = m.pos + Vector3(0, 0, 1.5)
 	j.yaw = PI
 	var evs: Array = []
-	for i in 3:
+	# El golpe definitivo es el último del combo (2 + Taijutsu golpes).
+	for i in Atributos.combo_largo(j.attrs):
 		s.recibir_comando(1, {"t": "accion", "id": "golpe"})
-		evs.append_array(correr(s, 0.5))
-	comprobar(contar(evs, "golpe_definitivo") == 1, "N3: el tercer golpe es el golpe definitivo")
+		evs.append_array(correr(s, 0.6))
+	comprobar(contar(evs, "golpe_definitivo") == 1, "N3: el último golpe del combo es el golpe definitivo")
 	comprobar(j.vida <= float(j.stats["vida_max"]) * 0.06 and not j.modo_activo, "la octava puerta te deja casi muerto")
 	s.free()
 

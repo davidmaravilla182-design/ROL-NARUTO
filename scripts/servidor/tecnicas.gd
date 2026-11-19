@@ -37,7 +37,7 @@ static func alternar_modo(s: ServidorJuego, e: EntidadServidor) -> void:
 		s.ganar_xp(e, id, float(Datos.reglas["maestria"]["xp_uso"]))
 		s._evento({"tipo": "modo", "entidad": e.id, "modo": id, "activo": true, "nivel": nivel})
 	e.sharingan = e.modo_activo and (e.modo == "sharingan" or e.modo == "mangekyo")
-	e.recargas[id] = float(j.get("recarga", 1.0))
+	e.recargas[id] = float(j.get("recarga", 1.0)) * Atributos.mult_recarga(e.attrs)
 
 
 static func apagar_modo(s: ServidorJuego, e: EntidadServidor) -> void:

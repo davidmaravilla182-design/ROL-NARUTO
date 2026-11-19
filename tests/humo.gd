@@ -13,6 +13,7 @@ var pasos := [
 	["res://escenas/juego.tscn", "baja"],
 	["red", ""],
 	["res://escenas/red.tscn", ""],
+	["res://escenas/ficha.tscn", ""],
 ]
 var _frames := 0
 var _indice := 0

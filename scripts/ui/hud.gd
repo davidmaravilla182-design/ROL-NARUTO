@@ -35,6 +35,7 @@ var _boton_interactuar: Button
 var _dialogo: Label
 var _dialogo_txt: Label
 var _dialogo_t := 0.0
+var atributos_jugador: Dictionary = {}   # atributos del personaje (Inteligencia: qué se ve del rival)
 var _lineas: Control
 var _lineas_t := 0.0
 var _lineas_total := 0.3
@@ -461,7 +462,7 @@ func actualizar(j: Dictionary, enemigo: Dictionary) -> void:
 	var rec: Dictionary = j["recargas"]
 	var niveles: Dictionary = j.get("niveles", {})
 	var efectos: Dictionary = j.get("efectos", {})
-	var attrs: Dictionary = Datos.personaje(str(j["plantilla"])).get("atributos", {})
+	var attrs: Dictionary = atributos_jugador if not atributos_jugador.is_empty() else Datos.personaje(str(j["plantilla"])).get("atributos", {})
 	for id in botones.keys():
 		var b: BotonJutsu = botones[id]
 		if id == "fijar":
@@ -488,6 +489,17 @@ func actualizar(j: Dictionary, enemigo: Dictionary) -> void:
 		_enemigo["nombre"] = str(Datos.personaje(str(enemigo["plantilla"])).get("nombre", ""))
 		_enemigo["vida"] = float(enemigo["vida"])
 		_enemigo["max"] = float(enemigo["vida_max"])
+		# Inteligencia 3+: la debilidad elemental del rival.
+		var nat_e := ""
+		var nats: Array = Datos.personaje(str(enemigo["plantilla"])).get("naturalezas", [])
+		if not nats.is_empty():
+			nat_e = str(nats[0])
+		var debil := ""
+		if nat_e != "" and Atributos.ve_debilidad(atributos_jugador):
+			for n in ["fuego", "viento", "rayo", "tierra", "agua"]:
+				if Combate.multiplicador_naturaleza(n, nat_e) > 1.01:
+					debil = Datos.nombre_naturaleza(n)
+		_enemigo["debil"] = debil
 
 
 func _dibujar_enemigo() -> void:
@@ -503,7 +515,11 @@ func _dibujar_enemigo() -> void:
 	_enemigo_panel.draw_rect(Rect2(barra.position, Vector2(barra.size.x * frac, barra.size.y)), Color(0.82, 0.16, 0.14))
 	_enemigo_panel.draw_rect(Rect2(barra.position, Vector2(barra.size.x * frac, barra.size.y * 0.4)), Color(1, 0.6, 0.5, 0.35))
 	_enemigo_panel.draw_rect(barra, Estilo.ACERO_BORDE, false, 1.5)
-	Estilo.texto(_enemigo_panel, Vector2(barra.position.x, barra.position.y + 15), "%d / %d" % [mini(int(ceil(float(_enemigo["vida"]))), int(round(float(_enemigo["max"])))), int(round(float(_enemigo["max"])))], 17, Color.WHITE, barra.size.x - 6, HORIZONTAL_ALIGNMENT_RIGHT)
+	# Inteligencia 1+: la vida en números; 3+: su debilidad.
+	if Atributos.ve_vida(atributos_jugador):
+		Estilo.texto(_enemigo_panel, Vector2(barra.position.x, barra.position.y + 15), "%d / %d" % [mini(int(ceil(float(_enemigo["vida"]))), int(round(float(_enemigo["max"])))), int(round(float(_enemigo["max"])))], 17, Color.WHITE, barra.size.x - 6, HORIZONTAL_ALIGNMENT_RIGHT)
+	if str(_enemigo.get("debil", "")) != "":
+		Estilo.texto(_enemigo_panel, Vector2(14, barra.end.y + 18), Datos.texto("hud_debil", [_enemigo["debil"]]), 15, Color(1.0, 0.85, 0.4), r.size.x - 28, HORIZONTAL_ALIGNMENT_LEFT)
 
 
 func mostrar_sellos(lista: Array, duracion: float) -> void:

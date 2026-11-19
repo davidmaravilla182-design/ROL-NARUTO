@@ -43,9 +43,41 @@ static func nuevo() -> Dictionary:
 	}
 
 
-## Tope de puntos de atributo del personaje (el clan puede sumar).
+## Tope de puntos de atributo: el del rango (14 Genin … 26 Élite) + los ganados con experiencia antes de ascender
+## (hasta 2) + los del clan. Los personajes antiguos conservan los puntos que ya tenían ("puntos_legado").
 static func tope_puntos(pj: Dictionary) -> int:
-	return int(Datos.reglas["atributos"]["tope_total"]) + int(clan(str(pj.get("clan", ""))).get("puntos_extra", 0))
+	var conf_p: Dictionary = Datos.reglas.get("progresion_puntos", {})
+	var rango := str(pj.get("rango", "genin"))
+	var tope_total := int(Datos.reglas["atributos"]["tope_total"])
+	var base := int(conf_p.get("tope_por_rango", {}).get(rango, tope_total))
+	var ganados := 0
+	if base < tope_total:
+		ganados = mini(int(conf_p.get("por_xp_max", 2)), int(floor(float(pj.get("xp_rango", 0.0)) / maxf(float(conf_p.get("xp_por_punto", 400)), 1.0))))
+	var extra := int(clan(str(pj.get("clan", ""))).get("puntos_extra", 0))
+	return maxi(mini(base + ganados, tope_total) + extra, int(pj.get("puntos_legado", 0)))
+
+
+## Rango siguiente y lo que falta: {siguiente, xp_necesaria, xp, prueba, listo_xp}.
+static func ascenso(pj: Dictionary) -> Dictionary:
+	var conf_p: Dictionary = Datos.reglas.get("progresion_puntos", {})
+	var r := str(pj.get("rango", "genin"))
+	var i := indice_rango(r)
+	var lista := rangos()
+	if i < 0 or i >= lista.size() - 2:   # Élite es el último alcanzable (Kage no)
+		return {"siguiente": "", "xp_necesaria": 0, "xp": 0, "prueba": "", "listo_xp": false}
+	var nec := float(conf_p.get("xp_ascenso", {}).get(r, 0))
+	var xp := float(pj.get("xp_rango", 0.0))
+	return {"siguiente": str(lista[i + 1]), "xp_necesaria": nec, "xp": xp, "prueba": str(conf_p.get("prueba_ascenso", {}).get(r, "")), "listo_xp": xp >= nec}
+
+
+## Asciende de rango (tras superar la prueba): reinicia la XP del rango.
+static func ascender(pj: Dictionary) -> bool:
+	var a := ascenso(pj)
+	if str(a["siguiente"]) == "" or not bool(a["listo_xp"]):
+		return false
+	pj["rango"] = a["siguiente"]
+	pj["xp_rango"] = 0.0
+	return true
 
 
 static func total_puntos(attrs: Dictionary) -> int:
@@ -177,9 +209,19 @@ static func validar(datos: Variant) -> Dictionary:
 		attrs[a] = clampi(int(origen.get(a, 0)), int(Datos.reglas["atributos"]["minimo"]), int(Datos.reglas["atributos"]["maximo"]))
 	var bal: Dictionary = c.get("balance_chakra", {})
 	attrs["_balance"] = clampf(float(origen.get("_balance", 0.0)), float(bal.get("min", -1.0)), float(bal.get("max", 1.0)))
+	pj["atributos"] = attrs
+	# Progreso de combate (experiencia y entrenamiento): números acotados.
+	pj["xp_total"] = maxf(float(d.get("xp_total", 0.0)), 0.0)
+	pj["xp_rango"] = clampf(float(d.get("xp_rango", 0.0)), 0.0, pj["xp_total"])
+	pj["puntos_legado"] = clampi(int(d.get("puntos_legado", 0)), 0, int(Datos.reglas["atributos"]["tope_total"]) + 2)
+	var ent := {}
+	if typeof(d.get("entreno")) == TYPE_DICTIONARY:
+		for k in (d["entreno"] as Dictionary).keys():
+			if str(k) in Datos.reglas["atributos"]["lista"] or str(k) == "control":
+				ent[str(k)] = clampf(float(d["entreno"][k]), 0.0, 1.0)
+	pj["entreno"] = ent
 	if total_puntos(attrs) > tope_puntos(pj):
 		errores.append("Atributos: %d de %d puntos" % [total_puntos(attrs), tope_puntos(pj)])
-	pj["atributos"] = attrs
 	var a_in: Dictionary = d.get("aspecto", {}) if typeof(d.get("aspecto")) == TYPE_DICTIONARY else {}
 	var asp: Dictionary = pj["aspecto"]
 	if c["peinados"].has(str(a_in.get("peinado", ""))):

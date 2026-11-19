@@ -162,7 +162,8 @@
       "aggro": 18.0,
       "combo_max": 5,
       "prob_shunshin": 0.45,
-      "prob_sustitucion": 0.15
+      "prob_sustitucion": 0.15,
+      "prob_bloqueo": 0.35
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -291,7 +292,8 @@
       "vida_mult": 2.2,
       "combo_max": 3,
       "prob_shunshin": 0.25,
-      "prob_sustitucion": 0.35
+      "prob_sustitucion": 0.35,
+      "prob_bloqueo": 0.2
     },
     "aspecto": {
       "piel": "#dcbb98",

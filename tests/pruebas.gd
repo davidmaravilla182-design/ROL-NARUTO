@@ -24,6 +24,7 @@ func _initialize() -> void:
 	probar_servidor_sharingan()
 	probar_servidor_combo()
 	probar_combate_anime()
+	probar_atributos_servidor()
 	probar_ia_puede_ganar()
 	probar_jugador_puede_ganar()
 	probar_textos_sin_codigo()
@@ -367,6 +368,7 @@ func probar_combate_anime() -> void:
 	var s := nuevo_servidor(false)
 	var j := s.entidad_de_peer(1)
 	var m := _muneco_frente(s, j, 3.8)
+	j.attrs["taijutsu"] = 3   # combo de 5 golpes (2 + Taijutsu)
 	var evs: Array = []
 	for i in 5:
 		s.recibir_comando(1, {"t": "accion", "id": "golpe"})
@@ -375,7 +377,7 @@ func probar_combate_anime() -> void:
 	for e in evs:
 		if e["tipo"] == "golpe":
 			pasos.append(int(e["paso"]))
-	comprobar(pasos == [0, 1, 2, 3, 4], "combo de 5 golpes encadenado (%s)" % str(pasos))
+	comprobar(pasos == [0, 1, 2, 5, 6], "combo de 5 golpes encadenado con Taijutsu 3 (%s)" % str(pasos))
 	comprobar(contar(evs, "impacto") >= 5, "los 5 golpes conectan aunque empiece a 3,8 m (avance rápido)")
 	comprobar(m.estado == "caido" or m.pos.distance_to(j.pos) > 2.5, "el golpe final lanza lejos al rival")
 	s.free()
@@ -439,6 +441,37 @@ func probar_combate_anime() -> void:
 	s._iniciar_golpe(j, 0)
 	evs = correr(s, 0.5)
 	comprobar(contar(evs, "choque") == 1 and j.vida == vida0, "choque de golpes simultáneos")
+	s.free()
+
+
+func probar_atributos_servidor() -> void:
+	# Guardia: un golpe normal se bloquea; con Fuerza 3+ el remate la rompe.
+	var s := nuevo_servidor(false)
+	var j := s.entidad_de_peer(1)
+	var g := _muneco_frente(s, j, 1.5)
+	g.yaw = 0.0
+	s.bloquear(g, 5.0)
+	var v0 := g.vida
+	j.attrs["fuerza"] = 1
+	s._aplicar_dano(g, 20.0, j, {"jutsu": "golpe", "paso": 0, "empuje": 1.0, "dir": Vector3(0, 0, -1)})
+	comprobar(g.vida > v0 - 6.0 and g.estado == "bloqueo", "la guardia para el golpe (%.0f de daño)" % (v0 - g.vida))
+	j.attrs["fuerza"] = 4
+	s._aplicar_dano(g, 20.0, j, {"jutsu": "golpe", "paso": 6, "fuerte": true, "empuje": 1.0, "dir": Vector3(0, 0, -1)})
+	comprobar(g.estado == "aturdido", "Fuerza 4 rompe la guardia con un golpe fuerte")
+	# Experiencia al derrotar y entrenamiento por uso.
+	var xp0 := j.xp_total
+	s._aplicar_dano(g, 99999.0, j, {"jutsu": "golpe", "dir": Vector3(0, 0, -1)})
+	comprobar(j.xp_total > xp0, "derrotar a un enemigo da experiencia (%.0f)" % (j.xp_total - xp0))
+	var ev := correr(s, 0.1)
+	s.entrenar(j, "control", "control_seg", 30.0)
+	comprobar(float(j.entreno.get("control", 0.0)) > 0.0 and Atributos.v(j.attrs, "control") > 0.0, "correr por paredes entrena el control de chakra")
+	# Inteligencia acorta la recarga.
+	j.attrs["inteligencia"] = 5
+	j.chakra = 999.0
+	s.recibir_comando(1, {"t": "accion", "id": "bola_fuego"})
+	correr(s, 2.0)
+	var rec := j.recarga("bola_fuego")
+	comprobar(rec > 0.0 and rec < float(Datos.jutsu("bola_fuego")["recarga"]) * 0.85, "Inteligencia 5: recarga más corta (%.2f s)" % rec)
 	s.free()
 
 

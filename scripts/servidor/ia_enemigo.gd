@@ -101,12 +101,17 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 	s.aplicar_comando(e, {"t": "entrada", "mov": Vector2(mov.x, mov.z), "mira": atan2(dir.x, dir.z)})
 
 	# Combos: el NPC encadena golpes hasta su máximo (agresivo: los 5 con la patada final).
-	if e.estado == "golpe" and e.combo_paso < int(conf.get("combo_max", 3)) - 1 and e.combo_paso < 10 and dist < float(conf.get("rango_melee", 2.2)) + 1.5:
+	if e.estado == "golpe" and e.combo_pos < int(conf.get("combo_max", 3)) - 1 and e.combo_paso < 10 and dist < float(conf.get("rango_melee", 2.2)) + 1.5:
 		s.aplicar_comando(e, {"t": "accion", "id": "golpe"})
 	# Sustitución: si el jugador está a punto de golpearlo de frente, a veces deja un tronco.
 	if _golpe_inminente(objetivo) and e.recarga("sustitucion") <= 0.0 and e.sustitucion_t <= 0.0:
-		if rng.randf() < float(conf.get("prob_sustitucion", 0.0)):
+		var r := rng.randf()
+		if r < float(conf.get("prob_sustitucion", 0.0)):
 			s.aplicar_comando(e, {"t": "accion", "id": "esquivar"})
+			return
+		# Guardia: el agresivo levanta los brazos y para el golpe (Fuerza 3+ se la rompe).
+		if r < float(conf.get("prob_sustitucion", 0.0)) + float(conf.get("prob_bloqueo", 0.0)) and e.estado == "libre":
+			s.bloquear(e)
 			return
 	if e.estado != "libre" or t_reaccion > 0.0:
 		return

@@ -45,12 +45,51 @@ func probar_validacion() -> void:
 	pj["atributos"]["velocidad"] = 5
 	pj["atributos"]["estamina"] = 5
 	comprobar(not Creacion.validar(pj)["ok"], "más de 26 puntos no es válido (sin clan permite 27)")
+	pj["rango"] = "elite"
 	pj["atributos"]["estamina"] = 2
 	pj["atributos"]["fuerza"] = 3
 	pj["atributos"]["genjutsu"] = 3
-	comprobar(Creacion.total_puntos(pj["atributos"]) == 27 and Creacion.validar(pj)["ok"], "27 puntos sin clan es válido (+1 de ventaja)")
+	comprobar(Creacion.total_puntos(pj["atributos"]) == 27 and Creacion.validar(pj)["ok"], "27 puntos sin clan es válido en Élite (+1 de ventaja)")
 	pj["clan"] = "uchiha"
 	comprobar(not Creacion.validar(pj)["ok"], "27 puntos con un clan no es válido")
+	# v0.9: tope por rango (14 Genin, 18 Chūnin, 22 Jōnin, 26 Élite) + hasta 2 ganados con experiencia.
+	var g := pj_base()
+	g["clan"] = "uchiha"
+	comprobar(Creacion.tope_puntos(g) == 14, "un Genin nuevo tiene 14 puntos (%d)" % Creacion.tope_puntos(g))
+	comprobar(Creacion.total_puntos(Creacion.nuevo()["atributos"]) == 14, "la creación empieza con los 14 puntos repartidos")
+	g["xp_rango"] = 850.0
+	comprobar(Creacion.tope_puntos(g) == 16, "con 850 XP de rango gana 2 puntos (%d)" % Creacion.tope_puntos(g))
+	g["xp_rango"] = 5000.0
+	comprobar(Creacion.tope_puntos(g) == 16, "antes de ascender no se ganan más de 2")
+	g["rango"] = "chunin"
+	g["xp_rango"] = 0.0
+	comprobar(Creacion.tope_puntos(g) == 18, "Chūnin: 18 puntos")
+	g["rango"] = "elite"
+	g["xp_rango"] = 9999.0
+	comprobar(Creacion.tope_puntos(g) == 26, "Élite: 26 puntos como máximo (nunca 40)")
+	g["rango"] = "genin"
+	g["xp_rango"] = 0.0
+	g["puntos_legado"] = 20
+	comprobar(Creacion.tope_puntos(g) == 20, "los personajes antiguos conservan sus puntos")
+	var asc := pj_base()
+	asc["xp_rango"] = 100.0
+	comprobar(not Creacion.ascender(asc), "sin experiencia suficiente no se asciende")
+	asc["xp_rango"] = 700.0
+	comprobar(Creacion.ascender(asc) and str(asc["rango"]) == "chunin" and float(asc["xp_rango"]) == 0.0, "con 600 XP y la prueba superada se asciende a Chūnin")
+	# Efectos de los atributos.
+	var a0 := {"taijutsu": 1}
+	var a5 := {"taijutsu": 5, "inteligencia": 5, "sellos": 5, "velocidad": 5, "genjutsu": 5, "estamina": 5}
+	comprobar(Atributos.combo_largo(a0) == 3 and Atributos.combo_largo(a5) == 7, "combo de 3 golpes con Taijutsu 1 y de 7 con 5")
+	comprobar(Atributos.secuencia_combo(7).size() == 7 and int(Atributos.secuencia_combo(3)[-1]) == 6, "el combo siempre acaba en la patada final")
+	comprobar(Atributos.mult_recarga(a5) < Atributos.mult_recarga({}) , "Inteligencia acorta las recargas")
+	comprobar(Atributos.ve_debilidad(a5) and not Atributos.ve_debilidad({"inteligencia": 2}), "con Inteligencia 3+ se ve la debilidad del rival")
+	comprobar(Atributos.factor_sellos(a5) <= 0.16 and Atributos.una_mano({"sellos": 4}), "Sellos 4: una mano; Sellos 5: casi sin sellos")
+	comprobar(Atributos.mult_duracion_genjutsu({"genjutsu": 5}, {}) > Atributos.mult_duracion_genjutsu({}, {"genjutsu": 5}) * 2.0, "Genjutsu alarga los tuyos y acorta los del enemigo")
+	comprobar(Atributos.mult_costo_movil(a5) < 1.0 and Atributos.factor_ataque(a5) < 1.0, "Estamina abarata paredes/agua; Velocidad acorta los golpes")
+	var ent := {"taijutsu": 2, "_entreno": {"taijutsu": 0.5}}
+	comprobar(is_equal_approx(Atributos.v(ent, "taijutsu"), 2.5), "el entrenamiento suma hasta +0,5")
+	for a in Atributos.LISTA:
+		comprobar(Atributos.efectos_texto(a, a5).size() == 2, "la ficha describe el efecto de %s" % a)
 	pj = pj_base()
 	pj["atributos"]["ninjutsu"] = 9
 	comprobar(int(Creacion.validar(pj)["pj"]["atributos"]["ninjutsu"]) == 5, "atributos fuera de rango se recortan a 5")

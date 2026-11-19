@@ -31,7 +31,7 @@ static func validar_atributos(attrs: Dictionary) -> Dictionary:
 static func _ponderado(attrs: Dictionary, pesos: Dictionary) -> float:
 	var s := 0.0
 	for k in pesos.keys():
-		s += float(attrs.get(k, 0)) * float(pesos[k])
+		s += Atributos.v(attrs, k) * float(pesos[k])
 	return s
 
 
@@ -52,7 +52,7 @@ static func _balance(attrs: Dictionary) -> float:
 ## Control de chakra (0-5): eficiencia (menos costo) y precisión.
 static func control(attrs: Dictionary) -> float:
 	Datos.cargar()
-	return clampf(_ponderado(attrs, Datos.reglas["derivados"]["control"]) - _balance(attrs), 0.0, 5.0)
+	return clampf(_ponderado(attrs, Datos.reglas["derivados"]["control"]) - _balance(attrs) + Atributos.v({"_entreno": attrs.get("_entreno", {})}, "control"), 0.0, 5.0)
 
 
 ## Multiplicador por naturaleza del atacante contra la naturaleza del defensor.
@@ -104,9 +104,7 @@ static func costo_por_segundo(jutsu_id: String, attrs: Dictionary, nivel := 1) -
 
 
 static func tiempo_sellos(jutsu_id: String, attrs: Dictionary) -> float:
-	var base := float(Datos.jutsu(jutsu_id).get("tiempo_sellos", 0.0))
-	var red := 1.0 - float(attrs.get("sellos", 0)) * Datos.formula("sellos_reduccion_por_punto")
-	return base * maxf(red, 0.2)
+	return float(Datos.jutsu(jutsu_id).get("tiempo_sellos", 0.0)) * Atributos.factor_sellos(attrs)
 
 
 ## Daño final de un ninjutsu (antes de defensa): nivel, atributos, naturaleza y clima.
@@ -115,7 +113,7 @@ static func dano_jutsu(jutsu_id: String, nivel: int, attrs: Dictionary, naturale
 	var base := float(Datos.nivel_jutsu(jutsu_id, nivel).get("dano", 0.0))
 	var nat := str(j.get("naturaleza", ""))
 	var d := base \
-		* (1.0 + float(attrs.get("ninjutsu", 0)) * Datos.formula("dano_por_ninjutsu")) \
+		* Atributos.mult_dano_ninjutsu(attrs) \
 		* (1.0 + reserva(attrs) * Datos.formula("dano_por_reserva"))
 	d *= multiplicador_naturaleza(nat, naturaleza_defensor)
 	d *= float(modificador_clima(nat, clima)["dano"])
@@ -125,7 +123,7 @@ static func dano_jutsu(jutsu_id: String, nivel: int, attrs: Dictionary, naturale
 ## Escala del tamaño visual/radio de un jutsu (reserva y clima).
 static func escala_tamano(jutsu_id: String, attrs: Dictionary, clima: String) -> float:
 	var nat := str(Datos.jutsu(jutsu_id).get("naturaleza", ""))
-	return (1.0 + reserva(attrs) * Datos.formula("tamano_por_reserva")) * float(modificador_clima(nat, clima)["tamano"])
+	return (1.0 + reserva(attrs) * Datos.formula("tamano_por_reserva")) * Atributos.mult_tamano_ninjutsu(attrs) * float(modificador_clima(nat, clima)["tamano"])
 
 
 ## Ángulo (grados) de asistencia de puntería: más control, más precisión.
@@ -136,9 +134,7 @@ static func precision_grados(attrs: Dictionary) -> float:
 static func dano_taijutsu(paso: int, attrs: Dictionary) -> float:
 	var pasos: Array = Datos.jutsu("golpe")["pasos"]
 	var p: Dictionary = pasos[clampi(paso, 0, pasos.size() - 1)]
-	return float(p["dano"]) * (1.0 \
-		+ float(attrs.get("taijutsu", 0)) * Datos.formula("taijutsu_dano_por_taijutsu") \
-		+ float(attrs.get("fuerza", 0)) * Datos.formula("taijutsu_dano_por_fuerza"))
+	return float(p["dano"]) * Atributos.mult_dano_taijutsu(attrs)
 
 
 ## Estadísticas derivadas de los atributos.
@@ -146,12 +142,12 @@ static func estadisticas(attrs: Dictionary) -> Dictionary:
 	var r := reserva(attrs)
 	var c := control(attrs)
 	return {
-		"vida_max": Datos.formula("vida_base") + float(attrs.get("estamina", 0)) * Datos.formula("vida_por_estamina") + float(attrs.get("fuerza", 0)) * Datos.formula("vida_por_fuerza"),
+		"vida_max": Datos.formula("vida_base") + Atributos.v(attrs, "estamina") * Atributos.ef("estamina", "vida") + Atributos.v(attrs, "fuerza") * Datos.formula("vida_por_fuerza"),
 		"chakra_max": Datos.formula("chakra_base") + r * Datos.formula("chakra_por_reserva"),
-		"estamina_max": Datos.formula("estamina_base") + float(attrs.get("estamina", 0)) * Datos.formula("estamina_por_estamina") + float(attrs.get("taijutsu", 0)) * Datos.formula("estamina_por_taijutsu"),
-		"velocidad": Datos.formula("velocidad_base") * (1.0 + float(attrs.get("velocidad", 0)) * Datos.formula("velocidad_por_punto")),
+		"estamina_max": Datos.formula("estamina_base") + Atributos.v(attrs, "estamina") * Atributos.ef("estamina", "estamina") + Atributos.v(attrs, "taijutsu") * Datos.formula("estamina_por_taijutsu"),
+		"velocidad": Datos.formula("velocidad_base") * Atributos.mult_movimiento(attrs),
 		"regen_chakra": Datos.formula("regen_chakra_base") + c * Datos.formula("regen_chakra_por_control"),
-		"regen_estamina": Datos.formula("regen_estamina"),
+		"regen_estamina": Datos.formula("regen_estamina") * Atributos.mult_regen_estamina(attrs),
 		"reserva": r,
 		"control": c,
 	}

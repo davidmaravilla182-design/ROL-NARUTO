@@ -2,7 +2,11 @@
 
 > Diseño completo en DISENO.md. Regla de arte: modelos nuevos solo desde imágenes de GPT (referencias/gpt/PEDIDOS.md).
 
-- [ ] 1. Atributos con efectos reales (ficha con efecto actual), progresión 14 → 26 por rango, XP, entrenamiento por uso.
+- [x] 1. Atributos con efectos reales (ficha con efecto actual), progresión 14 → 26 por rango, XP, entrenamiento por uso.
+  Hecho: `scripts/core/atributos.gd` (todos los efectos), combo de 2 + Taijutsu golpes (hasta 7), guardia de NPC que
+  Fuerza 3+ rompe, choques que gana la Fuerza, genjutsu escalado por los dos Genjutsu, Inteligencia en el HUD (vida,
+  debilidad), XP por derrotas, entrenamiento por uso (control, taijutsu, fuerza, sellos, velocidad, genjutsu, estamina),
+  tope 14/18/22/26 + 2 por XP, rango Élite, pantalla Ficha.
 - [ ] 2. Filtro Ninjutsu/Taijutsu/Genjutsu; 8 taijutsu + 5 genjutsu con 3 niveles; Ocho Puertas espectacular.
 - [ ] 3. Misiones: motor por fases, 6 capítulos, 4 eventos dinámicos, recompensas (XP, ryō, pergaminos, cosméticos).
 - [ ] 4. Jefe Tres Colas: 4 fases, sellado (Sellos 3+), música y cámara de jefe; marcador hasta tener su imagen.

@@ -101,6 +101,13 @@ func _ready() -> void:
 	Perfil.cargar()
 	hud.configurar_mapa(mapa)
 	hud.construir(Perfil.repertorio())
+	var attrs_pj: Dictionary = Perfil.atributos().duplicate()
+	var ent_pj: Dictionary = Perfil.personaje().get("entreno", {})
+	var bonus := {}
+	for k in ent_pj.keys():
+		bonus[k] = float(ent_pj[k]) * float(Datos.reglas.get("entrenamiento", {}).get("bonus_max", 0.5))
+	attrs_pj["_entreno"] = bonus
+	hud.atributos_jugador = attrs_pj
 	hud.viajar_pedido.connect(func(id): transporte.enviar({"t": Protocolo.C_VIAJAR, "distrito": id}))
 	hud.interactuar_pedido.connect(_interactuar)
 	hud.accion.connect(_on_accion)
@@ -726,7 +733,7 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 			if cambio or paso != int(v["paso"]):
 				var pg := Combate.paso_golpe(paso)
 				var seg: Array = pg.get("segmento", [])
-				if seg.size() < 2 or not pv.reproducir_segmento("m/" + str(pg.get("anim", "")), float(seg[0]), float(seg[1]), float(pg["duracion"])):
+				if seg.size() < 2 or not pv.reproducir_segmento("m/" + str(pg.get("anim", "")), float(seg[0]), float(seg[1]), float(pg["duracion"]) * float(v.get("f", 1.0))):
 					pv.reproducir_forzado("golpe%d" % (mini(paso, 2) + 1))
 				efectos.golpe_estela(pv, pg, int(e["id"]) == mi_id)
 			v["paso"] = paso
@@ -740,6 +747,8 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 			pv.reproducir("lanzar", 0.08)
 		"esquiva":
 			pv.reproducir("esquivar", 0.05)
+		"bloqueo":
+			pv.reproducir("guardia", 0.06)
 		_:
 			if bool(e.get("escalando", false)):
 				pv.reproducir("correr", 0.1, 1.5)   # corre por la pared más rápido que en el suelo
@@ -855,13 +864,39 @@ func _procesar_evento(ev: Dictionary) -> void:
 				efectos.aviso(ev["desde"], ev["hacia"], float(ev["duracion"]), str(ev.get("subtipo", "")) == "melee")
 		"esquiva", "salto":
 			efectos.polvo(_pos_entidad(id), 10)
+		"xp":
+			if id == mi_id:
+				Perfil.sumar_xp(float(ev["cantidad"]))
+				Perfil.guardar()
+				hud.mensaje(Datos.texto("msg_xp", [int(ev["cantidad"])]), 1.2)
+		"entreno":
+			if id == mi_id:
+				Perfil.poner_entreno(str(ev["atributo"]), float(ev["valor"]))
+				if bool(ev.get("lleno", false)):
+					hud.mensaje(Datos.texto("msg_entreno_lleno", [Datos.texto("attr_" + str(ev["atributo"])) if str(ev["atributo"]) != "control" else Datos.texto("attr_control")]), 2.5)
+					Perfil.guardar()
 		"golpe":
+			if _visuales.has(id):
+				_visuales[id]["f"] = float(ev.get("f", 1.0))
 			if bool(ev.get("avance", false)):
 				efectos.estela_avance(_pos_entidad(id), _visuales[id]["nodo"] if _visuales.has(id) else null)
 		"shunshin":
 			efectos.shunshin(ev["desde"], ev["hasta"])
 			if id == mi_id:
 				camara.sacudir(0.12)
+		"bloqueado":
+			efectos.choque(ev["pos"])
+			sonidos.tocar("golpe", -6.0, 2.4)
+			if int(ev.get("atacante", -1)) == mi_id:
+				hud.mensaje(Datos.texto("msg_bloqueado"), 0.8)
+		"guardia_rota":
+			efectos.onda_golpe(ev["pos"], Vector3.ZERO)
+			efectos.choque(ev["pos"])
+			sonidos.tocar("explosion", -10.0, 1.8)
+			if int(ev.get("atacante", -1)) == mi_id:
+				hud.mensaje(Datos.texto("msg_guardia_rota"), 1.2)
+				hud.lineas_velocidad(0.3)
+				pausa_impacto(0.1)
 		"choque":
 			efectos.choque(ev["pos"])
 			sonidos.tocar("golpe", 0.0, 1.9)

@@ -9,12 +9,12 @@
   "atributos_iniciales": {
     "ninjutsu": 2,
     "taijutsu": 2,
-    "genjutsu": 2,
+    "genjutsu": 1,
     "inteligencia": 2,
     "fuerza": 2,
     "velocidad": 2,
     "estamina": 2,
-    "sellos": 2
+    "sellos": 1
   },
   "balance_chakra": {
     "_nota": "-1 = todo control, +1 = toda reserva. Suma/resta este efecto (escala 0-5) a la reserva y al control derivados.",

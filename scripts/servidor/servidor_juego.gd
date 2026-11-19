@@ -116,7 +116,18 @@ func _reapariciones(dt: float) -> void:
 
 ## Genjutsu del rebelde: nubla la pantalla del objetivo unos segundos (el cliente dibuja el efecto).
 func npc_genjutsu(e: EntidadServidor, o: EntidadServidor, duracion: float) -> void:
+	# Genjutsu del objetivo: lo rompe antes (y lo entrena).
+	duracion *= Atributos.mult_duracion_genjutsu(e.attrs, o.attrs)
+	entrenar(o, "genjutsu", "genjutsu_resistido")
 	_evento({"tipo": "genjutsu", "entidad": e.id, "objetivo": o.id, "duracion": duracion})
+
+
+## Guardia de NPC: bloquea los golpes de frente un instante (Fuerza 3+ con un golpe fuerte la rompe).
+func bloquear(e: EntidadServidor, duracion := 0.6) -> void:
+	if not _puede_actuar(e):
+		return
+	e.poner_estado("bloqueo", duracion)
+	_evento({"tipo": "bloqueo", "entidad": e.id})
 
 
 ## Bomba de humo: nube en su posición y reaparece unos metros más allá (se aleja del objetivo).
@@ -279,11 +290,40 @@ func ganar_xp(e: EntidadServidor, id: String, cantidad: float) -> void:
 	if e.tipo != "jugador" or id in Repertorio.MODOS_BASE or not Datos.jutsus.has(id) or Datos.jutsu(id).get("interno", false):
 		return
 	var antes := float(e.maestria.get(id, 0.0))
-	var ahora := antes + cantidad
+	var ahora := antes + cantidad * Atributos.mult_maestria(e.attrs)   # Inteligencia: aprende más rápido
 	e.maestria[id] = ahora
 	var n0 := Repertorio.nivel_desbloqueado(antes)
 	var n1 := Repertorio.nivel_desbloqueado(ahora)
 	_evento({"tipo": "maestria", "entidad": e.id, "jutsu": id, "xp": ahora, "nivel": n1, "subio": n1 > n0})
+
+
+## Entrenamiento por uso: llena la barra de un atributo (o del control de chakra); la barra llena da +0,5.
+func entrenar(e: EntidadServidor, atributo: String, clave: String, veces := 1.0) -> void:
+	if e == null or e.tipo != "jugador":
+		return
+	var conf: Dictionary = Datos.reglas.get("entrenamiento", {})
+	var paso := float(conf.get("por_accion", {}).get(clave, 0.0)) * veces
+	if paso <= 0.0:
+		return
+	var antes := float(e.entreno.get(atributo, 0.0))
+	var ahora := minf(antes + paso, 1.0)
+	if ahora == antes:
+		return
+	e.entreno[atributo] = ahora
+	var ent: Dictionary = e.attrs.get("_entreno", {})
+	ent[atributo] = ahora * float(conf.get("bonus_max", 0.5))
+	e.attrs["_entreno"] = ent
+	# Aviso al dueño cada 5 % (y al llenarse) para que lo guarde y la ficha lo muestre.
+	if floor(ahora * 20.0) != floor(antes * 20.0) or ahora >= 1.0:
+		_evento({"tipo": "entreno", "entidad": e.id, "atributo": atributo, "valor": snappedf(ahora, 0.001), "lleno": ahora >= 1.0 and antes < 1.0})
+
+
+## Experiencia de combate y misiones (rango y puntos de atributo).
+func ganar_experiencia(e: EntidadServidor, cantidad: float, motivo := "") -> void:
+	if e == null or e.tipo != "jugador" or cantidad <= 0.0:
+		return
+	e.xp_total += cantidad
+	_evento({"tipo": "xp", "entidad": e.id, "cantidad": cantidad, "total": e.xp_total, "motivo": motivo})
 
 
 func reaparecer_todo() -> void:
@@ -331,7 +371,7 @@ func _accion(e: EntidadServidor, id: String) -> void:
 				_evento({"tipo": "salto", "entidad": e.id})
 				return
 			# Tras 3 golpes del combo, «saltar» es el lanzador (uppercut que manda al rival al aire).
-			if _puede_actuar(e) and e.en_suelo and e.combo_ventana > 0.0 and e.combo_paso >= 2 and e.combo_paso < 10:
+			if _puede_actuar(e) and e.en_suelo and e.combo_ventana > 0.0 and e.combo_pos >= 2 and e.combo_paso < 10:
 				_iniciar_golpe(e, 10)
 				return
 			if (_puede_actuar(e) or (e.estado == "golpe" and e.accion.get("golpeado", false))) and _saltar_tras_lanzado(e):
@@ -372,8 +412,14 @@ func _accion_golpe(e: EntidadServidor) -> void:
 		if (e.lanzado_t <= 0.0 and e.golpes_aereos == 0) or e.golpes_aereos >= 3:
 			return
 		paso = 12 if e.golpes_aereos >= 2 else 11
-	elif e.combo_ventana > 0.0 and e.combo_paso < pasos.size():
-		paso = (e.combo_paso + 1) % pasos.size()
+	else:
+		# Largo del combo según Taijutsu (2 a 7 golpes); el último siempre es la patada final.
+		var seq := Atributos.secuencia_combo(Atributos.combo_largo(e.attrs))
+		var pos := 0
+		if e.combo_ventana > 0.0 and e.combo_pos >= 0 and e.combo_pos < seq.size() - 1:
+			pos = e.combo_pos + 1
+		paso = int(seq[pos])
+		e.combo_pos = pos
 	if e.estamina < float(j["costo_estamina"]):
 		_mensaje(e, "msg_sin_estamina")
 		return
@@ -411,8 +457,10 @@ func _iniciar_golpe(e: EntidadServidor, paso: int) -> void:
 		var falta := v.length() - float(p["alcance"]) * 0.6
 		if falta > 0.1:
 			e.empuje = v.normalized() * minf(falta / maxf(float(p["impacto"]), 0.05), 22.0)
-	e.poner_estado("golpe", float(p["duracion"]), {"jutsu": "golpe", "paso": paso, "golpeado": false, "encadenar": false})
-	_evento({"tipo": "golpe", "entidad": e.id, "paso": paso, "avance": e.empuje.length() > 4.0})
+	# Velocidad: golpes más cortos (mismo tramo de animación, más rápido).
+	var f := Atributos.factor_ataque(e.attrs)
+	e.poner_estado("golpe", float(p["duracion"]) * f, {"jutsu": "golpe", "paso": paso, "golpeado": false, "encadenar": false, "f": f})
+	_evento({"tipo": "golpe", "entidad": e.id, "paso": paso, "avance": e.empuje.length() > 4.0, "f": snappedf(f, 0.01)})
 	if e.tipo == "enemigo":
 		_evento({"tipo": "aviso", "subtipo": "melee", "entidad": e.id, "desde": e.pos, "hacia": e.pos + e.adelante() * float(p["alcance"]), "duracion": float(p["impacto"])})
 
@@ -446,7 +494,7 @@ func _shunshin(e: EntidadServidor) -> bool:
 	var conf: Dictionary = Datos.jutsu("golpe").get("shunshin", {})
 	if conf.is_empty() or e.recarga("shunshin") > 0.0:
 		return false
-	var o := _objetivo_fijado(e, float(conf["alcance"]))
+	var o := _objetivo_fijado(e, float(conf["alcance"]) + Atributos.shunshin_extra(e.attrs))   # Velocidad: más lejos
 	if o == null or o.pos.distance_to(e.pos) < 2.5:
 		return false
 	if e.estamina < float(conf["costo_estamina"]):
@@ -462,6 +510,7 @@ func _shunshin(e: EntidadServidor) -> bool:
 	e.invulnerable_t = maxf(e.invulnerable_t, 0.2)
 	e.combo_ventana = float(Datos.jutsu("golpe")["ventana_combo"])
 	_evento({"tipo": "shunshin", "entidad": e.id, "desde": desde, "hasta": e.pos})
+	entrenar(e, "velocidad", "velocidad_esquiva")
 	return true
 
 
@@ -470,7 +519,7 @@ func _accion_esquivar(e: EntidadServidor) -> void:
 	# Ventana de sustitución: si un golpe te alcanza en este instante, queda un tronco en tu lugar.
 	var sus: Dictionary = Datos.jutsu("golpe").get("sustitucion", {})
 	if not sus.is_empty() and e.recarga("sustitucion") <= 0.0:
-		e.sustitucion_t = float(sus["ventana"])
+		e.sustitucion_t = float(sus["ventana"]) + Atributos.ventana_extra(e.attrs)   # Velocidad: ventana más amplia
 	if (_puede_actuar(e) or e.estado == "golpe") and e.en_suelo and _shunshin(e):
 		return
 	if not (_puede_actuar(e) or e.estado == "golpe") or not e.en_suelo:
@@ -526,7 +575,10 @@ func _accion_jutsu(e: EntidadServidor, id: String) -> void:
 		_mensaje(e, "msg_sin_chakra")
 		return
 	e.chakra -= costo
-	e.recargas[id] = float(j["recarga"])
+	e.recargas[id] = float(j["recarga"]) * Atributos.mult_recarga(e.attrs)   # Inteligencia: recarga más corta
+	if float(j.get("tiempo_sellos", 0.0)) > 0.0:
+		entrenar(e, "sellos", "sellos_jutsu")
+	entrenar(e, "inteligencia", "inteligencia_jutsu")
 	ganar_xp(e, id, float(Datos.reglas["maestria"]["xp_uso"]))
 	var t := Combate.tiempo_sellos(id, e.attrs)
 	var dir_cmd: Vector2 = e.apuntado.get("dir", Vector2.ZERO)
@@ -583,6 +635,8 @@ func _actualizar_recursos(e: EntidadServidor, dt: float) -> void:
 	e.invulnerable_t = maxf(e.invulnerable_t - dt, 0.0)
 	e.combo_ventana = maxf(e.combo_ventana - dt, 0.0)
 	e.sustitucion_t = maxf(e.sustitucion_t - dt, 0.0)
+	if e.tipo == "jugador" and e.entrada_mov.length() > 0.5 and e.en_suelo:
+		entrenar(e, "estamina", "estamina_seg", dt)
 	e.flotar_t = maxf(e.flotar_t - dt, 0.0)
 	e.lanzado_t = maxf(e.lanzado_t - dt, 0.0)
 	if e.en_suelo:
@@ -604,7 +658,7 @@ func _actualizar_estado(e: EntidadServidor, dt: float) -> void:
 	match e.estado:
 		"golpe":
 			var p: Dictionary = paso_golpe(int(e.accion["paso"]))
-			if not e.accion["golpeado"] and e.estado_total - e.estado_t >= float(p["impacto"]):
+			if not e.accion["golpeado"] and e.estado_total - e.estado_t >= float(p["impacto"]) * float(e.accion.get("f", 1.0)):
 				e.accion["golpeado"] = true
 				_resolver_golpe(e, int(e.accion["paso"]))
 			if e.estado_t <= 0.0:
@@ -612,9 +666,10 @@ func _actualizar_estado(e: EntidadServidor, dt: float) -> void:
 				var paso_fin := int(e.accion["paso"])
 				e.poner_estado("libre", 0.0)
 				# El remate y la patada final cierran el combo; el resto deja una ventana para seguir.
-				e.combo_ventana = 0.0 if paso_fin in [4, 12] else float(Datos.jutsu("golpe")["ventana_combo"])
-				if paso_fin in [4, 12]:
+				e.combo_ventana = 0.0 if paso_fin in [6, 12] else float(Datos.jutsu("golpe")["ventana_combo"])
+				if paso_fin in [6, 12]:
 					e.combo_paso = -1
+					e.combo_pos = -1
 				if encadenar:
 					_accion_golpe(e)
 		"sellos":
@@ -821,7 +876,7 @@ func _cadena_rayo(atacante: EntidadServidor, primero: EntidadServidor, dano: flo
 
 
 func _resolver_golpe(e: EntidadServidor, paso: int) -> void:
-	if paso == 2 and Tecnicas.golpe_definitivo(self, e):
+	if paso == 6 and Tecnicas.golpe_definitivo(self, e):
 		return
 	var p := paso_golpe(paso)
 	var alcance := float(p["alcance"])
@@ -846,14 +901,26 @@ func _resolver_golpe(e: EntidadServidor, paso: int) -> void:
 				o.accion["golpeado"] = true
 				e.empuje = -f * float(choque["empuje"])
 				o.empuje = f * float(choque["empuje"])
-				e.poner_estado("recuperacion", 0.25)
-				o.poner_estado("recuperacion", 0.25)
-				_evento({"tipo": "choque", "entidad": e.id, "otro": o.id, "pos": (e.centro() + o.centro()) * 0.5, "pausa": float(choque["pausa"])})
+				# Fuerza 3+ gana el choque: el rival queda aturdido.
+				var fe := Atributos.v(e.attrs, "fuerza")
+				var fo := Atributos.v(o.attrs, "fuerza")
+				var gana := ""
+				if Atributos.rompe_guardia(e.attrs) and fe > fo:
+					gana = "e"
+				elif Atributos.rompe_guardia(o.attrs) and fo > fe:
+					gana = "o"
+				e.poner_estado("aturdido" if gana == "o" else "recuperacion", 0.6 if gana == "o" else 0.25)
+				o.poner_estado("aturdido" if gana == "e" else "recuperacion", 0.6 if gana == "e" else 0.25)
+				_evento({"tipo": "choque", "entidad": e.id, "otro": o.id, "pos": (e.centro() + o.centro()) * 0.5, "pausa": float(choque["pausa"]),
+					"gana": e.id if gana == "e" else (o.id if gana == "o" else -1)})
 				return
 		var dano := float(p["dano"]) * (Combate.dano_taijutsu(0, e.attrs) / maxf(float(Datos.jutsu("golpe")["pasos"][0]["dano"]), 0.01)) * Tecnicas.multiplicador_taijutsu(e)
 		var info := {"jutsu": "golpe", "naturaleza": "", "derriba": bool(p["derriba"]), "dir": f, "empuje": float(p["empuje"]), "paso": paso,
 			"lanza": str(p.get("lanza", "")), "altura": float(p.get("altura", 0.0)), "fuerte": bool(p.get("fuerte", false)), "flotar": bool(p.get("flotar", false))}
 		_aplicar_dano(o, dano, e, info)
+		entrenar(e, "taijutsu", "taijutsu_golpe")
+		if paso in [6, 12]:
+			entrenar(e, "fuerza", "fuerza_remate")
 		if str(p.get("lanza", "")) == "arriba" and o.vivo():
 			e.lanzado_id = o.id
 			e.lanzado_t = 1.2
@@ -952,6 +1019,23 @@ func _explotar(p: Dictionary, directo: EntidadServidor) -> void:
 func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServidor, info: Dictionary) -> void:
 	if not o.vivo():
 		return
+	if atacante != null and info.has("empuje"):
+		info["empuje"] = float(info["empuje"]) * Atributos.mult_empuje(atacante.attrs)   # Fuerza: empuja más
+	# Guardia (bloqueo de NPC): para los golpes de frente; Fuerza 3+ con un golpe fuerte la rompe.
+	if o.estado == "bloqueo" and atacante != null and str(info.get("jutsu", "")) == "golpe" and o.adelante().dot(atacante.pos - o.pos) > 0.0:
+		if Atributos.rompe_guardia(atacante.attrs) and (bool(info.get("fuerte", false)) or int(info.get("paso", 0)) >= 5):
+			o.poner_estado("aturdido", 0.9)
+			info["sin_reaccion"] = true   # queda aturdido (no la reacción normal al golpe)
+			info["derriba"] = false
+			cantidad *= 1.2
+			_evento({"tipo": "guardia_rota", "entidad": o.id, "atacante": atacante.id, "pos": o.centro()})
+		else:
+			_evento({"tipo": "bloqueado", "entidad": o.id, "atacante": atacante.id, "pos": o.centro()})
+			cantidad *= 0.25
+			info["sin_reaccion"] = true
+			info["derriba"] = false
+			info["lanza"] = ""
+			info["empuje"] = float(info.get("empuje", 1.0)) * 0.3
 	if o.invulnerable_t <= 0.0 and Genericas.sustituir(self, o, atacante, info):
 		return
 	if _sustitucion_tronco(o, atacante, info):
@@ -991,6 +1075,9 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		o.poner_estado("muerto", 0.0)
 		o.empuje = dir * 4.0
 		_evento({"tipo": "derrota", "entidad": o.id, "tipo_entidad": o.tipo})
+		if atacante != null and o.tipo == "enemigo":
+			var tabla: Dictionary = Datos.reglas.get("experiencia", {}).get("derrotar", {})
+			ganar_experiencia(atacante, float(tabla.get(o.plantilla_id, tabla.get("default", 15))), "derrota")
 		return
 	if o.tipo == "muneco":
 		o.poner_estado("golpeado", 0.25)
@@ -1021,7 +1108,7 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		if lanza == "lejos":
 			o.vel_y = 4.5
 			o.en_suelo = false
-	else:
+	elif not info.get("sin_reaccion", false):
 		o.poner_estado("golpeado", Datos.reglas["estados"]["golpeado_duracion"])
 		o.empuje = dir * float(info.get("empuje", 1.0))
 	if atacante != null and atacante.tipo != "muneco":
@@ -1059,7 +1146,8 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	elif nueva.y <= suelo + 0.05:
 		if e.agua != 2 and e.chakra > Datos.sim("escalada_chakra_min"):
 			e.agua = 1
-			e.chakra = maxf(e.chakra - Datos.sim("agua_chakra_seg") * dt, 0.0)
+			e.chakra = maxf(e.chakra - Datos.sim("agua_chakra_seg") * Atributos.mult_costo_movil(e.attrs) * dt, 0.0)
+			entrenar(e, "control", "control_seg", dt)
 		else:
 			e.agua = 2
 	if e.agua == 2:
@@ -1087,7 +1175,8 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 				e.contacto_pared += dt
 				if e.contacto_pared >= Datos.sim("escalada_espera") or estaba:
 					e.vel_y = Datos.sim("escalada_velocidad")
-					e.chakra = maxf(e.chakra - Datos.sim("escalada_chakra_seg") * dt, 0.0)
+					e.chakra = maxf(e.chakra - Datos.sim("escalada_chakra_seg") * Atributos.mult_costo_movil(e.attrs) * dt, 0.0)
+					entrenar(e, "control", "control_seg", dt)
 					e.escalando = true
 					e.en_suelo = false
 					var n := mapa.normal_pared(p2, Datos.sim("radio_entidad") + 0.12, nueva.y)
@@ -1147,6 +1236,7 @@ func _sustitucion_tronco(o: EntidadServidor, atacante: EntidadServidor, info: Di
 	if atacante.estado == "golpe":
 		atacante.poner_estado("recuperacion", float(conf.get("aturdir", 0.5)))
 	_evento({"tipo": "sustitucion", "entidad": o.id, "jutsu": "sustitucion", "nivel": 1, "desde": desde, "hasta": o.pos, "explota": 0.0})
+	entrenar(o, "velocidad", "velocidad_esquiva", 2.0)
 	return true
 
 

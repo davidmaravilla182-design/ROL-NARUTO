@@ -56,20 +56,20 @@
     "estamina_por_estamina": 10.0,
     "estamina_por_taijutsu": 4.0,
     "velocidad_base": 6.0,
-    "velocidad_por_punto": 0.07,
+    "velocidad_por_punto": 0.08,
     "regen_chakra_base": 1.2,
     "regen_chakra_por_control": 0.25,
     "regen_estamina": 14.0,
     "costo_por_reserva": 0.08,
     "ahorro_por_control": 0.07,
-    "dano_por_ninjutsu": 0.08,
+    "dano_por_ninjutsu": 0.12,
     "dano_por_reserva": 0.05,
     "tamano_por_reserva": 0.06,
-    "sellos_reduccion_por_punto": 0.09,
+    "sellos_reduccion_por_punto": 0.12,
     "precision_grados_base": 10.0,
     "precision_grados_por_control": 6.0,
-    "taijutsu_dano_por_taijutsu": 0.07,
-    "taijutsu_dano_por_fuerza": 0.09
+    "taijutsu_dano_por_taijutsu": 0.1,
+    "taijutsu_dano_por_fuerza": 0.08
   },
   "clima": {
     "lluvia": {
@@ -98,6 +98,7 @@
     "genin",
     "chunin",
     "jonin",
+    "elite",
     "kage"
   ],
   "repertorio": {
@@ -196,6 +197,107 @@
     },
     "kage": {
       "siguiente": ""
+    }
+  },
+  "efectos_atributos": {
+    "_nota": "Efecto de cada punto de atributo (0-5). Atributos.gd los aplica; la ficha los muestra. El entrenamiento suma hasta +0,5 a cada atributo.",
+    "ninjutsu": {
+      "dano": 0.12,
+      "tamano": 0.06,
+      "alcance": 0.05
+    },
+    "taijutsu": {
+      "dano": 0.1,
+      "combo_base": 2,
+      "combo_min": 2,
+      "combo_max": 7
+    },
+    "genjutsu": {
+      "duracion": 0.15,
+      "potencia": 0.1,
+      "resistencia": 0.12,
+      "resistencia_max": 0.6
+    },
+    "inteligencia": {
+      "recarga": 0.04,
+      "maestria": 0.1,
+      "ver_vida": 1,
+      "ver_debilidad": 3,
+      "ver_emboscadas": 4
+    },
+    "fuerza": {
+      "dano": 0.08,
+      "empuje": 0.15,
+      "rompe_guardia": 3
+    },
+    "velocidad": {
+      "movimiento": 0.08,
+      "ataque": 0.05,
+      "ventana": 0.04,
+      "shunshin": 1.5
+    },
+    "estamina": {
+      "vida": 12.0,
+      "estamina": 10.0,
+      "regen": 0.08,
+      "ahorro_movil": 0.08
+    },
+    "sellos": {
+      "reduccion": 0.12,
+      "una_mano": 4,
+      "una_mano_factor": 0.5,
+      "minimo": 0.15,
+      "sellar_bijuu": 3
+    }
+  },
+  "progresion_puntos": {
+    "_nota": "Tope de puntos de atributo por rango (más los del clan). Antes de ascender se ganan hasta 'por_xp_max' puntos del rango siguiente con experiencia (uno cada 'xp_por_punto'); el resto al ascender. Nunca pasa de 26.",
+    "tope_por_rango": {
+      "estudiante": 14,
+      "genin": 14,
+      "chunin": 18,
+      "jonin": 22,
+      "elite": 26,
+      "kage": 26
+    },
+    "xp_por_punto": 400,
+    "por_xp_max": 2,
+    "xp_ascenso": {
+      "genin": 600,
+      "chunin": 1500,
+      "jonin": 3000
+    },
+    "prueba_ascenso": {
+      "genin": "examen_chunin",
+      "chunin": "duelo_jonin",
+      "jonin": "duelo_elite"
+    }
+  },
+  "experiencia": {
+    "_nota": "Experiencia de combate y misiones (además de la maestría de cada jutsu).",
+    "derrotar": {
+      "ninja_lluvia": 20,
+      "guardia_lluvia": 25,
+      "ninja_agua": 30,
+      "rebelde": 60,
+      "default": 15
+    },
+    "evento": 100,
+    "capitulo": 300
+  },
+  "entrenamiento": {
+    "_nota": "Usar algo lo entrena: cada acción llena la barra del atributo (0-1); la barra llena da +0,5 a ese atributo. 'control' es el control de chakra.",
+    "bonus_max": 0.5,
+    "por_accion": {
+      "control_seg": 0.0017,
+      "estamina_seg": 0.0011,
+      "taijutsu_golpe": 0.0033,
+      "fuerza_remate": 0.016,
+      "sellos_jutsu": 0.0067,
+      "velocidad_esquiva": 0.0125,
+      "genjutsu_resistido": 0.025,
+      "ninjutsu_impacto": 0.004,
+      "inteligencia_jutsu": 0.002
     }
   }
 }

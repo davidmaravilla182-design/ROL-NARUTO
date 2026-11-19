@@ -198,10 +198,15 @@ static func golpear(s: ServidorJuego, atacante: EntidadServidor, o: EntidadServi
 		return
 	if float(nd.get("sin_chakra", 0.0)) > 0.0:
 		o.chakra = maxf(o.chakra - float(o.stats["chakra_max"]) * float(nd["sin_chakra"]), 0.0)
+	# Genjutsu: dura más con el Genjutsu del lanzador y menos con el del objetivo.
+	var f_gen := 1.0
+	if str(Datos.jutsu(id).get("tipo", "")) == "genjutsu" or str(nd.get("forma", "")) == "genjutsu":
+		f_gen = Atributos.mult_duracion_genjutsu(attrs, o.attrs)
+		s.entrenar(o, "genjutsu", "genjutsu_resistido")
 	if float(nd.get("atrapa", 0.0)) > 0.0:
-		_controlar(s, o, "atrapado", float(nd["atrapa"]), id, nivel)
+		_controlar(s, o, "atrapado", float(nd["atrapa"]) * f_gen, id, nivel)
 	elif float(nd.get("aturde", 0.0)) > 0.0:
-		_controlar(s, o, "aturdido", float(nd["aturde"]), id, nivel)
+		_controlar(s, o, "aturdido", float(nd["aturde"]) * f_gen, id, nivel)
 
 
 static func _controlar(s: ServidorJuego, o: EntidadServidor, estado: String, t: float, id: String, nivel: int) -> void:

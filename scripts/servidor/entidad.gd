@@ -55,6 +55,9 @@ var efectos: Dictionary = {}     # estados temporales: ardiendo, susanoo, vulner
 var ceguera := 0.0
 var xp_modo_acum := 0.0
 var combo_paso := 0
+var combo_pos := -1
+var entreno: Dictionary = {}   # barras de entrenamiento 0-1 por atributo (y "control")
+var xp_total := 0.0        # posición dentro de la secuencia del combo (Atributos.secuencia_combo)
 var combo_ventana := 0.0
 var invulnerable_t := 0.0
 
@@ -102,6 +105,7 @@ func reiniciar() -> void:
 	efectos = {}
 	ceguera = 0.0
 	combo_paso = 0
+	combo_pos = -1
 	combo_ventana = 0.0
 	invulnerable_t = 0.0
 	apuntado = {}
@@ -112,6 +116,13 @@ func configurar_personaje(pj: Dictionary) -> void:
 	personaje = pj.duplicate(true)
 	nombre = str(pj.get("nombre", nombre))
 	attrs = (pj.get("atributos", {}) as Dictionary).duplicate()
+	# Entrenamiento por uso y experiencia del personaje.
+	entreno = (pj.get("entreno", {}) as Dictionary).duplicate()
+	var ent := {}
+	for k in entreno.keys():
+		ent[k] = float(entreno[k]) * float(Datos.reglas.get("entrenamiento", {}).get("bonus_max", 0.5))
+	attrs["_entreno"] = ent
+	xp_total = float(pj.get("xp_total", 0.0))
 	naturalezas = Creacion.naturalezas(pj)
 	stats = Creacion.estadisticas(pj)
 	aspecto = Creacion.aspecto_visual(pj)
