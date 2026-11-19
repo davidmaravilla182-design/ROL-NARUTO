@@ -7,11 +7,17 @@
     "altura_golpe": 1.0,
     "radio_cuerpo": 0.6,
     "_nota_escalada": "Caminar por paredes con chakra: al empujar contra una pared se sube a esta velocidad gastando chakra por segundo; arriba, el techo es suelo.",
-    "escalada_velocidad": 6.5,
+    "escalada_velocidad": 9.0,
     "escalada_chakra_seg": 4.0,
     "escalada_chakra_min": 2.0,
     "escalada_altura_min": 2.0,
-    "escalada_espera": 0.15
+    "escalada_espera": 0.15,
+    "salto_pared_impulso": 9.0,
+    "salto_pared_altura": 7.0,
+    "_nota_agua": "Caminar sobre el agua del canal gasta chakra por segundo; sin chakra se hunde y nada al multiplicador de velocidad.",
+    "agua_chakra_seg": 2.0,
+    "nado_velocidad": 0.4,
+    "nado_profundidad": 0.95
   },
   "atributos": {
     "lista": [

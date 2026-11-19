@@ -102,6 +102,7 @@ func _ready() -> void:
 	hud.configurar_mapa(mapa)
 	hud.construir(Perfil.repertorio())
 	hud.viajar_pedido.connect(func(id): transporte.enviar({"t": Protocolo.C_VIAJAR, "distrito": id}))
+	hud.interactuar_pedido.connect(_interactuar)
 	hud.accion.connect(_on_accion)
 	hud.apuntar.connect(_on_apuntar)
 	hud.soltar.connect(_on_soltar)
@@ -421,7 +422,32 @@ func _process(delta: float) -> void:
 		if mov.length() > 0.1:
 			_visuales[mi_id]["yaw"] = atan2(mov.x, mov.y)
 	_interpolar(delta)
+	_buscar_interaccion(delta)
 	_actualizar_red(delta)
+
+
+## Orientación de la figura: giro normal en el suelo; corriendo por una pared, de pie sobre ella
+## (los pies en la pared, el cuerpo perpendicular y la cabeza hacia arriba) con una inclinación leve hacia adelante.
+func _orientar(n: Node3D, v: Dictionary, yaw: float, k: float, delta: float, desplazar: bool) -> void:
+	v["yaw_vis"] = lerp_angle(float(v.get("yaw_vis", yaw)), yaw, k)
+	var pared: Vector3 = v.get("pared", Vector3.ZERO)
+	var meta := 1.0 if pared != Vector3.ZERO else 0.0
+	var t := move_toward(float(v.get("en_pared", 0.0)), meta, delta * 7.0)
+	v["en_pared"] = t
+	var normal := Basis(Vector3.UP, float(v["yaw_vis"]))
+	if t <= 0.001:
+		n.basis = normal
+		v.erase("pared_vis")
+		return
+	if pared != Vector3.ZERO:
+		v["pared_vis"] = pared
+	var pn: Vector3 = v.get("pared_vis", Vector3.FORWARD)
+	# y = normal de la pared (el cuerpo sale de ella), z = arriba (hacia donde corre), x = y × z.
+	var en_pared := Basis(pn.cross(Vector3.UP).normalized(), pn, Vector3.UP).orthonormalized()
+	en_pared = en_pared * Basis(Vector3.RIGHT, deg_to_rad(12.0))   # inclinación leve hacia adelante
+	n.basis = Basis(normal.get_rotation_quaternion().slerp(en_pared.get_rotation_quaternion(), t))
+	if desplazar:
+		n.position -= pn * 0.42 * t   # los pies tocan la pared (en el resto, ya va en "destino")
 
 
 ## Con objetivo fijado, la cámara gira para mantener al enemigo delante.
@@ -453,7 +479,7 @@ func _interpolar(delta: float) -> void:
 			var p := _muestra(v["buf"], ahora - retraso)
 			if not p.is_empty():
 				n.position = p[0]
-				n.rotation.y = lerp_angle(n.rotation.y, float(p[1]), k)
+				_orientar(n, v, float(p[1]), k, delta, true)
 				continue
 		var kp := k
 		if prediccion != null and id == mi_id:
@@ -463,7 +489,12 @@ func _interpolar(delta: float) -> void:
 			else:
 				kp = minf(1.0, delta * float(Datos.red["prediccion"].get("suavizado", 12.0)))
 		n.position = n.position.lerp(v["destino"], kp)
-		n.rotation.y = lerp_angle(n.rotation.y, float(v["yaw"]), k)
+		_orientar(n, v, float(v["yaw"]), k, delta, false)
+	# Corriendo por una pared, la cámara se aparta de ella y mira un poco hacia arriba (acompaña el giro).
+	if _visuales.has(mi_id) and (_visuales[mi_id].get("pared", Vector3.ZERO) as Vector3) != Vector3.ZERO and not camara.libre:
+		var pn: Vector3 = _visuales[mi_id]["pared"]
+		camara.yaw = lerp_angle(camara.yaw, atan2(pn.x, pn.z), minf(1.0, delta * 3.0))
+		camara.pitch = lerpf(camara.pitch, 0.12, minf(1.0, delta * 3.0))
 	for id in _proyectiles.keys():
 		var p: Dictionary = _proyectiles[id]
 		var pn: Node3D = p["nodo"]
@@ -524,6 +555,7 @@ func _on_estado(est: Dictionary) -> void:
 	var vistos := {}
 	var yo: Dictionary = {}
 	var enemigo: Dictionary = {}
+	var enemigos: Array = []
 	if est.has("jugadores"):
 		for inf in est["jugadores"]:
 			var iid := int(inf["id"])
@@ -545,7 +577,7 @@ func _on_estado(est: Dictionary) -> void:
 		if id == mi_id:
 			yo = e
 		elif e["tipo"] == "enemigo":
-			enemigo = e
+			enemigos.append(e)
 	for id in _visuales.keys():
 		if not vistos.has(id):
 			(_visuales[id]["nodo"] as Node).queue_free()
@@ -555,12 +587,20 @@ func _on_estado(est: Dictionary) -> void:
 	genericas.sincronizar_criaturas(est.get("criaturas", []))
 	for ev in est["eventos"]:
 		_procesar_evento(ev)
+	# La barra del enemigo solo aparece con uno vivo y cerca (el más cercano).
+	if not yo.is_empty():
+		var mejor := 40.0
+		for en in enemigos:
+			var dd := (en["pos"] as Vector3).distance_to(yo["pos"])
+			if float(en["vida"]) > 0.0 and dd < mejor:
+				mejor = dd
+				enemigo = en
 	if not yo.is_empty():
 		hud.actualizar(yo, enemigo)
 		_actualizar_mapa(yo, est["entidades"])
 		if _visuales.has(mi_id) and camara.objetivo == null:
 			camara.objetivo = _visuales[mi_id]["nodo"]
-		_comprobar_fin(yo, enemigo)
+		_comprobar_fin(yo, enemigos[0] if not enemigos.is_empty() else {})
 
 
 func _crear_visual(e: Dictionary) -> void:
@@ -605,6 +645,10 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 	v["vel"] = lerpf(float(v["vel"]), d, 0.5)
 	v["destino"] = nuevo
 	v["yaw"] = float(e["yaw"])
+	var pw: Vector2 = e.get("pared", Vector2.ZERO)
+	v["pared"] = Vector3(pw.x, 0, pw.y) if bool(e.get("escalando", false)) and pw != Vector2.ZERO else Vector3.ZERO
+	v["agua"] = int(e.get("agua", 0))
+	v["destino"] = nuevo - (v["pared"] as Vector3) * 0.42
 	if prediccion != null:
 		if int(e["id"]) == mi_id:
 			prediccion.reconciliar(e)
@@ -638,6 +682,21 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 					if int(e["id"]) == mi_id:
 						sonidos.tocar("chapoteo", -14.0, 1.3)
 		v["suelo"] = en_suelo
+		# Chakra en los pies: corriendo por una pared o caminando sobre el agua (pasos con chispas y ondas).
+		var con_chakra := (v["pared"] as Vector3) != Vector3.ZERO or int(v["agua"]) == 1
+		if v["nodo"] is PersonajeVisual:
+			(v["nodo"] as PersonajeVisual).chakra_pies(con_chakra)
+		if con_chakra and (float(v["vel"]) > 0.5 or (v["pared"] as Vector3) != Vector3.ZERO):
+			v["t_chakra"] = float(v.get("t_chakra", 0.0)) - 1.0 / 30.0
+			if float(v["t_chakra"]) <= 0.0:
+				v["t_chakra"] = 0.2
+				var normal: Vector3 = v["pared"] if (v["pared"] as Vector3) != Vector3.ZERO else Vector3.UP
+				efectos.paso_chakra(nuevo - (v["pared"] as Vector3) * 0.4, normal)
+		elif int(v["agua"]) == 2 and float(v["vel"]) > 0.3:
+			v["t_chakra"] = float(v.get("t_chakra", 0.0)) - 1.0 / 30.0
+			if float(v["t_chakra"]) <= 0.0:
+				v["t_chakra"] = 0.45
+				efectos.chapoteo(nuevo, 0.9, float(mapa.canal.get("nivel_agua", 0.0)))
 	if v["tipo"] == "muneco":
 		var mu: MunecoVisual = v["nodo"]
 		mu.poner_caido(estado == "muerto")
@@ -670,7 +729,7 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 			pv.reproducir("esquivar", 0.05)
 		_:
 			if bool(e.get("escalando", false)):
-				pv.reproducir("correr", 0.1)
+				pv.reproducir("correr", 0.1, 1.5)   # corre por la pared más rápido que en el suelo
 			elif not bool(e["en_suelo"]):
 				pv.reproducir("saltar", 0.1)
 			elif float(v["vel"]) > 1.0:
@@ -936,3 +995,42 @@ func _actualizar_mapa(yo: Dictionary, entidades: Array) -> void:
 		otros.append({"pos": Vector2(p.x, p.z), "color": Color(0.35, 0.7, 1.0) if e["tipo"] == "jugador" else Color(1.0, 0.3, 0.3)})
 	var mp: Vector3 = yo["pos"]
 	hud.actualizar_mapa(Vector2(mp.x, mp.z), float(yo["yaw"]), otros)
+
+
+var _t_interaccion := 0.0
+var _cercano: Dictionary = {}
+
+
+## Busca el aldeano o punto de misión más cercano (a menos de 2,8 m) para el botón «Interactuar».
+func _buscar_interaccion(delta: float) -> void:
+	_t_interaccion -= delta
+	if _t_interaccion > 0.0 or not _visuales.has(mi_id):
+		return
+	_t_interaccion = 0.15
+	var yo: Vector3 = (_visuales[mi_id]["nodo"] as Node3D).global_position
+	_cercano = {}
+	var mejor := 2.8
+	for p in Puntos.lista:
+		if not is_instance_valid(p["nodo"]):
+			continue   # de una partida anterior (la lista es estática)
+		var n: Node3D = p["nodo"]
+		if not n.is_visible_in_tree():
+			continue
+		var d := Vector2(n.global_position.x - yo.x, n.global_position.z - yo.z).length()
+		if d < mejor:
+			mejor = d
+			_cercano = p
+	hud.mostrar_interactuar(not _cercano.is_empty())
+
+
+func _interactuar() -> void:
+	if _cercano.is_empty():
+		return
+	var n: Node3D = _cercano["nodo"]
+	if n is Aldeano:
+		# Se detiene y mira al jugador mientras habla.
+		var yo: Vector3 = (_visuales[mi_id]["nodo"] as Node3D).global_position
+		(n as Aldeano)._pausa = 5.0
+		n.rotation.y = atan2(yo.x - n.global_position.x, yo.z - n.global_position.z)
+	var d := mapa.distrito(str(_cercano["distrito"]))
+	hud.dialogo(Puntos.texto(_cercano, str(d.get("nombre", ""))))

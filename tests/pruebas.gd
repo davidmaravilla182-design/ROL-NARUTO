@@ -364,6 +364,8 @@ func probar_jugador_puede_ganar() -> void:
 	var s := nuevo_servidor(true)
 	var j := s.entidad_de_peer(1)
 	s.recibir_comando(1, {"t": "nivel", "valor": 2})
+	# Sin muñecos de práctica en medio: el bot no sabe rodearlos y el embiste se gasta en ellos.
+	s.entidades = s.entidades.filter(func(x): return x.tipo != "muneco")
 	var enemigo: EntidadServidor = null
 	for e in s.entidades:
 		if e.tipo == "enemigo":
@@ -477,7 +479,7 @@ func probar_aldea() -> void:
 	# El canal se cruza por los puentes y no por el agua.
 	var cz := (float(m.canal["z_sur"]) + float(m.canal["z_norte"])) * 0.5
 	comprobar(not m.punto_bloqueado(Vector2(0.0, cz), 0.45), "el puente central cruza el canal")
-	comprobar(m.punto_bloqueado(Vector2(7.5, cz), 0.45), "el agua del canal bloquea fuera de los puentes")
+	comprobar(m.en_canal(Vector2(7.5, cz)) and not m.en_canal(Vector2(0.0, cz)), "el agua del canal se distingue de los puentes")
 	# Techos caminables y escaleras.
 	var casa: Dictionary = {}
 	for o in m.obstaculos:
@@ -515,6 +517,60 @@ func probar_aldea() -> void:
 		j.entrada_mov = Vector2(-1, 0)
 		s.paso(s.dt_tick)
 	comprobar(j.pos.y < 0.5, "sin chakra no se escala")
+	# Al escalar, el servidor manda la normal de la pared (para dibujarlo de pie sobre ella).
+	j.chakra = 100.0
+	j.pos = Vector3(c.x + md.x + 0.6, 0.0, c.y)
+	var normal_ok := false
+	for i in 30:
+		j.entrada_mov = Vector2(-1, 0)
+		s.paso(s.dt_tick)
+		if j.escalando and j.pared.dot(Vector2(1, 0)) > 0.9:
+			normal_ok = true
+	comprobar(normal_ok, "corriendo por la pared, la normal apunta hacia afuera")
+	# Salto desde la pared: sale despedido hacia atrás.
+	j.chakra = 100.0
+	s.recibir_comando(1, {"t": "accion", "id": "saltar"})
+	var x0 := j.pos.x
+	for i in 10:
+		j.entrada_mov = Vector2.ZERO
+		s.paso(s.dt_tick)
+	comprobar(j.pos.x > x0 + 1.0 and not j.escalando, "el salto desde la pared impulsa hacia atrás (%.1f m)" % (j.pos.x - x0))
+	# La torre del líder no se escala.
+	var torre: Dictionary = {}
+	for o in m.obstaculos:
+		if o["tipo"] == "torre_ia":
+			torre = o
+	j.chakra = 100.0
+	j.vel_y = 0.0
+	j.pos = Vector3((torre["centro"] as Vector2).x - (torre["medio"] as Vector2).x - 0.6, 0.0, (torre["centro"] as Vector2).y)
+	for i in 40:
+		j.entrada_mov = Vector2(1, 0)
+		s.paso(s.dt_tick)
+	comprobar(j.pos.y < 0.5 and not j.escalando, "la torre del líder no se puede escalar")
+	# Agua: con chakra se camina encima; sin chakra se nada (más hundido y más lento).
+	j.pos = Vector3(30.0, 0.0, -21.5)
+	j.vel_y = 0.0
+	j.chakra = 100.0
+	for i in 22:
+		j.entrada_mov = Vector2(0, -1)
+		s.paso(s.dt_tick)
+	comprobar(j.agua == 1 and absf(j.pos.y - float(m.canal["nivel_agua"])) < 0.05, "con chakra se camina sobre el agua del canal (y=%.2f)" % j.pos.y)
+	var ch0 := j.chakra
+	for i in 15:
+		j.entrada_mov = Vector2.ZERO
+		s.paso(s.dt_tick)
+	comprobar(j.chakra < ch0, "caminar sobre el agua gasta chakra")
+	j.chakra = 0.0
+	for i in 10:
+		s.paso(s.dt_tick)
+		j.chakra = 0.0
+	comprobar(j.agua == 2 and j.pos.y < float(m.canal["nivel_agua"]) - 0.5, "sin chakra se hunde y nada (y=%.2f)" % j.pos.y)
+	var z0 := j.pos.z
+	for i in 10:
+		j.entrada_mov = Vector2(0, 1)
+		j.chakra = 0.0
+		s.paso(s.dt_tick)
+	comprobar(j.pos.z - z0 < float(j.stats["velocidad"]) * 0.2, "nadando se avanza despacio (%.1f m en 1/3 s)" % (j.pos.z - z0))
 	# Recorridos a pie: de la plaza a la puerta y por el puente hasta la orilla; y de la plaza a la torre.
 	j.chakra = 0.0
 	j.pos = Vector3(0, 0, 30)

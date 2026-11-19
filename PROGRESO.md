@@ -1,3 +1,27 @@
+# PROGRESO — Correcciones tras probar el mapa en el teléfono (v0.6.1)
+
+- [x] 1. Correr por paredes como en el anime (de pie y perpendicular, brillo de chakra en los pies, salpicaduras,
+        cámara que acompaña, más rápido, impulso al techo, salto hacia atrás, resbalar sin chakra).
+- [x] 2. Agua: canal claramente visible (más oscuro y azulado, reflejos, corriente, espuma, bordes) y caminar sobre
+        el agua gastando chakra (ondas y brillo); sin chakra se hunde y nada despacio a la orilla.
+- [x] 3. Torre del líder no escalable (acceso por la terraza) y colisiones que coincidan con los modelos.
+- [x] 4. Huecos del modelo destrozado: interior oscuro (doble cara).
+- [x] 5. La casa de la plaza (primer modelo de Meshy) como edificio común repetido con variaciones.
+- [x] 6. Limpieza: escalera sin destino, estructura de tablas, cuadrícula de tinacos, orientación de modelos.
+- [x] 7. NPCs: botón Interactuar, aldeanos que caminan y hablan según el distrito, misiones «próximamente».
+- [x] 8. Barra del enemigo oculta si está derrotado o lejos.
+- [x] Cierre: pruebas, capturas antes/después en BITACORA_GRAFICOS.md (M2), APK.
+
+Notas: el canal ya no es obstáculo (se camina sobre él con 2 de chakra/s; sin chakra se nada al 40 %). La torre del
+líder está en `no_escalables`. Colisiones ajustadas por tipo (`ajuste_colision`: torres redondas 0,8, tinacos 0,7,
+faroles 0,35…). El edificio de la plaza (Meshy, imagen a 3D) es ahora el edificio común más repetido (73 copias)
+con tinte, giro y escala. Tinacos: fuera de las cuadrículas, 48 sobre techos al azar. Escaleras: una por pasarela,
+a su misma altura, hechas de tramos de 1 m con pilares (la «estructura de tablas» era una escalera de 12 m escalada
+de una sola pieza). Arreglos de fondo: un bucle viejo consumía números aleatorios por cada par de obstáculos y movía
+las cajas del campo con cualquier cambio del mapa; la prueba de balance quita los muñecos (el bot no los rodea).
+
+---
+
 # PROGRESO — Noche del mapa completo de Amegakure (v0.6)
 
 > Si el contexto se resume: releer PROGRESO.md, DECISIONES.md y BITACORA_GRAFICOS.md antes de seguir.

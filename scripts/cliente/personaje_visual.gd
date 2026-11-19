@@ -422,12 +422,45 @@ func _pieza(nombre_hueso: String, mi: Node3D, pos: Vector3) -> void:
 
 
 func reproducir(nombre: String, mezcla := 0.12, velocidad := 1.0) -> void:
+	anim.speed_scale = velocidad
 	if nombre == anim_actual and anim.is_playing():
 		return
 	if not anim.has_animation(nombre):
 		return
 	anim_actual = nombre
-	anim.play(nombre, mezcla, velocidad)
+	anim.play(nombre, mezcla)
+
+
+var _brillo_pies: Array = []
+
+
+## Brillo de chakra azul en las plantas de los pies (correr por paredes y sobre el agua).
+func chakra_pies(activo: bool) -> void:
+	if _brillo_pies.is_empty():
+		if not activo or esqueleto == null:
+			return
+		var mat := Materiales.emisivo(Color(0.35, 0.7, 1.0), 4.0)
+		for hueso in ["PieI", "PieD"]:
+			if esqueleto.find_bone(hueso) < 0:
+				continue
+			var ba := BoneAttachment3D.new()
+			ba.bone_name = hueso
+			esqueleto.add_child(ba)
+			var esf := MeshInstance3D.new()
+			var sm := SphereMesh.new()
+			sm.radius = 0.11
+			sm.height = 0.12
+			sm.radial_segments = 10
+			sm.rings = 4
+			sm.material = mat
+			esf.mesh = sm
+			esf.transparency = 0.35
+			esf.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			esf.position = Vector3(0, -0.06, 0.04)
+			ba.add_child(esf)
+			_brillo_pies.append(ba)
+	for b in _brillo_pies:
+		(b as Node3D).visible = activo
 
 
 ## Reinicia una animación aunque sea la misma (golpes encadenados).

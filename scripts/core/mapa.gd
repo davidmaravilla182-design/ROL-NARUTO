@@ -84,11 +84,15 @@ func _generar(conf: Dictionary) -> void:
 		obstaculos.append({"centro": c, "medio": medio, "alto": rng.randf_range(t["alto"][0], t["alto"][1]), "tipo": "torre"})
 
 	# Pasarelas entre torres cercanas (decorativas, en altura).
+	# Solo entre las torres generadas arriba (no entre las piezas del trazado: si no, cualquier cambio del mapa
+	# consumía números aleatorios y movía las cajas del campo).
 	var n_torres := obstaculos.size()
 	for i in n_torres:
 		for j in range(i + 1, n_torres):
 			var a: Dictionary = obstaculos[i]
 			var b: Dictionary = obstaculos[j]
+			if a["tipo"] != "torre" or b["tipo"] != "torre":
+				continue
 			var d: float = (a["centro"] as Vector2).distance_to(b["centro"])
 			if d < 15.0 and rng.randf() < 0.45:
 				var alto_max: float = minf(a["alto"], b["alto"]) - 2.0
@@ -131,7 +135,7 @@ func _generar(conf: Dictionary) -> void:
 		if radio_caminable > 0.0:
 			c3 = centro_aldea + Vector2.from_angle(rng.randf() * TAU) * sqrt(rng.randf()) * radio_caminable * 0.95
 		var r3 := rng.randf_range(0.8, 2.6)
-		if punto_bloqueado(c3, r3):
+		if punto_bloqueado(c3, r3) or _toca_canal(c3, r3):
 			continue
 		charcos.append({"centro": c3, "radio": r3})
 
@@ -139,6 +143,8 @@ func _generar(conf: Dictionary) -> void:
 ## Trazado fijo hecho con piezas del kit: cada pieza aporta su huella como obstáculo.
 func _trazado(tz: Dictionary) -> void:
 	var huellas: Dictionary = tz.get("huellas", {})
+	var ajuste: Dictionary = tz.get("ajuste_colision", {})
+	var no_escalables: Array = tz.get("no_escalables", [])
 	for p in tz.get("piezas", []):
 		var tipo := str(p["tipo"])
 		var c := _v2(p["pos"])
@@ -149,13 +155,13 @@ func _trazado(tz: Dictionary) -> void:
 			_plataforma_torre(c, giro)
 		if huellas.has(tipo) and bool(p.get("colision", true)):
 			var h: Array = huellas[tipo]
-			var medio := Vector2(float(h[0]), float(h[1])) * 0.5 * esc
+			var medio := Vector2(float(h[0]), float(h[1])) * 0.5 * esc * float(ajuste.get(tipo, 1.0))
 			var g := int(round(giro / 90.0)) % 2
 			if absf(fmod(giro, 90.0)) > 1.0:
 				medio = Vector2.ONE * maxf(medio.x, medio.y)
 			elif g == 1:
 				medio = Vector2(medio.y, medio.x)
-			obstaculos.append({"centro": c, "medio": medio, "alto": float(h[2]) * esc, "tipo": tipo})
+			obstaculos.append({"centro": c, "medio": medio, "alto": float(h[2]) * esc, "tipo": tipo, "escalable": not (tipo in no_escalables)})
 	for ox in tz.get("obstaculos_extra", []):
 		obstaculos.append({"centro": _v2(ox["pos"]), "medio": _v2(ox["medio"]), "alto": float(ox["alto"]), "tipo": "muro"})
 	for mu in tz.get("muralla", []):
@@ -172,24 +178,8 @@ func _trazado(tz: Dictionary) -> void:
 			obstaculos.append({"centro": ct, "medio": medio_t, "alto": float(t.get("altura", 0.6)) + 0.6, "tipo": "tubo"})
 	canal = tz.get("canal", {})
 	if not canal.is_empty():
-		var cx := (float(canal["x_min"]) + float(canal["x_max"])) * 0.5
-		var cz := (float(canal["z_sur"]) + float(canal["z_norte"])) * 0.5
-		var medio_c := Vector2((float(canal["x_max"]) - float(canal["x_min"])) * 0.5, absf(float(canal["z_sur"]) - float(canal["z_norte"])) * 0.5)
-		# El canal frena a los personajes (aunque salten) pero los proyectiles pasan por encima del agua.
-		# Se parte en tramos: los puentes dejan pasar.
+		# El agua no es obstáculo: con chakra se camina encima y sin chakra se nada (ServidorJuego._mover).
 		puentes = tz.get("puentes", [])
-		var cortes: Array = [float(canal["x_min"])]
-		var xs: Array = puentes.duplicate()
-		xs.sort()
-		for px in xs:
-			cortes.append(float(px) - 1.6)
-			cortes.append(float(px) + 1.6)
-		cortes.append(float(canal["x_max"]))
-		for k in range(0, cortes.size(), 2):
-			var xa: float = cortes[k]
-			var xb: float = cortes[k + 1]
-			if xb - xa > 0.1:
-				obstaculos.append({"centro": Vector2((xa + xb) * 0.5, cz), "medio": Vector2((xb - xa) * 0.5, medio_c.y), "alto": 50.0, "tipo": "canal", "solo_personajes": true})
 	for pl in tz.get("plataformas", []):
 		var c0 := _v2(pl["pos"])
 		var md := _v2(pl["medio"])
@@ -219,7 +209,7 @@ func _plataforma_torre(c: Vector2, giro: float) -> void:
 ## Altura del suelo bajo un punto: 0, la superficie de una plataforma/rampa o el techo de un obstáculo
 ## si se está encima (o cayendo sobre él). Así todos los techos y niveles son caminables.
 func altura_suelo(p: Vector2, y: float) -> float:
-	var h := 0.0
+	var h := float(canal["nivel_agua"]) if en_canal(p) else 0.0
 	for pl in plataformas:
 		var d: Vector2 = (p - pl["centro"]).abs()
 		if d.x <= pl["medio"].x and d.y <= pl["medio"].y:
@@ -248,11 +238,61 @@ func _superficie(pl: Dictionary, p: Vector2) -> float:
 	return lerpf(float(pl["altura0"]), float(pl["altura"]), clampf(t, 0.0, 1.0))
 
 
+## ¿Un círculo toca el agua del canal (tramos entre puentes)? Los charcos no se generan sobre el agua.
+func _toca_canal(p: Vector2, r: float) -> bool:
+	if canal.is_empty():
+		return false
+	var cortes: Array = [float(canal["x_min"])]
+	var xs: Array = puentes.duplicate()
+	xs.sort()
+	for px in xs:
+		cortes.append(float(px) - 1.6)
+		cortes.append(float(px) + 1.6)
+	cortes.append(float(canal["x_max"]))
+	for k in range(0, cortes.size(), 2):
+		var r2 := Rect2(float(cortes[k]), float(canal["z_norte"]), float(cortes[k + 1]) - float(cortes[k]), float(canal["z_sur"]) - float(canal["z_norte"]))
+		var cerca := Vector2(clampf(p.x, r2.position.x, r2.end.x), clampf(p.y, r2.position.y, r2.end.y))
+		if cerca.distance_to(p) < r or cerca == p:
+			return true
+	return false
+
+
+## ¿El punto está sobre el agua del canal (fuera de los puentes)?
+func en_canal(p: Vector2) -> bool:
+	if canal.is_empty():
+		return false
+	if p.x <= float(canal["x_min"]) or p.x >= float(canal["x_max"]) or p.y <= float(canal["z_norte"]) or p.y >= float(canal["z_sur"]):
+		return false
+	for px in puentes:
+		if absf(p.x - float(px)) < 1.6:
+			return false
+	return true
+
+
+## Normal (hacia afuera) de la pared más alta que toca el círculo; cero si no toca ninguna escalable.
+func normal_pared(p: Vector2, r: float, y: float) -> Vector2:
+	var mejor := 0.0
+	var n := Vector2.ZERO
+	for o in _cerca(p, r):
+		if o.get("solo_personajes", false) or not o.get("escalable", true):
+			continue
+		var alto := float(o["alto"])
+		if alto <= y or alto <= mejor:
+			continue
+		var oc: Vector2 = o["centro"]
+		var om: Vector2 = o["medio"]
+		var cerca := Vector2(clampf(p.x, oc.x - om.x, oc.x + om.x), clampf(p.y, oc.y - om.y, oc.y + om.y))
+		if cerca.distance_to(p) <= r and cerca.distance_to(p) > 0.0001:
+			mejor = alto
+			n = (p - cerca).normalized()
+	return n
+
+
 ## Altura de la pared más alta que toca un círculo (para escalar con chakra); 0 si no toca ninguna.
 func altura_pared(p: Vector2, r: float, y: float) -> float:
 	var h := 0.0
 	for o in _cerca(p, r):
-		if o.get("solo_personajes", false):
+		if o.get("solo_personajes", false) or not o.get("escalable", true):
 			continue
 		var alto := float(o["alto"])
 		if alto <= y:
@@ -334,22 +374,24 @@ func dentro_plataforma(q: Vector3) -> bool:
 ## Piezas del suelo de la plaza (después de las cajas del campo, para no cambiar su colocación).
 func _props(tz: Dictionary) -> void:
 	var huellas: Dictionary = tz.get("huellas", {})
+	var ajuste: Dictionary = tz.get("ajuste_colision", {})
 	for p in tz.get("props", []):
 		var tipo_p := str(p["tipo"])
 		var cp := _v2(p["pos"])
 		var gp := float(p.get("giro", 0.0))
 		var ep := float(p.get("escala", 1.0))
 		var hp: Array = huellas.get(tipo_p, [])
-		if not hp.is_empty():
+		var yp := float(p.get("y", 0.0))
+		if not hp.is_empty() and yp < 0.5:   # los objetos sobre los techos no chocan en el suelo
 			if _se_solapa(cp, Vector2(float(hp[0]), float(hp[1])) * 0.5 * ep, 0.1, true):
 				continue
-			var medio_p := Vector2(float(hp[0]), float(hp[1])) * 0.5 * ep
+			var medio_p := Vector2(float(hp[0]), float(hp[1])) * 0.5 * ep * float(ajuste.get(tipo_p, 1.0))
 			if absf(fmod(gp, 90.0)) > 1.0:
 				medio_p = Vector2.ONE * maxf(medio_p.x, medio_p.y) * 0.8
 			elif int(round(gp / 90.0)) % 2 == 1:
 				medio_p = Vector2(medio_p.y, medio_p.x)
 			obstaculos.append({"centro": cp, "medio": medio_p, "alto": float(hp[2]) * ep, "tipo": "prop"})
-		props.append({"tipo": tipo_p, "centro": cp, "giro": gp, "escala": ep, "tinte": p.get("tinte", [])})
+		props.append({"tipo": tipo_p, "centro": cp, "giro": gp, "escala": ep, "tinte": p.get("tinte", []), "y": yp})
 
 
 func _se_solapa(c: Vector2, medio: Vector2, margen: float, salvo_props := false) -> bool:

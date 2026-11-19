@@ -288,10 +288,17 @@ void fragment() {
 ## Agua del canal: corriente con ondas grandes de ruido + anillos de lluvia, muy reflectante y oscura.
 const AGUA := """
 shader_type spatial;
-render_mode cull_back;
-uniform vec4 color : source_color = vec4(0.05, 0.07, 0.1, 1.0);
+render_mode cull_back, fog_disabled;
+// Sin la niebla por altura del entorno (bajo el suelo es muy densa y blanqueaba el agua): niebla solo por distancia.
+uniform vec4 niebla : source_color = vec4(0.29, 0.3, 0.38, 1.0);
+uniform float niebla_densidad = 0.0055;
+uniform vec4 color : source_color = vec4(0.05, 0.13, 0.22, 1.0);
+uniform vec4 color_profundo : source_color = vec4(0.02, 0.05, 0.1, 1.0);
 uniform vec2 flujo = vec2(0.35, 0.0);
 uniform float fuerza = 1.0;
+// Canal: rectángulo (x0, z0, x1, z1) para la espuma de los bordes; con borde.z <= borde.x no hay bordes (lago).
+uniform vec4 borde = vec4(0.0);
+uniform float corriente = 0.0;
 varying vec3 wpos;
 RUIDO
 float altura(vec2 p) {
@@ -319,10 +326,28 @@ void fragment() {
 	float h = altura(p);
 	vec3 n = normalize(vec3((h - altura(p + vec2(e, 0.0))) * 0.6 * fuerza, 1.0, (h - altura(p + vec2(0.0, e))) * 0.6 * fuerza));
 	NORMAL = normalize((VIEW_MATRIX * vec4(n, 0.0)).xyz);
-	ALBEDO = color.rgb;
-	METALLIC = 0.6;
-	ROUGHNESS = 0.05;
-	SPECULAR = 0.7;
+	// Corriente: vetas alargadas que avanzan en la dirección del flujo.
+	vec2 q = vec2(p.x * 0.18 - TIME * corriente, p.y * 1.6);
+	float vetas = smoothstep(0.62, 0.8, fbm3(vec3(q, TIME * 0.05))) * corriente;
+	vec3 alb = mix(color_profundo.rgb, color.rgb, 0.5 + 0.5 * fbm3(vec3(p * 0.08, TIME * 0.02)));
+	// Espuma junto a los muros del canal (bordes marcados) que se mueve con la corriente.
+	float espuma = 0.0;
+	if (borde.z > borde.x) {
+		float d = min(abs(p.y - borde.y), abs(p.y - borde.w));
+		float ruido = fbm3(vec3(p.x * 0.7 - TIME * corriente * 1.5, p.y * 0.7, TIME * 0.2));
+		espuma = smoothstep(0.75, 0.0, d) * (0.45 + 0.55 * ruido);
+	}
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+	ALBEDO = alb + vec3(0.6, 0.72, 0.85) * (vetas * 0.35 + espuma * 0.75);
+	// Brillo propio azul (se distingue del suelo gris aun con poca luz) y más en los ángulos rasantes.
+	EMISSION = vec3(0.004, 0.02, 0.045) * (0.6 + fres * 1.6) + vec3(0.25, 0.3, 0.35) * espuma * 0.12;
+	float f = 1.0 - exp(-length(VERTEX) * niebla_densidad);
+	ALBEDO = mix(ALBEDO, niebla.rgb * 0.5, f);
+	EMISSION = mix(EMISSION, niebla.rgb * 0.35, f);
+	METALLIC = 0.0;
+	// Poco reflejo especular: a ángulos rasantes el cielo gris lo volvía blanco; las luces siguen reflejándose.
+	ROUGHNESS = mix(0.12, 0.7, espuma);
+	SPECULAR = 0.3;
 }
 """
 
@@ -654,6 +679,9 @@ static func shader(clave: String) -> Shader:
 	match clave:
 		"toon": return _shader(clave, TOON)
 		"toon_tex": return _shader(clave, TOON_TEX)
+		# Doble cara: los huecos de los modelos destrozados se ven oscuros por dentro, no transparentes.
+		"toon_tex_doble": return _shader(clave, TOON_TEX.replace("render_mode cull_back;", "render_mode cull_disabled;").replace(
+			"	EMISSION = emision.rgb * emision_fuerza;\n}", "	EMISSION = emision.rgb * emision_fuerza;\n	if (!FRONT_FACING) {\n		ALBEDO = vec3(0.012, 0.012, 0.018);\n		METALLIC = 0.0;\n		ROUGHNESS = 1.0;\n		NORMAL_MAP = vec3(0.5, 0.5, 1.0);\n	}\n}"))
 		"contorno": return _shader(clave, CONTORNO)
 		"fuego": return _shader(clave, FUEGO)
 		"calor": return _shader(clave, CALOR)
@@ -693,12 +721,12 @@ static func toon(c: Color, contorno := true, grosor := 0.012, metalico := 0.0, r
 
 ## Material con textura horneada de assets/texturas/<nombre>_color.png y _normal.png.
 static func toon_tex(nombre: String, tinte := Color.WHITE, escala_uv := Vector2.ONE, triplanar := false, escala_mundo := 0.25,
-		metalico := 0.0, humedad := 0.6, contorno := 0.0) -> ShaderMaterial:
-	var clave := "tt_%s_%s_%s_%s_%.3f_%.2f_%.2f_%.3f" % [nombre, tinte.to_html(), str(escala_uv), str(triplanar), escala_mundo, metalico, humedad, contorno]
+		metalico := 0.0, humedad := 0.6, contorno := 0.0, doble := false) -> ShaderMaterial:
+	var clave := "tt_%s_%s_%s_%s_%.3f_%.2f_%.2f_%.3f_%s" % [nombre, tinte.to_html(), str(escala_uv), str(triplanar), escala_mundo, metalico, humedad, contorno, str(doble)]
 	if _cache.has(clave):
 		return _cache[clave]
 	var m := ShaderMaterial.new()
-	m.shader = shader("toon_tex")
+	m.shader = shader("toon_tex_doble" if doble else "toon_tex")
 	m.set_shader_parameter("tex_color", load("res://assets/texturas/%s_color.png" % nombre))
 	m.set_shader_parameter("tex_normal", load("res://assets/texturas/%s_normal.png" % nombre))
 	m.set_shader_parameter("tinte", tinte)

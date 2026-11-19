@@ -190,6 +190,9 @@ func _isla(mat: Material) -> void:
 	# Acantilado de concreto alrededor de la isla (de 0 a -6 m) y orilla exterior del lago.
 	var borde := Materiales.cilindro(r + 1.0, r + 2.5, 6.0, Shaders.toon_tex("concreto", Color(0.6, 0.62, 0.68), Vector2.ONE, true, 0.12, 0.0, 0.8), 96)
 	borde.position = Vector3(c.x, -3.05, c.y)
+	# Sin tapas: la de arriba quedaba justo bajo el suelo y tapaba el agua del canal.
+	(borde.mesh as CylinderMesh).cap_top = false
+	(borde.mesh as CylinderMesh).cap_bottom = false
 	borde.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(borde)
 	var lago := MeshInstance3D.new()

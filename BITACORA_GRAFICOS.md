@@ -151,3 +151,29 @@ Cada entrada: qué se hizo, cómo se verificó, capturas comparadas, problemas y
   celdas y la torre cerca. En calidad media/baja las distancias de dibujo bajan a 80/60 m (edificios) y 55/38 m (objetos).
 - Siguiente: medir en el S26 Ultra; si la plaza no llega a 60 en alta, juntar los objetos pequeños en menos MultiMesh
   (celdas de 96 m para objetos) y bajar el LOD cercano de las casas.
+
+
+## M2 — correcciones tras probar el mapa en el teléfono (v0.6.1)
+Capturas en `referencias/capturas-correcciones/<vista>_antes.jpg` y `_despues.jpg` (guion `tools/captura_correcciones.gd`).
+
+| Punto | Antes | Después |
+|---|---|---|
+| 1. Correr por paredes | ![](referencias/capturas-correcciones/p1_pared_antes.jpg) | ![](referencias/capturas-correcciones/p1_pared_seguir_despues.jpg) |
+| 2. Canal y caminar sobre el agua | ![](referencias/capturas-correcciones/p2_canal_antes.jpg) | ![](referencias/capturas-correcciones/p2_canal_despues.jpg) |
+| 2. Canal de lejos | ![](referencias/capturas-correcciones/p2_canal_lejos_antes.jpg) | ![](referencias/capturas-correcciones/p2_canal_lejos_despues.jpg) |
+| 3. Torre no escalable | ![](referencias/capturas-correcciones/p3_torre_antes.jpg) | ![](referencias/capturas-correcciones/p3_torre_despues.jpg) |
+| 4. Edificio con huecos | ![](referencias/capturas-correcciones/p4_casa_antes.jpg) | ![](referencias/capturas-correcciones/p4_casa_despues.jpg) |
+| 6. Industrial (tinacos) | ![](referencias/capturas-correcciones/p6_industrial_antes.jpg) | ![](referencias/capturas-correcciones/p6_industrial_despues.jpg) |
+| 7. Interactuar | — | ![](referencias/capturas-correcciones/p7_interactuar_despues.jpg) |
+| 8. Barra del enemigo lejos | ![](referencias/capturas-correcciones/p8_lejos_del_enemigo_antes.jpg) | ![](referencias/capturas-correcciones/p8_lejos_del_enemigo_despues.jpg) |
+
+- **El agua del canal nunca se había visto**: el acantilado de la isla era un cilindro con tapa y la tapa superior,
+  2 cm bajo el suelo, cubría el canal. Sin tapas, el agua se ve; además se dibuja sin la niebla por altura (bajo el
+  suelo es muy densa y la blanqueaba) y con poco reflejo especular (a ángulos rasantes reflejaba el cielo gris).
+  Nuevo shader: azul profundo, vetas de corriente, espuma junto a los muros, brillo azul tenue en ángulos rasantes.
+- Pared: el servidor manda la normal de la pared; la figura gira para quedar de pie y perpendicular sobre ella (12°
+  hacia adelante), corre al 150 % de velocidad de animación, brillo azul en los pies, chispas y gotas en cada paso,
+  la cámara se aparta de la pared y mira hacia arriba. Impulso al techo al llegar al borde, salto hacia atrás y
+  resbalón sin chakra (servidor).
+- Doble cara con interior casi negro en los modelos de Meshy con huecos (shader `toon_tex_doble`).
+- Las capturas en este entorno van a ~4 fps (render por software); el guion espera varios cuadros por toma.

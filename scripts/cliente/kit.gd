@@ -10,6 +10,9 @@ static var _mats: Dictionary = {}
 const COLOR_VENTANA := Color(1.0, 0.68, 0.32)
 
 
+## Modelos de Meshy con huecos (ventanas rotas, paredes destrozadas): doble cara con interior oscuro.
+const DOBLE_CARA := ["casa_chica", "edificio_mediano", "taller_industrial", "torre_vivienda_a", "torre_vivienda_b",
+	"puerta_aldea", "academia", "entrada_mercado", "puesto_mercado", "carreta", "tanque_agua"]
 const ESCALABLES := {"losa": "suelo", "columna": "concreto", "escalera": "rejilla"}
 
 
@@ -29,7 +32,7 @@ static func material_para(nombre: String) -> Material:
 		"piedra": m = Shaders.toon_tex("concreto", Color(1.15, 1.12, 1.1), Vector2.ONE, false, 0.25, 0.0, 0.45, c)
 		"lengua": m = Materiales.solido(Color(0.55, 0.22, 0.28), 0.35)
 		# Edificio generado con Meshy: su propia textura con el cel shading y la lluvia del kit.
-		"edificio_ia": m = Shaders.toon_tex("edificio_ia", Color(0.86, 0.85, 0.9), Vector2.ONE, false, 0.25, 0.1, 0.5, c)
+		"edificio_ia": m = Shaders.toon_tex("edificio_ia", Color(0.86, 0.85, 0.9), Vector2.ONE, false, 0.25, 0.1, 0.5, c, true)
 		"madera": m = Shaders.toon_tex("madera", Color.WHITE, Vector2.ONE, false, 0.25, 0.0, 0.4, c)
 		"paja": m = Materiales.solido(Color(0.74, 0.62, 0.36), 0.95)
 		"cuerda": m = Materiales.solido(Color(0.58, 0.5, 0.38), 0.95)
@@ -41,7 +44,7 @@ static func material_para(nombre: String) -> Material:
 		_:
 			# Modelos de Meshy procesados en Blender: material con el nombre de la pieza y su textura.
 			if ResourceLoader.exists("res://assets/texturas/%s_color.png" % nombre):
-				m = Shaders.toon_tex(nombre, Color(0.9, 0.89, 0.93), Vector2.ONE, false, 0.25, 0.1, 0.5, c)
+				m = Shaders.toon_tex(nombre, Color(0.9, 0.89, 0.93), Vector2.ONE, false, 0.25, 0.1, 0.5, c, nombre.trim_suffix("_lejos") in DOBLE_CARA)
 			else:
 				m = Materiales.solido(Color(0.5, 0.5, 0.5))
 	_mats[clave] = m

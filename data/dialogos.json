@@ -1,0 +1,29 @@
+{
+ "_nota": "Frases de los aldeanos por distrito (se elige una al interactuar) y misiones que irán en los puntos amarillos.",
+ "comunes": [
+  "Dicen que el señor Pain lo ve todo desde lo alto de la torre.",
+  "Aquí nunca deja de llover. Ya ni recuerdo cómo se ve el sol.",
+  "Si la lluvia se detiene de golpe, es que alguien extraño entró a la aldea.",
+  "Cuida tu chakra: caminar sobre el canal cansa más de lo que parece."
+ ],
+ "distritos": {
+  "plaza": ["Los muñecos del campo aguantan todo. Practica tus jutsus con ellos.", "La plaza es el único sitio donde la gente se detiene a platicar."],
+  "canal": ["El agua del canal baja hasta el lago. No te caigas sin chakra.", "Los desagües rugen más cuando llueve fuerte."],
+  "mercado": ["¡Pescado del lago, recién sacado! ¿Te llevo uno?", "Tengo kunai, sellos explosivos y paraguas. Todo lo que un ninja necesita.", "Bajo este techo al menos no te mojas mientras compras."],
+  "residencial": ["Desde la pasarela de las torres se ve toda la aldea.", "Mis vecinos dicen que el señor Pain antes vivía como nosotros."],
+  "industrial": ["Las chimeneas no se apagan nunca. El vapor se mezcla con la lluvia.", "Cuidado con las tuberías, están calientes."],
+  "academia": ["En la academia primero aprendes a caminar por las paredes. Luego, sobre el agua.", "El instructor dice que el chakra se controla con la respiración.", "Mañana hay examen de sellos. Llevo toda la noche practicando."],
+  "puerta": ["Nadie entra ni sale sin que los guardias lo sepan.", "El puente es largo; al otro lado no hay nada más que lago y niebla."],
+  "torre": ["La torre es la sede del señor Pain. Solo se entra por la terraza.", "Dicen que los ojos de la torre se encienden cuando él observa."]
+ },
+ "misiones": {
+  "plaza": "Entrenamiento de puntería",
+  "canal": "Desagüe bloqueado",
+  "mercado": "Entrega de pescado",
+  "residencial": "Vecino desaparecido",
+  "industrial": "Fuga de vapor",
+  "academia": "Examen de caminar por paredes",
+  "puerta": "Guardia nocturna",
+  "torre": "Mensaje para el líder"
+ }
+}

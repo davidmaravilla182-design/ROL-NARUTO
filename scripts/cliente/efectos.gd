@@ -425,19 +425,37 @@ func cadena(puntos: Array, nivel: int) -> void:
 
 
 ## Salpicadura de agua (pisar charcos, caídas, cadena eléctrica).
-func chapoteo(pos: Vector3, fuerza := 1.0) -> void:
-	rafaga(Vector3(pos.x, 0.08, pos.z), {"cantidad": int(10 * fuerza) + 4, "vida": 0.45, "radio": 0.15 * fuerza, "direccion": Vector3.UP, "dispersion": 35.0,
+func chapoteo(pos: Vector3, fuerza := 1.0, y_suelo := 0.0) -> void:
+	rafaga(Vector3(pos.x, y_suelo + 0.08, pos.z), {"cantidad": int(10 * fuerza) + 4, "vida": 0.45, "radio": 0.15 * fuerza, "direccion": Vector3.UP, "dispersion": 35.0,
 		"vel_min": 1.5 * fuerza, "vel_max": 3.5 * fuerza, "gravedad": Vector3(0, -14, 0), "tam_min": 0.04, "tam_max": 0.08,
 		"color": Color(0.75, 0.85, 1.0, 0.7), "aditivo": false, "escala_fin": 0.6})
 	# Anillo de onda que se expande.
 	var anillo := Materiales.disco(0.3, Materiales.transparente(Color(0.8, 0.9, 1.0, 0.35), true), 16)
 	add_child(anillo)
-	anillo.global_position = Vector3(pos.x, 0.03, pos.z)
+	anillo.global_position = Vector3(pos.x, y_suelo + 0.03, pos.z)
 	var tw := create_tween()
 	tw.set_parallel(true)
 	tw.tween_property(anillo, "scale", Vector3(3, 1, 3) * fuerza, 0.5)
 	tw.tween_property(anillo, "transparency", 1.0, 0.5)
 	tw.chain().tween_callback(anillo.queue_free)
+
+
+## Paso con chakra: chispas azules y gotas que salen de la superficie (pared o agua) en la dirección normal.
+func paso_chakra(pos: Vector3, normal: Vector3) -> void:
+	rafaga(pos, {"cantidad": 8, "vida": 0.35, "radio": 0.12, "direccion": normal, "dispersion": 50.0,
+		"vel_min": 1.2, "vel_max": 3.0, "gravedad": Vector3(0, -10, 0), "tam_min": 0.04, "tam_max": 0.07,
+		"color": Color(0.75, 0.85, 1.0, 0.75), "aditivo": false, "escala_fin": 0.6})
+	rafaga(pos, {"cantidad": 5, "vida": 0.3, "radio": 0.1, "direccion": normal, "dispersion": 70.0,
+		"vel_min": 0.5, "vel_max": 1.4, "tam_min": 0.05, "tam_max": 0.09, "color": Color(0.45, 0.75, 1.0, 0.9)})
+	if normal.y > 0.7:
+		var anillo := Materiales.disco(0.3, Materiales.transparente(Color(0.55, 0.8, 1.0, 0.45), true), 16)
+		add_child(anillo)
+		anillo.global_position = pos + Vector3(0, 0.02, 0)
+		var tw := create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(anillo, "scale", Vector3(3.2, 1, 3.2), 0.7)
+		tw.tween_property(anillo, "transparency", 1.0, 0.7)
+		tw.chain().tween_callback(anillo.queue_free)
 
 
 # ------------------------------------------------------------ varios

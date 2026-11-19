@@ -244,6 +244,16 @@ func _accion(e: EntidadServidor, id: String) -> void:
 		"golpe":
 			_accion_golpe(e)
 		"saltar":
+			if e.escalando and _puede_actuar(e):
+				# Salto desde la pared: impulso hacia atrás y arriba.
+				e.empuje = Vector3(e.pared.x, 0, e.pared.y) * Datos.sim("salto_pared_impulso")
+				e.vel_y = Datos.sim("salto_pared_altura")
+				e.escalando = false
+				e.contacto_pared = -0.35   # un instante sin volver a pegarse
+				e.yaw = atan2(e.pared.x, e.pared.y)
+				e.pared = Vector2.ZERO
+				_evento({"tipo": "salto", "entidad": e.id})
+				return
 			if _puede_actuar(e) and e.en_suelo:
 				var j := Datos.jutsu("saltar")
 				if e.estamina < float(j["costo_estamina"]):
@@ -409,7 +419,7 @@ func _actualizar_recursos(e: EntidadServidor, dt: float) -> void:
 	if not e.vivo() or e.tipo == "muneco":
 		return
 	# El chakra se regenera si no hay un modo ocular ni un Susanoo consumiéndolo.
-	var gastando := (e.modo_activo and e.modo in Tecnicas.OJOS) or e.efectos.has("susanoo")
+	var gastando := (e.modo_activo and e.modo in Tecnicas.OJOS) or e.efectos.has("susanoo") or e.escalando or e.agua == 1
 	if not gastando:
 		e.chakra = minf(e.chakra + float(e.stats["regen_chakra"]) * dt, float(e.stats["chakra_max"]))
 	if e.estado == "libre":
@@ -811,11 +821,25 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	horiz += e.empuje
 	if e.estado != "esquiva" and e.estado != "chidori_embiste":
 		e.empuje = e.empuje.move_toward(Vector3.ZERO, dt * 18.0)
+	if e.agua == 2:
+		horiz *= Datos.sim("nado_velocidad")   # sin chakra en el agua: nada despacio
 	# Gravedad y salto.
 	e.vel_y -= Datos.sim("gravedad") * dt * (0.3 if Genericas.planea(e) and e.vel_y < 0.0 else 1.0)
 	var nueva := e.pos + horiz * dt
 	nueva.y = e.pos.y + e.vel_y * dt
 	var suelo := mapa.altura_suelo(Vector2(nueva.x, nueva.z), e.pos.y)
+	# Agua del canal: con chakra se camina sobre ella (gasta poco a poco); sin chakra se hunde y nada.
+	var sobre_agua := mapa.en_canal(Vector2(nueva.x, nueva.z)) and suelo <= float(mapa.canal["nivel_agua"]) + 0.01
+	if not sobre_agua:
+		e.agua = 0
+	elif nueva.y <= suelo + 0.05:
+		if e.agua != 2 and e.chakra > Datos.sim("escalada_chakra_min"):
+			e.agua = 1
+			e.chakra = maxf(e.chakra - Datos.sim("agua_chakra_seg") * dt, 0.0)
+		else:
+			e.agua = 2
+	if e.agua == 2:
+		suelo -= Datos.sim("nado_profundidad")
 	if nueva.y <= suelo:
 		nueva.y = suelo
 		e.vel_y = 0.0
@@ -823,12 +847,13 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	else:
 		e.en_suelo = false
 	var p2 := mapa.resolver_colision(Vector2(nueva.x, nueva.z), Datos.sim("radio_entidad"), nueva.y)
-	# Caminar por paredes con chakra: empujar contra una pared más alta que uno la sube.
-	# Solo paredes altas (las cajas y barriles se saltan) y tras empujar un instante, para no escalar sin querer en combate.
+	# Correr por paredes con chakra: empujar contra una pared alta sube corriendo por ella (de pie, perpendicular).
+	# Solo paredes de más de 2 m y tras empujar un instante (en combate no se trepa a las cajas sin querer).
 	var estaba := e.escalando
+	var normal_antes := e.pared
 	e.escalando = false
 	var contra_pared := false
-	if puede_moverse and e.entrada_mov.length() > 0.3 and e.chakra > Datos.sim("escalada_chakra_min"):
+	if puede_moverse and e.entrada_mov.length() > 0.3 and e.chakra > Datos.sim("escalada_chakra_min") and e.agua != 2:
 		var empujado := Vector2(nueva.x, nueva.z) - p2
 		var quiere := Vector2(horiz.x, horiz.z)
 		if empujado.length() > 0.001 and quiere.length() > 0.1 and empujado.normalized().dot(quiere.normalized()) > 0.4:
@@ -841,8 +866,23 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 					e.chakra = maxf(e.chakra - Datos.sim("escalada_chakra_seg") * dt, 0.0)
 					e.escalando = true
 					e.en_suelo = false
+					var n := mapa.normal_pared(p2, Datos.sim("radio_entidad") + 0.12, nueva.y)
+					if n != Vector2.ZERO:
+						e.pared = n
+						e.yaw = atan2(-n.x, -n.y)   # mira hacia la pared (sube de frente a ella)
 	if not contra_pared:
 		e.contacto_pared = 0.0
+	if estaba and not e.escalando:
+		if e.chakra <= Datos.sim("escalada_chakra_min") and e.entrada_mov.length() > 0.3:
+			# Sin chakra: resbala y cae, apartándose un poco de la pared.
+			e.empuje = Vector3(normal_antes.x, 0, normal_antes.y) * 2.0
+			e.vel_y = minf(e.vel_y, 0.0)
+		elif e.vel_y > 0.0:
+			# Llegó al borde superior: impulso automático hacia el techo.
+			e.empuje = Vector3(-normal_antes.x, 0, -normal_antes.y) * 5.0
+			e.vel_y = maxf(e.vel_y, 3.0)
+	if not e.escalando:
+		e.pared = Vector2.ZERO
 	if e.estado == "chidori_embiste" and p2.distance_to(Vector2(nueva.x, nueva.z)) > 0.05:
 		# Chocó contra una pared: termina el embiste.
 		e.empuje = Vector3.ZERO

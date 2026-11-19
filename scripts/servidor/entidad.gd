@@ -23,6 +23,8 @@ var vel_y := 0.0
 var empuje := Vector3.ZERO    # velocidad externa (esquiva, retroceso) que decae
 var en_suelo := true
 var escalando := false   # subiendo por una pared con chakra
+var pared := Vector2.ZERO   # normal de la pared por la que corre (hacia afuera)
+var agua := 0              # 0 en tierra, 1 caminando sobre el agua con chakra, 2 nadando (sin chakra)
 var contacto_pared := 0.0   # segundos empujando contra una pared alta (la escalada empieza tras un instante)
 var en_charco := false
 
@@ -227,5 +229,7 @@ func a_estado() -> Dictionary:
 		"recargas": r,
 		"en_suelo": en_suelo,
 		"escalando": escalando,
+		"pared": pared,
+		"agua": agua,
 		"en_charco": en_charco,
 	}

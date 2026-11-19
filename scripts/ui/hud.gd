@@ -16,6 +16,7 @@ signal salir_pedido()
 signal reinicio_pedido()
 signal camara_arrastre(relativo: Vector2)
 signal viajar_pedido(id: String)
+signal interactuar_pedido()
 
 # id, color, radio base, ángulo en el arco (grados, 180 = izquierda, 270 = arriba), anillo (0 centro, 1 interior, 2 exterior), apuntable
 # Botones fijos: id, color, radio base, ángulo en el arco (180 = izquierda, 270 = arriba), anillo (0 centro, 1 interior, 2 exterior)
@@ -30,6 +31,10 @@ const RANURAS := [[56.0, 211.0, 1], [56.0, 251.0, 1], [50.0, 198.0, 2], [50.0, 2
 const RANURA_MODO := [48.0, 256.0, 2]
 
 var minimapa: Minimapa
+var _boton_interactuar: Button
+var _dialogo: Label
+var _dialogo_txt: Label
+var _dialogo_t := 0.0
 var mapa_completo: MapaCompleto
 var _mapa: Mapa
 var raiz: Control
@@ -193,6 +198,35 @@ void fragment() {
 	_fps.add_theme_constant_override("outline_size", 5)
 	_fps.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 
+	# Interactuar con aldeanos y puntos de misión (aparece solo cuando hay uno cerca).
+	_boton_interactuar = Button.new()
+	_boton_interactuar.text = "Interactuar"
+	_boton_interactuar.add_theme_font_size_override("font_size", 26)
+	_boton_interactuar.custom_minimum_size = Vector2(220, 70)
+	_boton_interactuar.focus_mode = Control.FOCUS_NONE
+	_boton_interactuar.visible = false
+	_boton_interactuar.pressed.connect(func(): interactuar_pedido.emit(); Ajustes.vibrar(15))
+	raiz.add_child(_boton_interactuar)
+	# Globo de diálogo: una etiqueta de tamaño fijo con fondo (no crece con el texto).
+	_dialogo_txt = Label.new()
+	_dialogo = _dialogo_txt
+	_dialogo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dialogo.visible = false
+	var fondo := StyleBoxFlat.new()
+	fondo.bg_color = Color(0.04, 0.05, 0.09, 0.85)
+	fondo.border_color = Color(0.85, 0.7, 0.45, 0.8)
+	fondo.set_border_width_all(2)
+	fondo.set_corner_radius_all(10)
+	fondo.set_content_margin_all(14)
+	_dialogo_txt.add_theme_stylebox_override("normal", fondo)
+	_dialogo_txt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_dialogo_txt.add_theme_font_size_override("font_size", 24)
+	_dialogo_txt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dialogo_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dialogo_txt.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85))
+	_dialogo_txt.add_theme_constant_override("outline_size", 6)
+	_dialogo_txt.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	raiz.add_child(_dialogo)
 	if _mapa != null and _mapa.radio_caminable > 0.0:
 		minimapa = Minimapa.new()
 		raiz.add_child(minimapa)
@@ -296,6 +330,11 @@ func _reordenar() -> void:
 	_fps.position = Vector2(izq + 4, arr + 156)
 	if minimapa != null:
 		minimapa.position = Vector2(izq + 4, arr + 186)
+	if _boton_interactuar != null:
+		_boton_interactuar.position = Vector2(t.x * 0.5 - 110, t.y - aba - 190)
+		_boton_interactuar.size = Vector2(220, 70)
+		_dialogo.position = Vector2(t.x * 0.5 - 340, t.y - aba - 330)
+		_dialogo.size = Vector2(680, 120)
 	var x := t.x - der
 	var sup: Array = []
 	for n in raiz.get_children():
@@ -467,6 +506,10 @@ func _dibujar_banner() -> void:
 
 
 func _process(delta: float) -> void:
+	if _dialogo_t > 0.0:
+		_dialogo_t -= delta
+		if _dialogo_t <= 0.0 and _dialogo != null:
+			_dialogo.visible = false
 	# El letrero se desvanece solo (en tiempo real: la cámara lenta no lo alarga).
 	if _banner_t > 0.0:
 		_banner_t -= delta / maxf(Engine.time_scale, 0.05)
@@ -595,3 +638,18 @@ func abrir_mapa() -> void:
 	mapa_completo.cerrar.connect(func():
 		mapa_completo.queue_free()
 		mapa_completo = null)
+
+
+func mostrar_interactuar(visible_: bool) -> void:
+	if _boton_interactuar != null:
+		_boton_interactuar.visible = visible_
+
+
+## Globo de diálogo abajo al centro durante unos segundos.
+func dialogo(texto: String, segundos := 4.5) -> void:
+	if _dialogo == null:
+		return
+	_dialogo_txt.text = texto
+	_dialogo.visible = true
+	_dialogo_t = segundos
+	_reordenar()

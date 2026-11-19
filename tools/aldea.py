@@ -234,10 +234,10 @@ def main():
     t.plataforma(-31.0, 35.0, 4.0, 3.5, 5.0, "techo")
     # ---------------------------------------------------------------- 2. canal
     canal = {"x_min": -40.0, "x_max": 152.0, "z_sur": -23.0, "z_norte": -31.0, "nivel_agua": -1.1}
-    t.lotes([40, -62, 146, -33], ["casa_chica", "edificio_mediano", "edificio", "casa_chica"], 17, "gris", hacia(90, -27), margen=2.5)
-    t.lotes([40, -21, 146, 1], ["casa_chica", "edificio", "casa_chica", "edificio_mediano"], 15, "lila", hacia(90, -27), margen=2.5)
+    t.lotes([40, -62, 146, -33], ["casa_chica", "edificio_mediano", "edificio_ia", "casa_chica"], 17, "gris", hacia(90, -27), margen=2.5)
+    t.lotes([40, -21, 146, 1], ["casa_chica", "edificio_ia", "casa_chica", "edificio_mediano"], 15, "lila", hacia(90, -27), margen=2.5)
     t.lotes([40, 9, 140, 66], ["casa_chica", "edificio_mediano", "taller_industrial", "casa_chica"], 18, "gris", hacia(90, 5), margen=2.5)
-    rellenar(t, [40, -62, 146, 66], ["casa_chica", "casa_chica", "edificio", "tanque_agua"], 40, "gris", hacia(90, -27))
+    rellenar(t, [40, -62, 146, 66], ["casa_chica", "edificio_ia", "edificio", "edificio_ia"], 40, "gris", hacia(90, -27))
     t.dispersar([40, -21, 146, 1], ["barril", "caja_ia", "pila_tuberias", "farol_calle", "banca"], 26, "gris")
     t.dispersar([40, 9, 140, 60], ["barril", "caja_ia", "sacos", "farol_calle", "carreta", "roca"], 22, "oxido")
     # Pasarela elevada sobre la orilla norte del canal con escaleras a ambos lados.
@@ -255,9 +255,9 @@ def main():
     # Techo de la calle: losa caminable a 5,5 m sobre columnas, con escalera al este.
     t.plataforma(-92.5, -4.5, 41.5, 5.5, 5.5, "techo")
     t.plataforma(-53.0, -14.5, 1.2, 4.5, 5.5, "escalera", 0.0, "z")
-    t.lotes([-146, -60, -40, -16], ["casa_chica", "edificio", "edificio_mediano", "casa_chica"], 15, "calido", hacia(-90, -4.5), margen=2.0)
+    t.lotes([-146, -60, -40, -16], ["edificio_ia", "edificio", "edificio_mediano", "casa_chica"], 15, "calido", hacia(-90, -4.5), margen=2.0)
     t.lotes([-146, 6, -40, 68], ["casa_chica", "edificio", "casa_chica", "edificio_mediano"], 15, "calido", hacia(-90, -4.5), margen=2.0)
-    rellenar(t, [-146, -60, -40, 68], ["casa_chica", "casa_chica", "edificio", "tanque_agua"], 40, "calido", hacia(-90, -4.5))
+    rellenar(t, [-146, -60, -40, 68], ["casa_chica", "edificio_ia", "edificio", "edificio_ia"], 40, "calido", hacia(-90, -4.5))
     t.dispersar([-136, -15, -40, 6], ["sacos", "caja_ia", "barril", "carreta", "farol_calle"], 30, "calido")
     t.dispersar([-146, -60, -40, 66], ["sacos", "caja_ia", "barril", "roca", "banca"], 20, "calido")
     # ---------------------------------------------------------------- 4. residencial (torres apiladas + pasarelas)
@@ -266,18 +266,26 @@ def main():
         tipo = "torre_vivienda_a" if (len(torres) % 2 == 0) else "torre_vivienda_b"
         if t.pieza(tipo, x, z, rng.choice([0, 90, 180, 270]), rng.uniform(0.95, 1.08), rng.choice(TINTES["lila"]), 3.0):
             torres.append((x, z))
-    # Pasarelas entre torres vecinas a 10-14 m y escaleras desde el suelo.
+    # Pasarelas entre torres vecinas a 10-14 m, cada una con su escalera desde el suelo (a la misma altura).
     for (ax, az), (bx, bz) in [((-58, -78), (-58, -126)), ((-104, -78), (-104, -126)), ((-58, -126), (-104, -126)), ((-70, -168), (-95, -168))]:
         if (ax, az) in torres and (bx, bz) in torres:
             h = rng.choice([10.0, 12.0, 14.0])
+            largo = h * 1.25
             if abs(ax - bx) < 3:
-                t.plataforma(ax, (az + bz) / 2, 1.3, abs(az - bz) / 2 - 6.5, h, "pasarela")
+                zm = (az + bz) / 2
+                t.plataforma(ax, zm, 1.3, abs(az - bz) / 2 - 6.5, h, "pasarela")
+                # Escalera hacia +X: arriba junto a la pasarela, abajo lejos de ella.
+                if t.libre(ax + 1.3 + largo / 2, zm, largo / 2, 1.2, 0.5, reservas=False):
+                    t.plataforma(ax + 1.3 + largo / 2, zm, largo / 2, 1.2, 0.0, "escalera", h, "x")
+                else:
+                    t.plataforma(ax - 1.3 - largo / 2, zm, largo / 2, 1.2, h, "escalera", 0.0, "x")
             else:
-                t.plataforma((ax + bx) / 2, az, abs(ax - bx) / 2 - 6.5, 1.3, h, "pasarela")
-    t.plataforma(-48.7, -102.0, 8.0, 1.2, 0.0, "escalera", 12.0, "x")
+                xm = (ax + bx) / 2
+                t.plataforma(xm, az, abs(ax - bx) / 2 - 6.5, 1.3, h, "pasarela")
+                t.plataforma(xm, az + 1.3 + largo / 2, 1.2, largo / 2, 0.0, "escalera", h, "z")
     t.lotes([-146, -232, -40, -64], ["casa_chica", "casa_chica", "edificio"], 13, "gris", hacia(-87, -107), margen=2.5, prob=0.7)
-    rellenar(t, [-146, -232, -40, -64], ["casa_chica", "casa_chica", "edificio_mediano", "tanque_agua"], 45, "lila", hacia(-87, -107))
-    t.dispersar([-146, -232, -40, -64], ["banca", "farol_calle", "barril", "sacos", "roca", "tanque_agua"], 34, "lila")
+    rellenar(t, [-146, -232, -40, -64], ["casa_chica", "edificio_ia", "edificio_mediano", "edificio_ia"], 40, "lila", hacia(-87, -107))
+    t.dispersar([-146, -232, -40, -64], ["banca", "farol_calle", "barril", "sacos", "roca"], 30, "lila")
     # ---------------------------------------------------------------- 5. industrial (el más denso)
     for x, z in [(60, -90), (112, -90), (60, -160), (112, -160), (130, -110), (100, -200)]:
         t.pieza("taller_industrial", x, z, rng.choice([0, 90, 180, 270]), rng.uniform(0.95, 1.1), rng.choice(TINTES["oxido"]), 2.0)
@@ -285,9 +293,9 @@ def main():
         t.pieza("chimenea", x, z, 0, rng.uniform(0.9, 1.2), None, 1.5)
     for x, z in [(46, -70), (46, -150), (140, -140), (56, -200)]:
         t.pieza("silo", x, z, rng.uniform(0, 90), rng.uniform(0.85, 1.0), None, 2.0)
-    t.lotes([40, -232, 146, -64], ["tanque", "tanque_agua", "casa_chica", "taller_industrial"], 12, "oxido", hacia(87, -131), margen=1.5, prob=0.8)
-    rellenar(t, [40, -232, 146, -64], ["tanque", "tanque_agua", "casa_chica", "silo", "tanque"], 60, "oxido", hacia(87, -131), margen=0.8)
-    t.dispersar([40, -232, 146, -64], ["pila_tuberias", "barril", "caja_ia", "tanque_agua", "roca"], 70, "oxido")
+    t.lotes([40, -232, 146, -64], ["taller_industrial", "casa_chica", "edificio_ia", "tanque"], 16, "oxido", hacia(87, -131), margen=2.0, prob=0.55)
+    rellenar(t, [40, -232, 146, -64], ["tanque", "casa_chica", "silo", "edificio_ia"], 30, "oxido", hacia(87, -131), margen=1.5)
+    t.dispersar([40, -232, 146, -64], ["pila_tuberias", "barril", "caja_ia", "roca"], 55, "oxido")
     # ---------------------------------------------------------------- 6. academia
     t.pieza("academia", 0.0, -152.0, 0, 1.25, forzar=True)
     for x in (-18, -10, 10, 18):
@@ -298,19 +306,19 @@ def main():
     for x in (-14, -6, 6, 14):
         t.prop("banca", x, -137.0, 0, 1.0, forzar=True)
     t.lotes([-36, -230, 36, -140], ["casa_chica", "edificio", "edificio_mediano"], 15, "gris", hacia(0, -125), margen=2.5)
-    rellenar(t, [-36, -230, 36, -140], ["casa_chica", "edificio", "tanque_agua"], 18, "gris", hacia(0, -125))
+    rellenar(t, [-36, -230, 36, -140], ["casa_chica", "edificio", "edificio_ia"], 18, "gris", hacia(0, -125))
     t.dispersar([-36, -230, 36, -112], ["barril", "caja_ia", "roca", "sacos"], 14, "gris")
     # ---------------------------------------------------------------- 7. puerta, muralla y puente
     # La puerta tiene un vano en el medio: colisión solo en los dos cuerpos laterales.
     t.pieza("puerta_aldea", 0.0, PUERTA_Z + 1.0, 0, 1.0, forzar=True, colision=False)
     extra.append({"pos": [-11.0, PUERTA_Z + 1.0], "medio": [6.0, 5.6], "alto": 18.0})
     extra.append({"pos": [11.0, PUERTA_Z + 1.0], "medio": [6.0, 5.6], "alto": 18.0})
-    t.lotes([-36, 42, -8, 64], ["casa_chica", "casa_chica", "edificio"], 11, "gris", hacia(0, 52), margen=2.0)
-    t.lotes([8, 42, 36, 64], ["casa_chica", "casa_chica", "edificio"], 11, "gris", hacia(0, 52), margen=2.0)
+    t.lotes([-36, 42, -8, 64], ["casa_chica", "edificio_ia", "edificio"], 11, "gris", hacia(0, 52), margen=2.0)
+    t.lotes([8, 42, 36, 64], ["casa_chica", "edificio_ia", "edificio"], 11, "gris", hacia(0, 52), margen=2.0)
     for z in (46, 54, 62):
         t.prop("farol_calle", -7.0, z, 90, 1.0, forzar=True)
         t.prop("farol_calle", 7.0, z, 270, 1.0, forzar=True)
-    rellenar(t, [-36, 40, 36, 66], ["casa_chica", "tanque_agua"], 10, "gris", hacia(0, 52), margen=1.0)
+    rellenar(t, [-36, 40, 36, 66], ["casa_chica", "edificio_ia"], 10, "gris", hacia(0, 52), margen=1.0)
     t.dispersar([-36, 42, 36, 66], ["barril", "caja_ia", "sacos", "carreta"], 14, "gris")
     # Puente sobre el lago (losa caminable a ras del suelo) y embarcadero exterior.
     t.plataforma(0.0, 111.0, 3.4, 40.0, 0.0, "puente")
@@ -331,9 +339,18 @@ def main():
     # ---------------------------------------------------------------- torre: explanada con faroles
     for x, z in [(-20, -62), (20, -62), (-26, -76), (26, -76)]:
         t.prop("farol_calle", x, z, 0, 1.2, forzar=True)
-    rellenar(t, [-38, -112, 38, -33], ["casa_chica", "edificio", "tanque_agua"], 14, "lila", hacia(0, -80))
+    rellenar(t, [-38, -112, 38, -33], ["casa_chica", "edificio", "edificio_ia"], 14, "lila", hacia(0, -80))
     t.dispersar([-38, -60, 38, -33], ["barril", "caja_ia", "pila_tuberias", "banca"], 12, "lila")
 
+    # ---------------------------------------------------------------- tinacos sobre algunos techos (irregulares)
+    for p in list(t.piezas):
+        if p["tipo"] in ("casa_chica", "edificio", "edificio_ia", "edificio_mediano") and rng.random() < 0.22:
+            alto = t.h[p["tipo"]][2] * p.get("escala", 1.0)
+            hx, hz = t.medio(p["tipo"], p["giro"], p.get("escala", 1.0))
+            x = p["pos"][0] + rng.uniform(-hx * 0.4, hx * 0.4)
+            z = p["pos"][1] + rng.uniform(-hz * 0.4, hz * 0.4)
+            t.props.append({"tipo": "tanque_agua", "pos": [round(x, 2), round(z, 2)], "giro": round(rng.uniform(0, 360), 1),
+                            "escala": round(rng.uniform(0.45, 0.6), 3), "y": round(alto - 0.2, 2), "tinte": rng.choice(TINTES["oxido"])})
     # ---------------------------------------------------------------- puntos de misión y aldeanos
     puntos = []
     for d in DISTRITOS:
@@ -373,6 +390,11 @@ def main():
     tz["canal"] = canal
     tz["muralla"] = muro
     tz["obstaculos_extra"] = extra
+    # La colisión es una caja: en los modelos redondos o con patas se encoge para que coincida con lo que se ve.
+    tz["ajuste_colision"] = {"torre_vivienda_a": 0.8, "torre_vivienda_b": 0.8, "tanque_agua": 0.7, "farol_calle": 0.35,
+                             "silo": 0.82, "chimenea": 0.75, "casa_chica": 0.92, "roca": 0.8, "barril": 0.85,
+                             "tanque": 0.8, "torreta": 0.95, "edificio_mediano": 0.93, "academia": 0.93}
+    tz["no_escalables"] = ["torre_ia"]
     tz["arcos"] = [{"pos": [27.0, 5.0], "giro": 90}, {"pos": [-27.0, -4.5], "giro": 90}, {"pos": [0.0, 26.5], "giro": 0},
                    {"pos": [0.0, 48.0], "giro": 0}, {"pos": [70.0, 5.0], "giro": 90}, {"pos": [-70.0, -4.5], "giro": 90}]
     tubos = [{"pos": [-22.0, -21.6], "altura": 0.6, "giro": 0}, {"pos": [22.5, -21.6], "altura": 0.6, "giro": 0}]

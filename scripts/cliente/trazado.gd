@@ -28,7 +28,7 @@ static func construir(e: Escenario, m: Mapa) -> void:
 		if not ResourceLoader.exists("res://assets/modelos/%s.glb" % tipo):
 			continue
 		var esc := float(p.get("escala", 1.0))
-		var t := Transform3D(Basis(Vector3.UP, deg_to_rad(float(p["giro"]))).scaled(Vector3.ONE * esc), Vector3(c.x, 0, c.y))
+		var t := Transform3D(Basis(Vector3.UP, deg_to_rad(float(p["giro"]))).scaled(Vector3.ONE * esc), Vector3(c.x, float(p.get("y", 0.0)), c.y))
 		var celda := Vector2i(floori(c.x / CELDA), floori(c.y / CELDA))
 		var g: Dictionary = grupos.get_or_add("%s|%d|%d" % [tipo, celda.x, celda.y], {"tipo": tipo, "celda": celda, "ts": [], "tintes": []})
 		g["ts"].append(t)
@@ -166,7 +166,8 @@ static func _farolillos(e: Escenario, c: Vector2, md: Vector2, h: float) -> void
 ## Farol en la puerta del edificio especial (Meshy, primer modelo).
 static func _edificio_ia_luz(e: Escenario, m: Mapa) -> void:
 	for p in m.piezas:
-		if p["tipo"] != "edificio_ia":
+		# Solo el edificio original de la plaza lleva su farol con luz real (las copias usan los faroles del distrito).
+		if p["tipo"] != "edificio_ia" or (p["centro"] as Vector2).length() > 40.0:
 			continue
 		var c: Vector2 = p["centro"]
 		var t := Transform3D(Basis(Vector3.UP, deg_to_rad(float(p["giro"]))), Vector3(c.x, 0, c.y))
@@ -231,7 +232,18 @@ static func _plataformas(e: Escenario, m: Mapa) -> void:
 				ang = PI if h > h0 else 0.0
 			var ancho := (md.y if por_x else md.x)
 			var largo := (md.x if por_x else md.y) * 2.0
-			escaleras.append(Transform3D(Basis(Vector3.UP, ang).scaled_local(Vector3(ancho, sube, largo)), Vector3(c.x, bajo, c.y)))
+			# Tramos de ~1 m de subida (6 peldaños cada uno): la escalera no se ve como tablas gigantes.
+			var dir := (Vector3(1, 0, 0) if por_x else Vector3(0, 0, 1)) * (1.0 if h > h0 else -1.0)
+			var tramos := maxi(1, ceili(sube))
+			var lado := Vector3(0, 0, 1) if por_x else Vector3(1, 0, 0)
+			for i in tramos:
+				var centro := Vector3(c.x, 0, c.y) + dir * (-largo * 0.5 + (float(i) + 0.5) * largo / tramos)
+				var base_y := bajo + float(i) * sube / tramos
+				escaleras.append(Transform3D(Basis(Vector3.UP, ang).scaled_local(Vector3(ancho, sube / tramos, largo / tramos)), centro + Vector3(0, base_y, 0)))
+				# Pilares bajo la escalera cada dos tramos cuando va alta.
+				if base_y > 1.5 and i % 2 == 1:
+					for sl in [-1.0, 1.0]:
+						columnas.append(Transform3D(Basis.from_scale(Vector3(0.8, base_y, 0.8)), centro + lado * sl * (ancho - 0.15)))
 			continue
 		if tipo == "techo" and maxf(md.x, md.y) > 20.0:
 			_farolillos(e, c, md, h)
@@ -317,6 +329,11 @@ static func _canal(e: Escenario, m: Mapa, rng: RandomNumberGenerator) -> void:
 	pm.size = Vector2(x1 - x0, absf(zs - zn) + 1.0)
 	var mat := Shaders.material("agua")
 	mat.set_shader_parameter("fuerza", 1.0 if Ajustes.g("ondas_charcos", true) else 0.0)
+	mat.set_shader_parameter("borde", Vector4(x0, zn, x1, zs))
+	mat.set_shader_parameter("corriente", 0.6)
+	mat.set_shader_parameter("flujo", Vector2(0.9, 0.0))
+	mat.set_shader_parameter("color", Color(0.025, 0.09, 0.18))
+	mat.set_shader_parameter("color_profundo", Color(0.008, 0.03, 0.08))
 	pm.material = mat
 	agua.mesh = pm
 	agua.position = Vector3((x0 + x1) * 0.5, agua_y, (zs + zn) * 0.5)
