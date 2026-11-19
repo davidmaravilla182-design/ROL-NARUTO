@@ -391,6 +391,31 @@ void fragment() {
 }
 """
 
+## Cuerpo de agua de los jutsus (dragón): agua translúcida que fluye, con bordes claros y espuma.
+const AGUA_CUERPO := """
+shader_type spatial;
+render_mode cull_disabled, depth_draw_always, blend_mix;
+uniform vec4 color : source_color = vec4(0.18, 0.5, 0.85, 1.0);
+uniform float velocidad = 2.2;
+varying vec3 wpos;
+RUIDO
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	// Ondulación del agua sobre la superficie.
+	VERTEX += NORMAL * (fbm3(wpos * 1.6 + vec3(TIME * velocidad, 0.0, 0.0)) - 0.5) * 0.08;
+}
+void fragment() {
+	float fres = pow(1.0 - clamp(abs(dot(NORMAL, VIEW)), 0.0, 1.0), 2.0);
+	float flujo = fbm3(wpos * 2.2 + vec3(0.0, -TIME * velocidad, TIME * 0.7));
+	float espuma = smoothstep(0.62, 0.8, flujo);
+	ALBEDO = mix(color.rgb, vec3(0.85, 0.95, 1.0), espuma * 0.8 + fres * 0.35);
+	EMISSION = color.rgb * 0.25 + vec3(0.6, 0.85, 1.0) * fres * 0.5;
+	ROUGHNESS = 0.08;
+	SPECULAR = 0.8;
+	ALPHA = clamp(0.55 + fres * 0.4 + espuma * 0.3, 0.0, 0.95);
+}
+"""
+
 ## Capa de nubes en movimiento, con destello de relámpago.
 const NUBES := """
 shader_type spatial;
@@ -679,6 +704,7 @@ static func shader(clave: String) -> Shader:
 	match clave:
 		"toon": return _shader(clave, TOON)
 		"toon_tex": return _shader(clave, TOON_TEX)
+		"agua_cuerpo": return _shader(clave, AGUA_CUERPO)
 		# Doble cara: los huecos de los modelos destrozados se ven oscuros por dentro, no transparentes.
 		"toon_tex_doble": return _shader(clave, TOON_TEX.replace("render_mode cull_back;", "render_mode cull_disabled;").replace(
 			"	EMISSION = emision.rgb * emision_fuerza;\n}", "	EMISSION = emision.rgb * emision_fuerza;\n	if (!FRONT_FACING) {\n		ALBEDO = vec3(0.012, 0.012, 0.018);\n		METALLIC = 0.0;\n		ROUGHNESS = 1.0;\n		NORMAL_MAP = vec3(0.5, 0.5, 1.0);\n	}\n}"))

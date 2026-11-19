@@ -9,7 +9,7 @@
 - [x] 2. Cinco NPCs con piezas + piezas propias: guardia de la lluvia (kunai, agresivo), ninja de agua (distancia),
         remanente rebelde (fuerte, genjutsu que nubla, bombas de humo, raro); comerciante y instructor (misiones).
         Enemigos en zonas de combate fuera de la plaza; los de misiones en su distrito con Interactuar.
-- [ ] 3. Jutsus con modelo 3D (Meshy da la forma, los efectos van en shaders): Susanoo (3 niveles), Kirin, Gran Dragón
+- [x] 3. Jutsus con modelo 3D (Meshy da la forma, los efectos van en shaders): Susanoo (3 niveles), Kirin, Gran Dragón
         de Agua, Dragón de Madera, Golem de Tierra; 3 niveles (nivel 3 enorme con cámara lenta).
   Hecho (1): cuerpo base de Meshy (imagen a imagen desde ninja-frente.png + imagen a 3D, 16,8k triángulos), 4 peinados
   de Meshy (solo malla, recortado el maniquí que traen debajo) y 4 prendas hechas en Blender copiando las caras del
@@ -19,7 +19,17 @@
   Hecho (2): guardia (kunai, agresivo), ninja de agua (mantiene la distancia, dragón de agua), rebelde (genjutsu que
   nubla la pantalla y bombas de humo; aparece cada 90–180 s en una de 3 zonas, 2,2× vida), comerciante e instructor
   (dicen la misión que darán). Enemigos con radio de detección y regreso a su puesto; reaparecen a los 30 s.
-- [ ] Cierre: capturas (combinaciones, NPCs, jutsus ×3 niveles), medida con varios NPCs y un jutsu N3, APK, reporte.
+- [x] Cierre: capturas en BITACORA_GRAFICOS.md (M3), medida con NPCs y jutsu N3, APK.
+
+  Meshy esta tarea: cuerpo base 21 (imagen a imagen 6 + imagen a 3D 15); peinados 40 (dos tandas: la primera a
+  3.000 polígonos quedaba pobre tras recortar el maniquí); Susanoo ×3, Kirin y Dragón de Agua 25 (solo malla);
+  Dragón de Madera 15 y Golem 15 (con textura). Total 116 de 450.
+
+### Pendiente / siguiente
+- Las misiones solo se anuncian (comerciante e instructor dicen cuál darán): falta su lógica.
+- El impermeable aún se ve algo acolchado; la capa no tiene física de tela (sigue al cuerpo por pesos).
+- Peinados por piezas sin física (rígidos al hueso de la cabeza); la coleta no se balancea.
+- El dragón de madera tiene alas (Meshy); un dragón oriental sin alas necesitaría otra generación (15 créditos).
 
 ---
 

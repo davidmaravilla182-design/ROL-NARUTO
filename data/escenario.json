@@ -289,6 +289,41 @@
     6.0,
     6.0,
     21.0
+   ],
+   "jutsu_susanoo_1": [
+    1.4,
+    0.48,
+    2.8
+   ],
+   "jutsu_susanoo_2": [
+    4.65,
+    2.7,
+    5.2
+   ],
+   "jutsu_susanoo_3": [
+    7.55,
+    4.63,
+    9.0
+   ],
+   "jutsu_kirin": [
+    1.14,
+    5.0,
+    3.0
+   ],
+   "jutsu_dragon_agua": [
+    2.18,
+    2.47,
+    4.0
+   ],
+   "jutsu_dragon_madera": [
+    3.37,
+    6.88,
+    4.0
+   ],
+   "jutsu_golem": [
+    1.8,
+    1.2,
+    2.6
    ]
   },
   "canal": {
@@ -9958,6 +9993,34 @@
    "puesto_mercado": [
     1759,
     600
+   ],
+   "jutsu_susanoo_1": [
+    6405,
+    1494
+   ],
+   "jutsu_susanoo_2": [
+    7997,
+    1990
+   ],
+   "jutsu_susanoo_3": [
+    7993,
+    2455
+   ],
+   "jutsu_kirin": [
+    8000,
+    1500
+   ],
+   "jutsu_dragon_agua": [
+    7998,
+    1498
+   ],
+   "jutsu_dragon_madera": [
+    8000,
+    2000
+   ],
+   "jutsu_golem": [
+    7999,
+    2000
    ]
   },
   "props_base": [

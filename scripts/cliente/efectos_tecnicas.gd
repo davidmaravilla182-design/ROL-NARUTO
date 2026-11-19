@@ -110,15 +110,30 @@ func kirin(pos: Vector3, nivel: int, radio: float, bestia: bool) -> void:
 	var arriba := pos + Vector3(randf_range(-3, 3), 70.0, randf_range(-3, 3))
 	var pares: Array = [[arriba, pos]]
 	if bestia:
-		# La bestia: varios rayos gruesos entrelazados y una cabeza que cae.
+		# La bestia: varios rayos gruesos entrelazados.
 		for k in 3:
 			pares.append([arriba + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2)), pos + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8))])
-		var cabeza := Materiales.esfera(1.4 if nivel < 3 else 1.1, Materiales.emisivo(Color(0.75, 0.9, 1.0), 4.0), 10)
+	# La bestia de rayo (modelo de Meshy con el shader espectral azul) cae en picada; más grande en cada nivel.
+	var mk := Shaders.material("espectral")
+	mk.set_shader_parameter("color", Color(0.55, 0.8, 1.0))
+	mk.set_shader_parameter("intensidad", 4.5)
+	var cabeza: Node3D = Kit.modelo_jutsu("kirin", mk)
+	var lenta_caida := 0.55
+	if cabeza == null:
+		if not bestia:
+			cabeza = null
+		else:
+			cabeza = Materiales.esfera(1.4 if nivel < 3 else 1.1, Materiales.emisivo(Color(0.75, 0.9, 1.0), 4.0), 10)
+			cabeza.scale = Vector3(1.0, 0.7, 1.6)
+			lenta_caida = 0.22
+	else:
+		cabeza.scale = Vector3.ONE * [1.8, 2.8, 4.5][nivel - 1]
+	if cabeza != null:
 		add_child(cabeza)
 		cabeza.global_position = arriba
-		cabeza.scale = Vector3(1.0, 0.7, 1.6)
+		cabeza.look_at(pos, Vector3.FORWARD)
 		var tw := create_tween()
-		tw.tween_property(cabeza, "global_position", pos + Vector3(0, 1.0, 0), 0.22).set_ease(Tween.EASE_IN)
+		tw.tween_property(cabeza, "global_position", pos + Vector3(0, 1.0, 0), lenta_caida).set_ease(Tween.EASE_IN)
 		tw.tween_callback(cabeza.queue_free)
 	efectos.rayos_fugaces(pares, 0.35 if bestia else 0.22, 0.5, 3)
 	efectos.rafaga(pos + Vector3(0, 0.5, 0), {"cantidad": int(nd.get("particulas", 120)), "vida": 0.6, "radio": radio * 0.3, "vel_min": 8.0, "vel_max": 18.0,
@@ -226,6 +241,23 @@ func crear_susanoo(nivel: int) -> Node3D:
 	mat.set_shader_parameter("color", COLOR_ESPECTRAL)
 	mat.set_shader_parameter("intensidad", 1.2 + nivel * 0.3)
 	var esc: float = [1.0, 1.8, 3.0][nivel - 1]
+	# Modelo de Meshy del nivel (costillas / torso con arco / armadura con espada) con el chakra translúcido.
+	var modelo := Kit.modelo_jutsu("susanoo_%d" % nivel, mat)
+	if modelo != null:
+		modelo.position = Vector3(0, 0, -0.25 * nivel)
+		raiz.add_child(modelo)
+		for lado in [-1.0, 1.0]:
+			if nivel >= 2:
+				var ojo := Materiales.caja(Vector3(0.18, 0.05, 0.05) * (nivel - 0.5), Materiales.emisivo(Color(1.0, 0.85, 0.3), 4.0))
+				ojo.position = Vector3(0.18 * lado * (nivel - 0.5), [0.0, 4.35, 7.7][nivel - 1], [0.0, 0.25, 0.6][nivel - 1])
+				raiz.add_child(ojo)
+		var luz_m := OmniLight3D.new()
+		luz_m.light_color = COLOR_ESPECTRAL
+		luz_m.light_energy = 1.5 + nivel
+		luz_m.omni_range = 4.0 * esc
+		luz_m.position = Vector3(0, 1.5 * esc, 0)
+		raiz.add_child(luz_m)
+		return raiz
 	# Costillas: arcos alrededor del torso.
 	for k in 5:
 		var t := TorusMesh.new()

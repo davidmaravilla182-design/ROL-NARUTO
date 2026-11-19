@@ -62,20 +62,33 @@ def main():
     ancho, fondo = (mx[0] - mn[0]) * esc, (mx[1] - mn[1]) * esc
     log("%s: %.2f × %.2f × %.2f m, %d triángulos" % (nombre, ancho, fondo, alto, tris(o)))
     img = None
-    for n in o.data.materials[0].node_tree.nodes:
-        if n.type == "TEX_IMAGE" and n.image is not None and img is None:
-            img = n.image
-    img.scale(px, px)
-    img.filepath_raw = os.path.join(RAIZ, "assets", "texturas", nombre + "_color.png")
-    img.file_format = "PNG"
-    img.save()
-    plano = bpy.data.images.new(nombre + "_normal", 4, 4, alpha=False)
-    plano.pixels.foreach_set(np.tile([0.5, 0.5, 1.0, 1.0], 16).astype(np.float32))
-    plano.filepath_raw = os.path.join(RAIZ, "assets", "texturas", nombre + "_normal.png")
-    plano.file_format = "PNG"
-    plano.save()
+    if o.data.materials and o.data.materials[0] is not None and o.data.materials[0].node_tree is not None:
+        for n in o.data.materials[0].node_tree.nodes:
+            if n.type == "TEX_IMAGE" and n.image is not None and img is None:
+                img = n.image
+    if img is not None:
+        img.scale(px, px)
+        img.filepath_raw = os.path.join(RAIZ, "assets", "texturas", nombre + "_color.png")
+        img.file_format = "PNG"
+        img.save()
+        plano = bpy.data.images.new(nombre + "_normal", 4, 4, alpha=False)
+        plano.pixels.foreach_set(np.tile([0.5, 0.5, 1.0, 1.0], 16).astype(np.float32))
+        plano.filepath_raw = os.path.join(RAIZ, "assets", "texturas", nombre + "_normal.png")
+        plano.file_format = "PNG"
+        plano.save()
+    else:
+        log("sin textura (solo malla): el juego le pone su shader")
+    # Reducción opcional (formas de jutsus): MAX_TRIS en el entorno.
+    tope = int(os.environ.get("MAX_TRIS", "0"))
+    if tope and tris(o) > tope:
+        activo(o)
+        md0 = o.modifiers.new("dec0", "DECIMATE")
+        md0.ratio = tope / tris(o)
+        bpy.ops.object.modifier_apply(modifier="dec0")
     while len(o.data.materials) > 1:
         o.data.materials.pop()
+    if not o.data.materials:
+        o.data.materials.append(bpy.data.materials.new(nombre))
     o.data.materials[0].name = nombre
     exportar(o, os.path.join(RAIZ, "assets", "modelos", nombre + ".glb"))
     lejos = o.copy()

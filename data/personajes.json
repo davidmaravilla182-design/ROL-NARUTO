@@ -136,10 +136,10 @@
     ],
     "atributos": {
       "ninjutsu": 2,
-      "taijutsu": 5,
+      "taijutsu": 4,
       "genjutsu": 1,
       "inteligencia": 2,
-      "fuerza": 5,
+      "fuerza": 3,
       "velocidad": 4,
       "estamina": 4,
       "sellos": 2
@@ -155,7 +155,7 @@
       "prob_esquivar": 0.2,
       "umbral_huida": 0.0,
       "cambio_lateral": 1.8,
-      "pausa_reaccion": 0.12,
+      "pausa_reaccion": 0.35,
       "aggro": 18.0
     },
     "aspecto": {

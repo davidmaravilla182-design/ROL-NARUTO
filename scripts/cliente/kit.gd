@@ -95,6 +95,17 @@ static func instancia(nombre: String, t := Transform3D.IDENTITY, sombras := true
 	return mi
 
 
+## Modelo 3D de un jutsu (Meshy, procesado en Blender) si existe: assets/modelos/jutsu_<nombre>.glb.
+static func modelo_jutsu(nombre: String, material: Material = null) -> MeshInstance3D:
+	if not ResourceLoader.exists("res://assets/modelos/jutsu_%s.glb" % nombre):
+		return null
+	var mi := instancia("jutsu_" + nombre, Transform3D.IDENTITY, material == null)
+	if material != null:
+		mi.material_override = material
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return mi
+
+
 ## Muchas copias de una pieza en una sola llamada de dibujo.
 ## tintes (opcional): un Color por copia para variar el color (lo lee el shader toon_tex).
 static func multimalla(nombre: String, transformaciones: Array, sombras := true, tintes: Array = []) -> MultiMeshInstance3D:

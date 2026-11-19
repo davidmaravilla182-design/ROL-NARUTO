@@ -177,3 +177,50 @@ Capturas en `referencias/capturas-correcciones/<vista>_antes.jpg` y `_despues.jp
   resbalón sin chakra (servidor).
 - Doble cara con interior casi negro en los modelos de Meshy con huecos (shader `toon_tex_doble`).
 - Las capturas en este entorno van a ~4 fps (render por software); el guion espera varios cuadros por toma.
+
+
+## M3 — personaje por piezas, NPCs y jutsus con modelo 3D (v0.7)
+
+### Personaje por piezas
+Cuerpo base de Meshy (imagen a imagen desde `ninja-frente.png` → imagen a 3D, 16,8k triángulos, textura 1024),
+4 peinados de Meshy (solo malla; Meshy los genera sobre un maniquí con cara y busto, que se recorta en Blender usando
+el cuerpo como referencia) y 4 prendas hechas en Blender copiando las caras del cuerpo con sus mismos pesos (se
+deforman igual que el cuerpo) e infladas 2–3 cm, suavizadas y reducidas a ~3.500 triángulos.
+
+| Frente | Espalda (emblema del clan en cada prenda) |
+|---|---|
+| ![](referencias/capturas-personajes/combinaciones_frente.jpg) | ![](referencias/capturas-personajes/combinaciones_espalda.jpg) |
+| ![](referencias/capturas-personajes/combinaciones_cerca_1.jpg) | ![](referencias/capturas-personajes/combinaciones_cerca_2.jpg) |
+
+### NPCs (guardia, ninja de agua, rebelde, comerciante, instructor y el ninja del campo)
+| Frente | Espalda |
+|---|---|
+| ![](referencias/capturas-personajes/npcs_cerca_1.jpg) | ![](referencias/capturas-personajes/npcs_espalda.jpg) |
+| ![](referencias/capturas-personajes/npcs_cerca_2.jpg) | ![](referencias/capturas-personajes/npcs_frente.jpg) |
+
+### Jutsus con modelo (N1 | N2 | N3)
+| Jutsu | N1 | N2 | N3 |
+|---|---|---|---|
+| Susanoo (costillas / torso con arco / armadura con espada, shader espectral morado) | ![](referencias/capturas-jutsus/susanoo_n1_b.jpg) | ![](referencias/capturas-jutsus/susanoo_n2_b.jpg) | ![](referencias/capturas-jutsus/susanoo_n3_b.jpg) |
+| Kirin (bestia de rayo que cae; shader espectral azul + rayos) | ![](referencias/capturas-jutsus/kirin_n1_b.jpg) | ![](referencias/capturas-jutsus/kirin_n2_b.jpg) | ![](referencias/capturas-jutsus/kirin_n3_b.jpg) |
+| Gran Dragón de Agua (1 / 2 / 3 dragones, shader de agua que fluye) | ![](referencias/capturas-jutsus/dragon_agua_n1_a.jpg) | ![](referencias/capturas-jutsus/dragon_agua_n2_a.jpg) | ![](referencias/capturas-jutsus/dragon_agua_n3_a.jpg) |
+| Madera (raíces / bosque / dragón de madera que surge entre raíces) | ![](referencias/capturas-jutsus/madera_n1_a.jpg) | ![](referencias/capturas-jutsus/madera_n2_a.jpg) | ![](referencias/capturas-jutsus/madera_n3_a.jpg) |
+| Golem de Tierra (se levanta del suelo; escala 0,8 / 1,4 / 2,6) | ![](referencias/capturas-jutsus/golem_tierra_n1_b.jpg) | ![](referencias/capturas-jutsus/golem_tierra_n2_b.jpg) | ![](referencias/capturas-jutsus/golem_tierra_n3_b.jpg) |
+
+- Meshy da la forma (Text to 3D, solo malla 5 créditos; madera y golem con textura, 15) y el juego pone el
+  material: espectral (Susanoo, Kirin), agua translúcida con flujo, espuma y ondulación (dragón de agua), textura
+  de Meshy con el toon del kit (madera, golem). En N3 hay cámara lenta (ya existía para los cinco).
+- El Kirin cae en 0,55 s: en las capturas de este entorno (~4 fps) se ve poco; en el teléfono se ve la caída entera.
+- El dragón de madera de Meshy salió con alas (más «occidental» que oriental); se dejó porque se lee bien como
+  dragón de madera y las raíces que brotan lo anclan al suelo.
+
+### Rendimiento con NPCs y jutsu N3 (calidad alta, 1280×720)
+| Vista | Llamadas | Primitivas | Captura |
+|---|---|---|---|
+| Puente con dos guardias | 270 | 484k | ![](referencias/capturas-jutsus/r0_puente_con_guardias.jpg) |
+| Guardias + Susanoo N3 | 95 | 239k | ![](referencias/capturas-jutsus/r1_guardias_y_susanoo_n3.jpg) |
+| Guardias + Golem N3 | 122 | 261k | ![](referencias/capturas-jutsus/r2_guardias_susanoo_y_golem_n3.jpg) |
+
+Estimación: en el S26 Ultra la plaza va a 60 FPS con 558–635 llamadas (medido por el usuario); estas escenas están
+por debajo de eso, así que se espera 60 en alta. Cada ninja por piezas cuesta ~4 llamadas y ~24k triángulos
+(cuerpo 16,8k + prenda 3,5k + pelo 2,5k); los modelos de jutsus, 6–9k.

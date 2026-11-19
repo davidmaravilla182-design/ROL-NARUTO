@@ -274,8 +274,8 @@ func _espuma(padre: Node3D, radio: float, cantidad: int) -> void:
 
 
 func _dragon(nodo: Node3D, radio: float, c: Color, n: int, fuego: bool) -> void:
-	var tierra := c.r > c.b and c.g > 0.3 and not fuego and c.r < 0.8
 	var madera := c.g > c.r and c.g > c.b
+	var tierra := c.r > c.b and c.g > 0.3 and not fuego and c.r < 0.8 and not madera
 	var mat: Material
 	if fuego:
 		mat = null
@@ -283,6 +283,35 @@ func _dragon(nodo: Node3D, radio: float, c: Color, n: int, fuego: bool) -> void:
 		mat = _toon(c)
 	else:
 		mat = Materiales.transparente(Color(c.r, c.g, c.b, 0.8), false)
+	# Dragones de agua y de madera: modelo de Meshy (agua que fluye / madera con su textura) y el cuerpo detrás.
+	var modelo: MeshInstance3D = null
+	if not fuego and not tierra:
+		if madera:
+			modelo = Kit.modelo_jutsu("dragon_madera")
+		else:
+			var ma := Shaders.material("agua_cuerpo")
+			ma.set_shader_parameter("color", Color(c.r, c.g, c.b).darkened(0.2))
+			modelo = Kit.modelo_jutsu("dragon_agua", ma)
+	if modelo != null:
+		modelo.scale = Vector3.ONE * radio * (1.1 if not madera else 0.9)
+		modelo.position = Vector3(0, -radio * 1.2, radio * 0.6)
+		nodo.add_child(modelo)
+		if madera:
+			_raices_surgen(nodo.global_position, radio)
+		else:
+			_espuma(nodo, radio, 50)
+			_sonar("chapoteo", -6.0, 0.6)
+		var cuerpo_m := Cuerpo.new()
+		cuerpo_m.separacion = radio * 1.0
+		nodo.add_child(cuerpo_m)
+		for i in mini(n, 5):
+			var r_m := radio * lerpf(0.55, 0.2, float(i) / 4.0)
+			var seg_m: MeshInstance3D = Materiales.esfera(r_m, mat if madera else modelo.material_override, 8)
+			seg_m.top_level = true
+			cuerpo_m.add_child(seg_m)
+			seg_m.global_position = nodo.global_position
+			cuerpo_m.segmentos.append(seg_m)
+		return
 	var cabeza: MeshInstance3D
 	if fuego:
 		cabeza = efectos.esfera_fuego(radio, 1.4)
@@ -324,6 +353,27 @@ func _dragon(nodo: Node3D, radio: float, c: Color, n: int, fuego: bool) -> void:
 	else:
 		_espuma(nodo, radio, 40)
 		_sonar("chapoteo", -6.0, 0.6)
+
+
+## El dragón de madera surge del suelo: raíces que brotan y se retuercen donde nace.
+func _raices_surgen(pos: Vector3, radio: float) -> void:
+	var raiz := Node3D.new()
+	add_child(raiz)
+	raiz.global_position = Vector3(pos.x, 0, pos.z)
+	for k in 7:
+		var a := TAU * k / 7.0 + randf() * 0.4
+		var tronco := Materiales.cilindro(0.06, 0.22 + radio * 0.05, 1.6 + randf() * 1.2 + radio, _toon(Color(0.38, 0.26, 0.15)), 6)
+		tronco.position = Vector3(cos(a), 0, sin(a)) * (0.6 + radio * 0.6)
+		tronco.rotation = Vector3(sin(a) * 0.5, 0, -cos(a) * 0.5)
+		tronco.scale = Vector3(1, 0.01, 1)
+		raiz.add_child(tronco)
+		var tw := tronco.create_tween()
+		tw.tween_property(tronco, "scale", Vector3.ONE, 0.35 + randf() * 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	efectos.polvo(pos, 24)
+	var fin := raiz.create_tween()
+	fin.tween_interval(1.6)
+	fin.tween_property(raiz, "scale", Vector3(1, 0.01, 1), 0.5)
+	fin.tween_callback(raiz.queue_free)
 
 
 # ============================================================================ explosión
@@ -1214,6 +1264,22 @@ func crear_criatura(c: Dictionary) -> Criatura:
 	match forma:
 		"golem", "golem_lava":
 			var lava := forma == "golem_lava"
+			var modelo_g: MeshInstance3D = null if lava else Kit.modelo_jutsu("golem")
+			if modelo_g != null:
+				# Golem de roca de Meshy: se levanta del suelo (sube desde abajo) entre polvo y piedras.
+				cuerpo.add_child(modelo_g)
+				modelo_g.position.y = -2.8
+				var tw_g := modelo_g.create_tween()
+				tw_g.tween_property(modelo_g, "position:y", 0.0, 0.9).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+				efectos.polvo(n.global_position, 40)
+				efectos.rafaga(n.global_position + Vector3(0, 0.3, 0), {"cantidad": 24, "vida": 0.9, "radio": 0.8, "direccion": Vector3.UP, "dispersion": 40.0,
+					"vel_min": 3.0, "vel_max": 7.0, "gravedad": Vector3(0, -14, 0), "tam_min": 0.12, "tam_max": 0.28, "color": Color(0.45, 0.38, 0.3), "aditivo": false})
+				for lado in [-1, 1]:
+					var ojo_g := Materiales.esfera(0.07, _brillo(Color(1.0, 0.65, 0.2), 3.0), 6)
+					ojo_g.position = Vector3(lado * 0.16, 2.25, 0.4)
+					modelo_g.add_child(ojo_g)
+				n.scale = Vector3.ONE * esc
+				return n
 			var mat := _toon(Color(0.42, 0.3, 0.2) if not lava else Color(0.18, 0.08, 0.06))
 			var torso := Materiales.caja(Vector3(1.2, 1.1, 0.8), mat)
 			torso.position.y = 1.5

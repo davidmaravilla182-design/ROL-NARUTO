@@ -24,6 +24,15 @@ func _initialize() -> void:
 	if OS.get_environment("GUION") == "tecnicas":
 		_guion_tecnicas()
 		return
+	if OS.get_environment("GUION") == "modelos":
+		# Jutsus con modelo 3D (Meshy) en sus tres niveles.
+		_guion_tecnicas([
+			["kirin", "sharingan", "kirin", 1.75, 1.9, 16.0, -14.0],
+		])
+		return
+	if OS.get_environment("GUION") == "rendimiento":
+		_guion_rendimiento()
+		return
 	if OS.get_environment("GUION") == "comparar":
 		_guion_comparar()
 		return
@@ -152,8 +161,8 @@ func _process(d: float) -> bool:
 
 
 ## Guion alternativo (GUION=tecnicas): los 6 jutsus del primer bloque en N1, N2 y N3, dos capturas cada uno.
-func _guion_tecnicas() -> void:
-	var casos := [
+func _guion_tecnicas(casos_propios: Array = []) -> void:
+	var casos := casos_propios if not casos_propios.is_empty() else [
 		# [jutsu, modo, acción, t captura a, t captura b, distancia cámara]
 		["kirin", "sharingan", "kirin", 1.85, 2.25, 9.0],
 		["rasengan", "", "rasengan", 0.45, 0.85, 6.5],
@@ -172,7 +181,8 @@ func _guion_tecnicas() -> void:
 				juego.transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": activos, "modo": c[1], "prueba": true})
 				juego.hud.construir({"activos": activos, "modo": c[1], "niveles_max": {}})
 				_nivel(n)])
-			guion.append([t0 + 0.1, func(): _listo(Vector3(0, 0, 10)); _rival(Vector3(0, 0, 4.5)); _seguir(); _cam(0.7, c[5], -0.22, 1.6)])
+			var z_rival: float = c[6] if c.size() > 6 else 4.5
+			guion.append([t0 + 0.1, func(): _listo(Vector3(0, 0, 10)); _rival(Vector3(0, 0, z_rival)); _seguir(); _cam(0.7, c[5], -0.22, 1.6)])
 			if c[1] != "":
 				guion.append([t0 + 0.2, func(): _accion("modo")])
 			guion.append([t0 + 0.35, func(): _accion(c[2])])
@@ -184,6 +194,27 @@ func _guion_tecnicas() -> void:
 			guion.append([t0 + 3.0, func(): _accion("modo") if c[1] != "" else null])
 			t0 += 3.4
 	guion.append([t0, func(): quit(0)])
+
+
+## Medida de rendimiento: jugador en el puente con los guardias encima, Susanoo N3 y luego Golem N3.
+func _guion_rendimiento() -> void:
+	guion = [[0.85, func(): menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[1.4, func():
+			juego.transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["susanoo", "golem_tierra", "", ""], "modo": "mangekyo", "prueba": true})
+			juego.hud.construir({"activos": ["susanoo", "golem_tierra", "", ""], "modo": "mangekyo", "niveles_max": {}})
+			_nivel(3)],
+		[1.5, func(): _listo(Vector3(0, 0, 84)); _seguir(); _cam(0.4, 9.0, -0.25, 1.6)],
+		[1.55, func(): juego.servidor.entidad_de_peer(1).invulnerable_t = 999.0],
+		[3.0, func(): _foto_medida("r0_puente_con_guardias")],
+		[3.1, func(): _accion("modo")],
+		[3.4, func(): _accion("susanoo")],
+		[4.6, func(): _foto_medida("r1_guardias_y_susanoo_n3")],
+		[6.0, func(): _accion("golem_tierra")],
+		[7.6, func(): _foto_medida("r2_guardias_susanoo_y_golem_n3")],
+		[7.8, func():
+			var f := FileAccess.open(salida.path_join("medidas.txt"), FileAccess.WRITE)
+			f.store_string("\n".join(_medidas))
+			quit(0)]]
 
 
 ## Enemigo quieto y con vida completa en `pos`, mirando al jugador.
