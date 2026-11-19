@@ -141,7 +141,7 @@ class Trazado:
         self.plataformas.append(p)
         self.ocupar(x, z, hx, hz)
 
-    def dispersar(self, rect, tipos, n, tintes="gris", reservas=False, intentos=40):
+    def dispersar(self, rect, tipos, n, tintes="gris", reservas=True, intentos=40):
         """Objetos repartidos al azar en un rectángulo (grupos: a veces apilados de 2-4 juntos)."""
         x0, z0, x1, z1 = rect
         hechos = 0
@@ -365,7 +365,7 @@ def main():
     tz["obstaculos_extra"] = extra
     tz["arcos"] = [{"pos": [27.0, 5.0], "giro": 90}, {"pos": [-27.0, -4.5], "giro": 90}, {"pos": [0.0, 26.5], "giro": 0},
                    {"pos": [0.0, 48.0], "giro": 0}, {"pos": [70.0, 5.0], "giro": 90}, {"pos": [-70.0, -4.5], "giro": 90}]
-    tubos = [{"pos": [-6.0, -21.6], "altura": 0.6, "giro": 0}, {"pos": [6.5, -21.6], "altura": 0.6, "giro": 0}]
+    tubos = [{"pos": [-22.0, -21.6], "altura": 0.6, "giro": 0}, {"pos": [22.5, -21.6], "altura": 0.6, "giro": 0}]
     # Distrito industrial: tuberías elevadas sobre sus dos calles (tramos de 12 m, a dos alturas).
     for z in range(-190, -64, 12):
         tubos.append({"pos": [87.0, float(z)], "altura": 6.2, "giro": 90})

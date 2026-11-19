@@ -9,7 +9,9 @@
     "_nota_escalada": "Caminar por paredes con chakra: al empujar contra una pared se sube a esta velocidad gastando chakra por segundo; arriba, el techo es suelo.",
     "escalada_velocidad": 6.5,
     "escalada_chakra_seg": 4.0,
-    "escalada_chakra_min": 2.0
+    "escalada_chakra_min": 2.0,
+    "escalada_altura_min": 2.0,
+    "escalada_espera": 0.15
   },
   "atributos": {
     "lista": [

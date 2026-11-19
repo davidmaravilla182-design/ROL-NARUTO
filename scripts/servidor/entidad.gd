@@ -23,6 +23,7 @@ var vel_y := 0.0
 var empuje := Vector3.ZERO    # velocidad externa (esquiva, retroceso) que decae
 var en_suelo := true
 var escalando := false   # subiendo por una pared con chakra
+var contacto_pared := 0.0   # segundos empujando contra una pared alta (la escalada empieza tras un instante)
 var en_charco := false
 
 var vida := 100.0

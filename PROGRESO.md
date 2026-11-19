@@ -13,8 +13,8 @@
 - [x] 2. Distrito del canal (más puentes, cascadas de desagües).            → APK
 - [x] 3. Mercado (calle techada, puestos, luz cálida).
 - [x] 4. Zona residencial (torres apiladas, pasarelas).                      → APK
-- [ ] 5. Distrito industrial (tuberías, chimeneas con vapor, tanques).
-- [ ] 6. Academia ninja (edificio + patio de prácticas).                     → APK
+- [x] 5. Distrito industrial (tuberías, chimeneas con vapor, tanques).
+- [x] 6. Academia ninja (edificio + patio de prácticas).                     → APK
 - [ ] 7. Puerta principal y muralla (puente sobre el lago).
 - [ ] 8. Torre del rostro al centro (sede del líder), integrada.             → APK
 - [ ] 9. Red local en el mapa nuevo (bots en distintos distritos), FPS/draw calls por distrito.
@@ -35,6 +35,10 @@
   Meshy a ambos lados, 56 farolillos de papel y 5 luces cálidas, entrada emblemática (arco sin colisión central);
   residencial con 6 torres cilíndricas de Meshy, 4 pasarelas a 10–14 m y escalera de 12 m.
   Industrial: 28 tramos de tubería elevada sobre sus calles con pórticos.
+- **Distritos 5 y 6**: industrial con 4 talleres, 6 chimeneas con vapor denso, 46 tanques, silos, ~70 objetos y
+  tuberías elevadas; academia de Meshy (escala 1,25) con patio de prácticas (4 muñecos, faroles, bancas).
+  Escalada: solo paredes de más de 2 m y tras empujar 0,15 s (en combate no se trepa a las cajas sin querer).
+  Calles reservadas libres de objetos; pruebas de recorrido: plaza → puerta → puente → orilla y plaza → torre.
 - **Meshy**: 18 modelos (Text to 3D, Smart Topology meshy-t2.5, 15 créditos c/u = 270). Saldo 1135 → 865.
 
 ---

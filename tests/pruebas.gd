@@ -515,4 +515,18 @@ func probar_aldea() -> void:
 		j.entrada_mov = Vector2(-1, 0)
 		s.paso(s.dt_tick)
 	comprobar(j.pos.y < 0.5, "sin chakra no se escala")
+	# Recorridos a pie: de la plaza a la puerta y por el puente hasta la orilla; y de la plaza a la torre.
+	j.chakra = 0.0
+	j.pos = Vector3(0, 0, 30)
+	for i in 30 * 30:
+		j.entrada_mov = Vector2(0, 1)
+		j.chakra = 0.0
+		s.paso(s.dt_tick)
+	comprobar(j.pos.z > 150.0, "se sale por la puerta y el puente hasta la orilla (z=%.1f)" % j.pos.z)
+	j.pos = Vector3(0, 0, 0)
+	for i in 30 * 12:
+		j.entrada_mov = Vector2(0, -1)
+		j.chakra = 0.0
+		s.paso(s.dt_tick)
+	comprobar(j.pos.z < -55.0, "de la plaza se cruza el canal hasta la explanada de la torre (z=%.1f)" % j.pos.z)
 	s.free()

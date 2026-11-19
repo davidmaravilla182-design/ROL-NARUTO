@@ -824,17 +824,25 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 		e.en_suelo = false
 	var p2 := mapa.resolver_colision(Vector2(nueva.x, nueva.z), Datos.sim("radio_entidad"), nueva.y)
 	# Caminar por paredes con chakra: empujar contra una pared más alta que uno la sube.
+	# Solo paredes altas (las cajas y barriles se saltan) y tras empujar un instante, para no escalar sin querer en combate.
+	var estaba := e.escalando
 	e.escalando = false
+	var contra_pared := false
 	if puede_moverse and e.entrada_mov.length() > 0.3 and e.chakra > Datos.sim("escalada_chakra_min"):
 		var empujado := Vector2(nueva.x, nueva.z) - p2
 		var quiere := Vector2(horiz.x, horiz.z)
 		if empujado.length() > 0.001 and quiere.length() > 0.1 and empujado.normalized().dot(quiere.normalized()) > 0.4:
 			var tope := mapa.altura_pared(p2, Datos.sim("radio_entidad") + 0.12, nueva.y)
-			if tope > nueva.y + 0.25:
-				e.vel_y = Datos.sim("escalada_velocidad")
-				e.chakra = maxf(e.chakra - Datos.sim("escalada_chakra_seg") * dt, 0.0)
-				e.escalando = true
-				e.en_suelo = false
+			if tope > nueva.y + 0.25 and (tope >= Datos.sim("escalada_altura_min") or estaba):
+				contra_pared = true
+				e.contacto_pared += dt
+				if e.contacto_pared >= Datos.sim("escalada_espera") or estaba:
+					e.vel_y = Datos.sim("escalada_velocidad")
+					e.chakra = maxf(e.chakra - Datos.sim("escalada_chakra_seg") * dt, 0.0)
+					e.escalando = true
+					e.en_suelo = false
+	if not contra_pared:
+		e.contacto_pared = 0.0
 	if e.estado == "chidori_embiste" and p2.distance_to(Vector2(nueva.x, nueva.z)) > 0.05:
 		# Chocó contra una pared: termina el embiste.
 		e.empuje = Vector3.ZERO
