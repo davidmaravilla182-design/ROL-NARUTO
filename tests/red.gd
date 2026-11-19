@@ -51,6 +51,10 @@ func _preparar() -> void:
 	local = TransporteLocal.new()
 	raiz_s.add_child(local)
 	local.iniciar(servidor)
+	var pj_a := Creacion.nuevo()
+	pj_a["nombre"] = "Kaito_anfitrion"
+	pj_a["aspecto"]["peinado"] = "coleta"
+	local.enviar({"t": Protocolo.C_PERSONAJE, "datos": pj_a})
 	red_srv = TransporteENet.new()
 	red_srv.name = "Red"
 	raiz_s.add_child(red_srv)
@@ -96,6 +100,8 @@ func _crear_bot(nombre: String, simular: bool) -> Dictionary:
 		r.enviar({"t": Protocolo.C_PERSONAJE, "datos": pj})
 		r.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["bola_fuego", "lava", "hielo", "prision_agua"], "modo": "", "prueba": true}))
 	r.estado_recibido.connect(func(est):
+		if est.has("jugadores"):
+			b["info"] = est["jugadores"]
 		b["ultimo"] = est
 		b["eventos"].append_array(est.get("eventos", [])))
 	r.rechazado.connect(func(_m): _rechazado = true)
@@ -232,6 +238,14 @@ func _comprobar_mismo_estado() -> void:
 				nombres_ok = false
 		comprobar(ids.size() == ref.size() and max_err < 0.05, "%s ve el mismo estado que el servidor (%d entidades, error %.3f)" % [b["nombre"], ids.size(), max_err])
 	comprobar(nombres_ok, "todos ven el nombre de cada jugador")
+	# Cada invitado recibe el aspecto (personalización) de los demás jugadores.
+	for b in bots:
+		var vistos := {}
+		for inf in b.get("info", []):
+			if not (inf.get("aspecto", {}) as Dictionary).is_empty():
+				vistos[str(inf["nombre"])] = str(inf["aspecto"].get("peinado", ""))
+		var otro := "Bot2" if b["nombre"] == "Bot1" else "Bot1"
+		comprobar(vistos.has(otro) and vistos.has("Kaito_anfitrion"), "%s recibe la personalización del otro invitado y del anfitrión %s" % [b["nombre"], str(vistos)])
 
 
 func probar_prediccion() -> void:

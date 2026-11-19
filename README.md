@@ -119,4 +119,4 @@ Otros botones de depuración:
 - Decisiones tomadas durante el desarrollo: [DECISIONES.md](DECISIONES.md)
 - Licencias y créditos: [assets/LICENCIAS.md](assets/LICENCIAS.md)
 - Todos los datos de diseño (nombres, jutsus, atributos, textos) están en [`/data`](data). Cambiar esos JSON renombra o rebalancea el juego sin tocar código.
-- Verificación local (headless): `tools/verificar.sh` (importa el proyecto, corre 89 pruebas de combate, 88 del repertorio, 36 de personaje, 18 de red local (servidor + 2 bots) y una prueba de humo). Hook de pre-commit: `git config core.hooksPath .githooks`.
+- Verificación local (headless): `tools/verificar.sh` (importa el proyecto, corre 89 pruebas de combate, 88 del repertorio, 36 de personaje, 20 de red local (servidor + 2 bots) y una prueba de humo). Hook de pre-commit: `git config core.hooksPath .githooks`.

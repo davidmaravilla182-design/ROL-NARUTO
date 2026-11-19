@@ -27,6 +27,7 @@ var conectado_ok := false
 var _api: SceneMultiplayer
 var _eventos_pendientes: Dictionary = {}   # servidor: peer -> [eventos sin enviar]
 var _seq_peer: Dictionary = {}             # servidor: peer -> nº de instantánea
+var _info_pendiente: Dictionary = {}       # servidor: peer -> "jugadores" (nombre y aspecto) aún sin enviar
 var _cuenta_tick := 0
 var _eventos_cliente: Array = []           # cliente: eventos fiables aún no inyectados
 var _ultimo_seq := -1
@@ -122,6 +123,9 @@ func _on_estado_servidor(peer_id: int, estado: Dictionary) -> void:
 	var evs: Array = estado.get("eventos", [])
 	if not evs.is_empty():
 		(_eventos_pendientes[peer_id] as Array).append_array(evs)
+	# Nombre y aspecto de los jugadores: si llegan en un tick que no se envía, viajan en el siguiente.
+	if estado.has("jugadores"):
+		_info_pendiente[peer_id] = estado["jugadores"]
 	if peer_id == _primer_peer():
 		_cuenta_tick += 1
 	# 30 ticks/s en el servidor → ~20 instantáneas/s por la red (2 de cada 3 ticks).
@@ -134,6 +138,9 @@ func _on_estado_servidor(peer_id: int, estado: Dictionary) -> void:
 		_eventos_pendientes[peer_id] = []
 	var est := estado.duplicate()
 	est["eventos"] = []
+	if _info_pendiente.has(peer_id):
+		est["jugadores"] = _info_pendiente[peer_id]
+		_info_pendiente.erase(peer_id)
 	est["n"] = int(_seq_peer[peer_id])
 	_seq_peer[peer_id] = int(_seq_peer[peer_id]) + 1
 	# Las recargas y niveles solo le importan a su dueño: se quitan de los demás para ahorrar bytes.
