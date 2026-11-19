@@ -125,5 +125,283 @@
     "rango": "genin",
     "linajes": [],
     "contratos": []
+  },
+  "guardia_lluvia": {
+    "nombre": "Guardia de la Lluvia",
+    "tipo": "enemigo",
+    "clan": "sin_clan",
+    "aldea": "lluvia",
+    "naturalezas": [
+      "agua"
+    ],
+    "atributos": {
+      "ninjutsu": 2,
+      "taijutsu": 5,
+      "genjutsu": 1,
+      "inteligencia": 2,
+      "fuerza": 5,
+      "velocidad": 4,
+      "estamina": 4,
+      "sellos": 2
+    },
+    "jutsus": [
+      "golpe",
+      "esquivar"
+    ],
+    "ia": {
+      "perfil": "agresivo",
+      "distancia_preferida": 1.6,
+      "rango_melee": 2.3,
+      "prob_esquivar": 0.2,
+      "umbral_huida": 0.0,
+      "cambio_lateral": 1.8,
+      "pausa_reaccion": 0.12,
+      "aggro": 18.0
+    },
+    "aspecto": {
+      "piel": "#dcbb98",
+      "pelo": "#2a2d36",
+      "ojos": "#202020",
+      "camisa": "#3e4656",
+      "pantalon": "#323947",
+      "chaleco": "#747c88",
+      "banda": "#26304f",
+      "vendas": "#d2ccbb",
+      "sandalias": "#2a2a30",
+      "emblema_espalda": false,
+      "mascara": true,
+      "peinado": "corto",
+      "capa": false,
+      "capa_color": "#3e4556",
+      "ropa": "impermeable",
+      "color_prenda": "#3e4656",
+      "accesorios": [
+        "respirador",
+        "kunai"
+      ]
+    },
+    "rango": "chunin",
+    "linajes": [],
+    "contratos": []
+  },
+  "ninja_agua": {
+    "nombre": "Ninja de agua",
+    "tipo": "enemigo",
+    "clan": "sin_clan",
+    "aldea": "lluvia",
+    "naturalezas": [
+      "agua"
+    ],
+    "atributos": {
+      "ninjutsu": 5,
+      "taijutsu": 2,
+      "genjutsu": 2,
+      "inteligencia": 4,
+      "fuerza": 2,
+      "velocidad": 4,
+      "estamina": 3,
+      "sellos": 4
+    },
+    "jutsus": [
+      "golpe",
+      "bala_agua",
+      "dragon_agua",
+      "esquivar"
+    ],
+    "ia": {
+      "perfil": "distancia",
+      "distancia_preferida": 12.0,
+      "distancia_minima": 8.0,
+      "rango_disparo": 18.0,
+      "rango_melee": 2.0,
+      "prob_esquivar": 0.55,
+      "umbral_huida": 0.3,
+      "cambio_lateral": 2.2,
+      "pausa_reaccion": 0.4,
+      "aggro": 22.0
+    },
+    "aspecto": {
+      "piel": "#dcbb98",
+      "pelo": "#2f5f8a",
+      "ojos": "#202020",
+      "camisa": "#3e4656",
+      "pantalon": "#323947",
+      "chaleco": "#747c88",
+      "banda": "#26304f",
+      "vendas": "#d2ccbb",
+      "sandalias": "#2a2a30",
+      "emblema_espalda": false,
+      "mascara": false,
+      "peinado": "largo",
+      "capa": false,
+      "capa_color": "#3e4556",
+      "ropa": "capa",
+      "color_prenda": "#2f4a5e",
+      "accesorios": []
+    },
+    "rango": "chunin",
+    "linajes": [],
+    "contratos": []
+  },
+  "rebelde": {
+    "nombre": "Remanente rebelde",
+    "tipo": "enemigo",
+    "clan": "sin_clan",
+    "aldea": "lluvia",
+    "naturalezas": [
+      "agua"
+    ],
+    "atributos": {
+      "ninjutsu": 3,
+      "taijutsu": 4,
+      "genjutsu": 5,
+      "inteligencia": 3,
+      "fuerza": 4,
+      "velocidad": 3,
+      "estamina": 3,
+      "sellos": 1
+    },
+    "jutsus": [
+      "golpe",
+      "bala_agua",
+      "esquivar"
+    ],
+    "ia": {
+      "perfil": "rebelde",
+      "distancia_preferida": 5.0,
+      "rango_disparo": 15.0,
+      "rango_melee": 2.3,
+      "prob_esquivar": 0.5,
+      "umbral_huida": 0.0,
+      "cambio_lateral": 2.0,
+      "pausa_reaccion": 0.25,
+      "aggro": 20.0,
+      "genjutsu_recarga": 12.0,
+      "genjutsu_duracion": 3.5,
+      "genjutsu_rango": 14.0,
+      "humo_recarga": 9.0,
+      "vida_mult": 2.2
+    },
+    "aspecto": {
+      "piel": "#dcbb98",
+      "pelo": "#3b2a1e",
+      "ojos": "#202020",
+      "camisa": "#3e4656",
+      "pantalon": "#323947",
+      "chaleco": "#747c88",
+      "banda": "#26304f",
+      "vendas": "#d2ccbb",
+      "sandalias": "#2a2a30",
+      "emblema_espalda": false,
+      "mascara": false,
+      "peinado": "puntas",
+      "capa": false,
+      "capa_color": "#3e4556",
+      "ropa": "ligera",
+      "color_prenda": "#4a4038",
+      "accesorios": [
+        "mascara_rebelde",
+        "banda_tachada"
+      ]
+    },
+    "rango": "jonin",
+    "linajes": [],
+    "contratos": []
+  },
+  "comerciante": {
+    "nombre": "Comerciante del mercado",
+    "tipo": "aldeano",
+    "clan": "sin_clan",
+    "aldea": "lluvia",
+    "naturalezas": [],
+    "atributos": {
+      "ninjutsu": 1,
+      "taijutsu": 1,
+      "genjutsu": 1,
+      "inteligencia": 3,
+      "fuerza": 2,
+      "velocidad": 2,
+      "estamina": 2,
+      "sellos": 1
+    },
+    "jutsus": [
+      "golpe"
+    ],
+    "ia": {
+      "perfil": "mision"
+    },
+    "aspecto": {
+      "piel": "#dcbb98",
+      "pelo": "#5d4630",
+      "ojos": "#202020",
+      "camisa": "#3e4656",
+      "pantalon": "#323947",
+      "chaleco": "#747c88",
+      "banda": "#26304f",
+      "vendas": "#d2ccbb",
+      "sandalias": "#2a2a30",
+      "emblema_espalda": false,
+      "mascara": false,
+      "peinado": "corto",
+      "capa": false,
+      "capa_color": "#3e4556",
+      "ropa": "ligera",
+      "color_prenda": "#7a5a2a",
+      "accesorios": [
+        "delantal",
+        "sombrero_paja"
+      ]
+    },
+    "rango": "civil",
+    "linajes": [],
+    "contratos": []
+  },
+  "instructor": {
+    "nombre": "Instructor de la academia",
+    "tipo": "aldeano",
+    "clan": "sin_clan",
+    "aldea": "lluvia",
+    "naturalezas": [],
+    "atributos": {
+      "ninjutsu": 4,
+      "taijutsu": 4,
+      "genjutsu": 2,
+      "inteligencia": 4,
+      "fuerza": 4,
+      "velocidad": 4,
+      "estamina": 3,
+      "sellos": 1
+    },
+    "jutsus": [
+      "golpe"
+    ],
+    "ia": {
+      "perfil": "mision"
+    },
+    "aspecto": {
+      "piel": "#dcbb98",
+      "pelo": "#1a1f2e",
+      "ojos": "#202020",
+      "camisa": "#3e4656",
+      "pantalon": "#323947",
+      "chaleco": "#747c88",
+      "banda": "#26304f",
+      "vendas": "#d2ccbb",
+      "sandalias": "#2a2a30",
+      "emblema_espalda": true,
+      "mascara": false,
+      "peinado": "coleta",
+      "capa": false,
+      "capa_color": "#3e4556",
+      "ropa": "chaleco",
+      "color_prenda": "#56644e",
+      "accesorios": [
+        "pergamino",
+        "chaleco_rango"
+      ]
+    },
+    "rango": "jonin",
+    "linajes": [],
+    "contratos": []
   }
 }

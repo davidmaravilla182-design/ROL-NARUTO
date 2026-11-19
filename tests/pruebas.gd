@@ -29,6 +29,7 @@ func _initialize() -> void:
 	probar_plataforma_lengua()
 	probar_piezas_suelo()
 	probar_aldea()
+	probar_npcs()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -585,4 +586,43 @@ func probar_aldea() -> void:
 		j.chakra = 0.0
 		s.paso(s.dt_tick)
 	comprobar(j.pos.z < -55.0, "de la plaza se cruza el canal hasta la explanada de la torre (z=%.1f)" % j.pos.z)
+	s.free()
+
+
+## NPCs de la aldea: aparecen en sus zonas, solo atacan dentro de su radio, el rebelde está oculto y reaparecen.
+func probar_npcs() -> void:
+	var s := ServidorJuego.new()
+	s.auto_procesar = false
+	s.iniciar()
+	s.poblar_aldea()
+	s.agregar_jugador(1)
+	var tipos := {}
+	var ocultos := 0
+	for e in s.entidades:
+		tipos[e.plantilla_id] = int(tipos.get(e.plantilla_id, 0)) + 1
+		if e.oculto:
+			ocultos += 1
+	comprobar(tipos.get("guardia_lluvia", 0) >= 2 and tipos.get("ninja_agua", 0) >= 2 and tipos.get("rebelde", 0) == 1, "aparecen guardias, ninjas de agua y un rebelde (%s)" % str(tipos))
+	comprobar(ocultos == 1, "el rebelde empieza oculto (aparece de vez en cuando)")
+	var j := s.entidad_de_peer(1)
+	var g: EntidadServidor = null
+	for e in s.entidades:
+		if e.plantilla_id == "guardia_lluvia":
+			g = e
+			break
+	var p0 := g.pos
+	for i in 60:
+		s.paso(s.dt_tick)
+	comprobar(g.pos.distance_to(p0) < 2.0, "un guardia lejos del jugador se queda en su puesto")
+	j.pos = g.pos + Vector3(6, 0, 0)
+	var d0 := j.pos.distance_to(g.pos)
+	for i in 30:
+		s.paso(s.dt_tick)
+	comprobar(j.pos.distance_to(g.pos) < d0 - 1.0, "el guardia (agresivo) se lanza sobre el jugador cercano")
+	var guardias_estado := g.vida
+	g.vida = 0.0
+	g.poner_estado("muerto", 0.0)
+	for i in int(31.0 / s.dt_tick):
+		s.paso(s.dt_tick)
+	comprobar(g.vivo() and g.vida > 0.0 and guardias_estado > 0.0, "el guardia reaparece a los 30 s")
 	s.free()

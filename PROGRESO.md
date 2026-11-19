@@ -1,3 +1,28 @@
+# PROGRESO — Personaje por piezas, 5 NPCs y jutsus con modelo 3D (v0.7, noche)
+
+> Meshy: presupuesto 450 créditos; preguntar solo si una operación pasa de 40. Commit y push tras cada avance verificado.
+
+- [x] 1. Personaje por piezas: cuerpo base (pose A, ropa interior ninja negra, vendas, sandalias, sin chaleco ni pelo),
+        4 peinados (puntas, corto, largo, coleta) y 4 prendas (chaleco, impermeable, ropa ligera, capa con capucha)
+        sobre el esqueleto de 17 huesos; colores por pieza; emblema del clan en la espalda de cualquier prenda;
+        creación con vista previa, retrato del HUD y red.
+- [x] 2. Cinco NPCs con piezas + piezas propias: guardia de la lluvia (kunai, agresivo), ninja de agua (distancia),
+        remanente rebelde (fuerte, genjutsu que nubla, bombas de humo, raro); comerciante y instructor (misiones).
+        Enemigos en zonas de combate fuera de la plaza; los de misiones en su distrito con Interactuar.
+- [ ] 3. Jutsus con modelo 3D (Meshy da la forma, los efectos van en shaders): Susanoo (3 niveles), Kirin, Gran Dragón
+        de Agua, Dragón de Madera, Golem de Tierra; 3 niveles (nivel 3 enorme con cámara lenta).
+  Hecho (1): cuerpo base de Meshy (imagen a imagen desde ninja-frente.png + imagen a 3D, 16,8k triángulos), 4 peinados
+  de Meshy (solo malla, recortado el maniquí que traen debajo) y 4 prendas hechas en Blender copiando las caras del
+  cuerpo con sus pesos (se deforman igual que él) e infladas 2–3 cm; impermeable con faldón y capa con capucha.
+  Emblema del clan en la espalda de cada prenda. Colores por pieza (prenda, interior, pelo, piel) en la creación,
+  vista previa, retrato y red (el aspecto viaja completo). `tools/blender/ninja_piezas.py`, `tools/vista_piezas.gd`.
+  Hecho (2): guardia (kunai, agresivo), ninja de agua (mantiene la distancia, dragón de agua), rebelde (genjutsu que
+  nubla la pantalla y bombas de humo; aparece cada 90–180 s en una de 3 zonas, 2,2× vida), comerciante e instructor
+  (dicen la misión que darán). Enemigos con radio de detección y regreso a su puesto; reaparecen a los 30 s.
+- [ ] Cierre: capturas (combinaciones, NPCs, jutsus ×3 niveles), medida con varios NPCs y un jutsu N3, APK, reporte.
+
+---
+
 # PROGRESO — Correcciones tras probar el mapa en el teléfono (v0.6.1)
 
 - [x] 1. Correr por paredes como en el anime (de pie y perpendicular, brillo de chakra en los pies, salpicaduras,

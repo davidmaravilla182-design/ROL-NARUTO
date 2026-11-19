@@ -23,6 +23,8 @@ var vel_y := 0.0
 var empuje := Vector3.ZERO    # velocidad externa (esquiva, retroceso) que decae
 var en_suelo := true
 var escalando := false   # subiendo por una pared con chakra
+var oculto := false        # NPC que todavía no aparece (el rebelde): no se envía ni se simula
+var muerto_t := 0.0        # segundos desde que murió (reaparición de los NPC)
 var pared := Vector2.ZERO   # normal de la pared por la que corre (hacia afuera)
 var agua := 0              # 0 en tierra, 1 caminando sobre el agua con chakra, 2 nadando (sin chakra)
 var contacto_pared := 0.0   # segundos empujando contra una pared alta (la escalada empieza tras un instante)
@@ -72,6 +74,8 @@ func configurar(plantilla: String, p_id: int) -> void:
 	stats = Combate.estadisticas(attrs)
 	if d.has("vida_fija"):
 		stats["vida_max"] = float(d["vida_fija"])
+	# NPCs más resistentes (el remanente rebelde es un reto).
+	stats["vida_max"] = float(stats["vida_max"]) * float(d.get("ia", {}).get("vida_mult", 1.0))
 	reiniciar()
 
 
@@ -83,6 +87,7 @@ func reiniciar() -> void:
 	chakra = stats["chakra_max"]
 	estamina = stats["estamina_max"]
 	estado = "libre"
+	muerto_t = 0.0
 	estado_t = 0.0
 	estado_total = 0.0
 	accion = {}

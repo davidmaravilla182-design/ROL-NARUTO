@@ -35,6 +35,9 @@ var _boton_interactuar: Button
 var _dialogo: Label
 var _dialogo_txt: Label
 var _dialogo_t := 0.0
+var _genjutsu: ColorRect
+var _genjutsu_t := 0.0
+var _genjutsu_total := 1.0
 var mapa_completo: MapaCompleto
 var _mapa: Mapa
 var raiz: Control
@@ -198,6 +201,30 @@ void fragment() {
 	_fps.add_theme_constant_override("outline_size", 5)
 	_fps.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 
+	# Genjutsu: la pantalla se nubla y gira en morado unos segundos.
+	_genjutsu = ColorRect.new()
+	_genjutsu.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_genjutsu.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var shg := Shader.new()
+	shg.code = """shader_type canvas_item;
+uniform sampler2D pantalla : hint_screen_texture, filter_linear_mipmap;
+uniform float intensidad = 0.0;
+void fragment() {
+	vec2 c = SCREEN_UV - 0.5;
+	float r = length(c);
+	float ang = intensidad * 0.9 * sin(TIME * 1.7) * (1.0 - r);
+	vec2 uv = vec2(cos(ang) * c.x - sin(ang) * c.y, sin(ang) * c.x + cos(ang) * c.y) + 0.5;
+	uv += vec2(sin(TIME * 3.0 + SCREEN_UV.y * 12.0), cos(TIME * 2.3 + SCREEN_UV.x * 10.0)) * 0.006 * intensidad;
+	vec3 borroso = textureLod(pantalla, uv, 3.5 * intensidad).rgb;
+	float vin = smoothstep(0.25, 0.75, r);
+	vec3 tinte = mix(borroso, vec3(0.35, 0.1, 0.5), 0.25 * intensidad + vin * 0.45 * intensidad);
+	COLOR = vec4(tinte, intensidad);
+}"""
+	var mg := ShaderMaterial.new()
+	mg.shader = shg
+	_genjutsu.material = mg
+	_genjutsu.visible = false
+	raiz.add_child(_genjutsu)
 	# Interactuar con aldeanos y puntos de misión (aparece solo cuando hay uno cerca).
 	_boton_interactuar = Button.new()
 	_boton_interactuar.text = "Interactuar"
@@ -506,6 +533,11 @@ func _dibujar_banner() -> void:
 
 
 func _process(delta: float) -> void:
+	if _genjutsu_t > 0.0 and _genjutsu != null:
+		_genjutsu_t -= delta
+		var k := clampf(minf(_genjutsu_t, _genjutsu_total - _genjutsu_t) / 0.5, 0.0, 1.0)
+		(_genjutsu.material as ShaderMaterial).set_shader_parameter("intensidad", k)
+		_genjutsu.visible = _genjutsu_t > 0.0
 	if _dialogo_t > 0.0:
 		_dialogo_t -= delta
 		if _dialogo_t <= 0.0 and _dialogo != null:
@@ -653,3 +685,11 @@ func dialogo(texto: String, segundos := 4.5) -> void:
 	_dialogo.visible = true
 	_dialogo_t = segundos
 	_reordenar()
+
+
+## Genjutsu: nubla y hace girar la pantalla durante «segundos» (entra y sale suave).
+func genjutsu(segundos: float) -> void:
+	_genjutsu_total = segundos
+	_genjutsu_t = segundos
+	if _genjutsu != null:
+		_genjutsu.visible = true

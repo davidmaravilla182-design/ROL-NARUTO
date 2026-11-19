@@ -1,0 +1,17 @@
+{
+ "id": "01a1f294-8691-7425-8075-0b829e47b39a",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 3933548362,
+ "prompt": "giant armored samurai spirit warrior with long nose tengu mask helmet, wings of armor plates, holding a long sword, full body, stylized anime game asset, single creature, dramatic pose, clean readable silhouette, no base, no ground",
+ "texture_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795071186267,
+ "progress": 100,
+ "started_at": 1795071186275,
+ "finished_at": 1795071221043,
+ "task_error": null,
+ "consumed_credits": 5
+}

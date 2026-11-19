@@ -1,0 +1,97 @@
+{
+ "modelos": {
+  "susanoo_1": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-6a3f-7328-9409-a3bc22a636fe"
+  },
+  "susanoo_2": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-79fb-70d3-b532-2cb250f36354"
+  },
+  "susanoo_3": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-8691-7425-8075-0b829e47b39a"
+  },
+  "kirin": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-9615-7761-8c3d-3693153e14ee"
+  },
+  "dragon_agua": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-a59e-774a-bf13-fff121649fdb"
+  },
+  "dragon_madera": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f294-af5a-76bb-a3de-e73fd2e92e8d",
+   "textura": "01a1f295-a010-7315-a028-6ab17f5a76ff"
+  },
+  "golem_tierra": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f294-ba84-773e-a9b6-a69b90b3ba15",
+   "textura": "01a1f295-5a49-71be-a99b-01f4572d6f19"
+  },
+  "pelo_puntas_v1": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-3ba5-77d3-9d4c-ee05eab18ec6"
+  },
+  "pelo_corto_v1": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-48d6-76ee-bc40-82aee18a9c2f"
+  },
+  "pelo_largo_v1": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-50e7-7112-be03-e03ffef95616"
+  },
+  "pelo_coleta_v1": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f294-5c46-7607-a29a-fb52fa32e386"
+  },
+  "pelo_puntas": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f299-25d2-72b4-a19c-67120921d359"
+  },
+  "pelo_corto": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f299-293d-75ce-a362-2353a818525d"
+  },
+  "pelo_largo": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f299-2c83-7187-8136-ba9a2cd34bf9"
+  },
+  "pelo_coleta": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 5,
+   "vista": "01a1f299-2f9f-76b2-be2c-527da41adbf4"
+  }
+ },
+ "creditos": 95
+}

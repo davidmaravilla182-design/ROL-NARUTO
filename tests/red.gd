@@ -45,6 +45,7 @@ func _preparar() -> void:
 	raiz_s.add_child(servidor)
 	servidor.iniciar()
 	servidor.poblar_entrenamiento()
+	servidor.poblar_aldea()
 	for e in servidor.entidades:
 		if e.tipo == "enemigo":
 			e.ia = null   # quieto: la prueba compara posiciones
@@ -179,7 +180,7 @@ func _process(_d: float) -> bool:
 				var r2: TransporteENet = bots[1]["red"]
 				comprobar(r2.ping_ms > 0.0, "ping medido con el simulador de latencia (%.0f ms)" % r2.ping_ms)
 				# Viaje rápido: cada bot va a un distrito distinto del mapa completo.
-				(bots[0]["red"] as TransporteENet).enviar({"t": Protocolo.C_VIAJAR, "distrito": "industrial"})
+				(bots[0]["red"] as TransporteENet).enviar({"t": Protocolo.C_VIAJAR, "distrito": "academia"})
 				(bots[1]["red"] as TransporteENet).enviar({"t": Protocolo.C_VIAJAR, "distrito": "mercado"})
 				_fase = 6
 				_t0 = Time.get_ticks_msec()
@@ -231,7 +232,7 @@ func _comprobar_distritos() -> void:
 	var j2 := servidor.entidad(int(bots[1]["id"]))
 	var d1 := servidor.mapa.distrito_en(j1.pos2())
 	var d2 := servidor.mapa.distrito_en(j2.pos2())
-	comprobar(d1 == "industrial" and d2 == "mercado", "viaje rápido: Bot1 en %s y Bot2 en %s (%.0f m entre ellos)" % [d1, d2, j1.pos.distance_to(j2.pos)])
+	comprobar(d1 == "academia" and d2 == "mercado", "viaje rápido: Bot1 en %s y Bot2 en %s (%.0f m entre ellos)" % [d1, d2, j1.pos.distance_to(j2.pos)])
 	for b in bots:
 		var otro := j2 if b == bots[0] else j1
 		var visto := false
@@ -244,7 +245,8 @@ func _comprobar_distritos() -> void:
 func _comprobar_mismo_estado() -> void:
 	var ref := {}
 	for e in servidor.entidades:
-		ref[e.id] = e
+		if not e.oculto:
+			ref[e.id] = e
 	var nombres_ok := true
 	for b in bots:
 		var est: Dictionary = b["ultimo"]

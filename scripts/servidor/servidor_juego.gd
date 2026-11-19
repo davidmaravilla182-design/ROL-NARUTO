@@ -56,6 +56,81 @@ func poblar_entrenamiento() -> void:
 		m.yaw = 0.0
 
 
+var _rebelde: EntidadServidor
+var _rebelde_t := 0.0
+
+
+## Enemigos de las zonas de combate (fuera de la plaza) y el remanente rebelde, que aparece de vez en cuando.
+func poblar_aldea() -> void:
+	var npcs: Dictionary = Datos.escenario.get("aldea", {}).get("npcs", {})
+	if npcs.is_empty() or mapa.radio_caminable <= 0.0:
+		return
+	for en in npcs.get("enemigos", []):
+		var p := Vector2(float(en["pos"][0]), float(en["pos"][1]))
+		var e := _crear_entidad(str(en["plantilla"]), Vector3(p.x, 0, p.y))
+		e.equipo = 2
+		e.ia = IaEnemigo.new(e)
+		e.yaw = randf() * TAU
+	var r: Dictionary = npcs.get("rebelde", {})
+	if not r.is_empty():
+		_rebelde = _crear_entidad(str(r["plantilla"]), Vector3.ZERO)
+		_rebelde.equipo = 2
+		_rebelde.ia = IaEnemigo.new(_rebelde)
+		_rebelde.oculto = true
+		_rebelde.estado = "muerto"
+		_rebelde_t = randf_range(float(r["espera"][0]), float(r["espera"][1])) * 0.5
+
+
+## Reaparición de los enemigos de la aldea y aparición ocasional del rebelde en una de sus zonas.
+func _reapariciones(dt: float) -> void:
+	var npcs: Dictionary = Datos.escenario.get("aldea", {}).get("npcs", {})
+	if npcs.is_empty():
+		return
+	var espera := float(npcs.get("reaparicion", 30.0))
+	for e in entidades:
+		if e.ia == null or e.oculto or e.vivo() or e == _rebelde:
+			continue
+		if e.plantilla_id == "ninja_lluvia":
+			continue   # el del campo de entrenamiento reaparece con el botón
+		e.muerto_t += dt
+		if e.muerto_t >= espera:
+			e.reiniciar()
+			e.ia.reiniciar()
+			_evento({"tipo": "reaparecer_npc", "entidad": e.id})
+	if _rebelde == null:
+		return
+	if _rebelde.oculto or not _rebelde.vivo():
+		_rebelde_t -= dt
+		if _rebelde_t <= 0.0:
+			var r: Dictionary = npcs["rebelde"]
+			var zonas_r: Array = r["zonas"]
+			var z: Array = zonas_r[randi() % zonas_r.size()]
+			_rebelde.inicio = Vector3(float(z[0]), 0, float(z[1]))
+			_rebelde.reiniciar()
+			_rebelde.ia.reiniciar()
+			_rebelde.oculto = false
+			_rebelde_t = randf_range(float(r["espera"][0]), float(r["espera"][1]))
+			_evento({"tipo": "mensaje", "entidad": -1, "clave": "msg_rebelde", "para_todos": true})
+
+
+## Genjutsu del rebelde: nubla la pantalla del objetivo unos segundos (el cliente dibuja el efecto).
+func npc_genjutsu(e: EntidadServidor, o: EntidadServidor, duracion: float) -> void:
+	_evento({"tipo": "genjutsu", "entidad": e.id, "objetivo": o.id, "duracion": duracion})
+
+
+## Bomba de humo: nube en su posición y reaparece unos metros más allá (se aleja del objetivo).
+func npc_humo(e: EntidadServidor, alejarse_de: Vector3) -> void:
+	_evento({"tipo": "humo", "entidad": e.id, "pos": e.pos})
+	var d := e.pos - alejarse_de
+	d.y = 0.0
+	var ang := atan2(d.x, d.z) + randf_range(-1.0, 1.0)
+	var dest := Vector2(e.pos.x, e.pos.z) + Vector2(sin(ang), cos(ang)) * 7.0
+	dest = mapa.resolver_colision(dest, Datos.sim("radio_entidad"), 0.0)
+	e.pos = Vector3(dest.x, mapa.altura_suelo(dest, 0.0), dest.y)
+	e.invulnerable_t = maxf(e.invulnerable_t, 0.5)
+	_evento({"tipo": "humo", "entidad": e.id, "pos": e.pos})
+
+
 func agregar_jugador(peer_id: int, plantilla := "jugador_uchiha") -> int:
 	var j := _crear_entidad(plantilla, Vector3(mapa.inicio_jugador.x, 0, mapa.inicio_jugador.y))
 	j.peer_id = peer_id
@@ -405,6 +480,7 @@ func paso(dt: float) -> void:
 	for e in entidades:
 		if e.ia != null and e.vivo():
 			e.ia.pensar(self, dt)
+	_reapariciones(dt)
 	for e in entidades:
 		_actualizar_estado(e, dt)
 		_mover(e, dt)
@@ -992,7 +1068,8 @@ func _evento(ev: Dictionary) -> void:
 func publicar_estado() -> void:
 	var ents: Array = []
 	for e in entidades:
-		ents.append(e.a_estado())
+		if not e.oculto:
+			ents.append(e.a_estado())
 	var proys: Array = []
 	for p in proyectiles:
 		proys.append({"id": p["id"], "jutsu": p["jutsu"], "pos": p["pos"], "dir": p["dir"], "radio": p["radio"], "nivel": p["nivel"], "dueno": p["dueno"],

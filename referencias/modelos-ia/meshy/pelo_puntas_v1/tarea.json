@@ -1,0 +1,17 @@
+{
+ "id": "01a1f294-3ba5-77d3-9d4c-ee05eab18ec6",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 2649403921,
+ "prompt": "anime ninja spiky hair wig with many sharp spikes pointing back and up, short bangs, stylized anime game asset, hair piece only, single object, no head, no face, no body, hollow inside, clean shapes",
+ "texture_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795071166498,
+ "progress": 100,
+ "started_at": 1795071166506,
+ "finished_at": 1795071189826,
+ "task_error": null,
+ "consumed_credits": 5
+}

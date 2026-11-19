@@ -1,0 +1,17 @@
+{
+ "id": "01a1f294-a59e-774a-bf13-fff121649fdb",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 780603841,
+ "prompt": "eastern water dragon with big open jaws, long serpentine body rising up in an arc, fins, whiskers, stylized anime game asset, single creature, dramatic pose, clean readable silhouette, no base, no ground",
+ "texture_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795071192742,
+ "progress": 100,
+ "started_at": 1795071192750,
+ "finished_at": 1795071228030,
+ "task_error": null,
+ "consumed_credits": 5
+}

@@ -115,5 +115,62 @@
       0.0844
     ],
     "profundidad_cabeza": 0.1495
+  },
+  "ninja_piezas": {
+    "_nota": "Generado por tools/blender/ninja_piezas.py: zonas del cuerpo base, medidas de la cabeza y triángulos por pieza.",
+    "zonas": {
+      "piel": [
+        0.957,
+        0.794,
+        0.709
+      ],
+      "camisa": [
+        0.106,
+        0.106,
+        0.125
+      ],
+      "pantalon": [
+        0.12,
+        0.119,
+        0.138
+      ],
+      "pelo": [
+        0.1,
+        0.1,
+        0.12
+      ],
+      "chaleco": [
+        0.3,
+        0.35,
+        0.3
+      ]
+    },
+    "triangulos": {
+      "CUERPO": 16780,
+      "PELO_puntas": 2500,
+      "PELO_corto": 2494,
+      "PELO_largo": 2498,
+      "PELO_coleta": 2500,
+      "PRENDA_chaleco": 3500,
+      "PRENDA_impermeable": 3484,
+      "PRENDA_ligera": 3480,
+      "PRENDA_capa": 1028,
+      "EMBLEMA_base": 200,
+      "EMBLEMA_chaleco": 200,
+      "EMBLEMA_impermeable": 200,
+      "EMBLEMA_ligera": 200,
+      "EMBLEMA_capa": 200
+    },
+    "nudo": [
+      0.0,
+      0.1183,
+      -0.12
+    ],
+    "ojo": [
+      0.034,
+      0.0819,
+      0.1223
+    ],
+    "profundidad_cabeza": 0.217
   }
 }

@@ -1,0 +1,17 @@
+{
+ "id": "01a1f299-2f9f-76b2-be2c-527da41adbf4",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 3308959744,
+ "prompt": "anime hair wig tied in a high ponytail with loose front bangs, stylized anime game asset, hair piece only, single object, no head, no face, no body, hollow inside, clean shapes",
+ "texture_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795071488533,
+ "progress": 100,
+ "started_at": 1795071488539,
+ "finished_at": 1795071515785,
+ "task_error": null,
+ "consumed_credits": 5
+}

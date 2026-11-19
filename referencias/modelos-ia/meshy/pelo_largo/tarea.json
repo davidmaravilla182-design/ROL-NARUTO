@@ -1,0 +1,17 @@
+{
+ "id": "01a1f299-2c83-7187-8136-ba9a2cd34bf9",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 734915840,
+ "prompt": "anime long straight hair wig falling to the middle of the back with long front bangs, stylized anime game asset, hair piece only, single object, no head, no face, no body, hollow inside, clean shapes",
+ "texture_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795071487725,
+ "progress": 100,
+ "started_at": 1795071487733,
+ "finished_at": 1795071507553,
+ "task_error": null,
+ "consumed_credits": 5
+}

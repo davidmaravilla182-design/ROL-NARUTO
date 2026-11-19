@@ -408,10 +408,13 @@ def main():
     tz["tubos"] = tubos
     tz["horizonte"] = {"cantidad": 40, "radio_min": 250.0, "radio_max": 330.0, "escala_min": 1.6, "escala_max": 3.2}
     tz["cables"] = 40
+    npcs = esc.get("aldea", {}).get("npcs")   # datos hechos a mano: se conservan
     esc["aldea"] = {"_nota": "Generado por tools/aldea.py. Isla circular en el lago: se camina dentro de radio_caminable y en zonas_extra.",
                     "centro": list(CENTRO), "radio_muro": RADIO_MURO, "radio_caminable": RADIO_CAMINABLE,
                     "zonas_extra": [[-5.5, 60.0, 5.5, 80.0], [-3.4, 70.0, 3.4, 152.0], [-24.0, 150.0, 24.0, 174.0]],
                     "lago_radio": 600.0, "distritos": DISTRITOS, "puntos": puntos}
+    if npcs:
+        esc["aldea"]["npcs"] = npcs
     esc["limite_juego"] = 400.0
     esc["charcos_aleatorios"] = 170
     json.dump(esc, open(RUTA, "w", encoding="utf-8"), ensure_ascii=False, indent=1)

@@ -467,6 +467,14 @@ func golpe_fisico(pos: Vector3, fuerte: bool) -> void:
 		camara.sacudir(0.25 if fuerte else 0.1)
 
 
+## Bomba de humo: nube gris densa que se expande y se disipa.
+func humo(pos: Vector3) -> void:
+	rafaga(pos + Vector3(0, 0.8, 0), {"cantidad": 40, "vida": 1.6, "radio": 0.8, "direccion": Vector3.UP, "dispersion": 90.0,
+		"vel_min": 0.6, "vel_max": 2.2, "gravedad": Vector3(0, 0.4, 0), "tam_min": 0.9, "tam_max": 1.6,
+		"color": Color(0.62, 0.64, 0.68, 0.75), "aditivo": false, "escala_fin": 2.2})
+	golpe_fisico(pos + Vector3(0, 1.0, 0), false)
+
+
 func polvo(pos: Vector3, cantidad := 16) -> void:
 	rafaga(Vector3(pos.x, 0.15, pos.z), {"cantidad": cantidad, "vida": 0.6, "radio": 0.3, "direccion": Vector3.UP, "dispersion": 70.0,
 		"vel_min": 0.8, "vel_max": 2.0, "gravedad": Vector3(0, -2, 0), "tam_min": 0.3, "tam_max": 0.5, "color": Color(0.6, 0.65, 0.7, 0.35), "aditivo": false})

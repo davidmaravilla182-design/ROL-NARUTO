@@ -11502,6 +11502,104 @@
     ],
     "texto": "Aldeano: Torre del líder"
    }
-  ]
+  ],
+  "npcs": {
+   "_nota": "Enemigos en zonas de combate (fuera de la plaza) y personajes de misiones en su distrito. El rebelde aparece de vez en cuando en una de sus zonas.",
+   "enemigos": [
+    {
+     "plantilla": "guardia_lluvia",
+     "pos": [
+      -2.0,
+      92.0
+     ]
+    },
+    {
+     "plantilla": "guardia_lluvia",
+     "pos": [
+      2.0,
+      104.0
+     ]
+    },
+    {
+     "plantilla": "guardia_lluvia",
+     "pos": [
+      87.0,
+      -110.0
+     ]
+    },
+    {
+     "plantilla": "guardia_lluvia",
+     "pos": [
+      100.0,
+      -150.0
+     ]
+    },
+    {
+     "plantilla": "ninja_agua",
+     "pos": [
+      70.0,
+      -24.0
+     ]
+    },
+    {
+     "plantilla": "ninja_agua",
+     "pos": [
+      110.0,
+      -27.0
+     ]
+    },
+    {
+     "plantilla": "ninja_agua",
+     "pos": [
+      -80.0,
+      -104.0
+     ]
+    }
+   ],
+   "rebelde": {
+    "plantilla": "rebelde",
+    "zonas": [
+     [
+      70.0,
+      -180.0
+     ],
+     [
+      -100.0,
+      -190.0
+     ],
+     [
+      0.0,
+      -205.0
+     ]
+    ],
+    "espera": [
+     90.0,
+     180.0
+    ]
+   },
+   "reaparicion": 30.0,
+   "mision": [
+    {
+     "plantilla": "comerciante",
+     "pos": [
+      -70.0,
+      -8.5
+     ],
+     "giro": 0,
+     "distrito": "mercado",
+     "mision": "Entrega de pescado al distrito industrial"
+    },
+    {
+     "plantilla": "instructor",
+     "pos": [
+      0.0,
+      -131.0
+     ],
+     "giro": 180,
+     "distrito": "academia",
+     "mision": "Entrenamiento: derrota a tres guardias en la puerta"
+    }
+   ]
+  }
  }
 }

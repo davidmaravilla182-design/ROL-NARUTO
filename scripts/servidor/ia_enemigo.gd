@@ -6,6 +6,9 @@ extends RefCounted
 ## Comportamiento: se acerca hasta su distancia preferida, rodea lateralmente,
 ## dispara ráfagas de balas de agua, golpea si lo tienes encima, esquiva a veces
 ## tus jutsus y huye cuando le queda poca vida.
+## Perfiles (data/personajes.json → ia.perfil): "agresivo" (cuerpo a cuerpo con kunai, se pega),
+## "distancia" (jutsus de agua y mantiene la distancia), "rebelde" (genjutsu que nubla y bombas de humo).
+## Los NPC de la aldea solo atacan dentro de su radio de detección ("aggro") y si no, vuelven a su puesto.
 
 var e: EntidadServidor
 var conf: Dictionary
@@ -15,11 +18,15 @@ var t_lado := 0.0
 var t_reaccion := 0.0
 var amenazas_vistas: Dictionary = {}
 var anuncio_huida := false
+var perfil := ""
+var t_genjutsu := 0.0
+var t_humo := 0.0
 
 
 func _init(entidad: EntidadServidor) -> void:
 	e = entidad
 	conf = Datos.personaje(e.plantilla_id).get("ia", {})
+	perfil = str(conf.get("perfil", ""))
 	rng.seed = 777 + e.id
 	reiniciar()
 
@@ -30,6 +37,8 @@ func reiniciar() -> void:
 	t_reaccion = 2.5
 	amenazas_vistas.clear()
 	anuncio_huida = false
+	t_genjutsu = float(conf.get("genjutsu_recarga", 10.0)) * 0.4
+	t_humo = 2.0
 
 
 func pensar(s: ServidorJuego, dt: float) -> void:
@@ -38,9 +47,17 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 	if t_lado <= 0.0:
 		t_lado = float(conf.get("cambio_lateral", 2.5)) * rng.randf_range(0.6, 1.4)
 		lado = -lado
+	t_genjutsu -= dt
+	t_humo -= dt
 	var objetivo := s._jugador_mas_cercano(e.pos)
+	# Radio de detección: fuera de él, el NPC vuelve a su puesto y espera.
+	if objetivo != null and conf.has("aggro") and objetivo.pos.distance_to(e.pos) > float(conf["aggro"]):
+		objetivo = null
 	if objetivo == null:
-		s.aplicar_comando(e, {"t": "entrada", "mov": Vector2.ZERO, "mira": e.yaw})
+		var a_casa := e.inicio - e.pos
+		a_casa.y = 0.0
+		var m := Vector2(a_casa.x, a_casa.z).normalized() * 0.6 if a_casa.length() > 1.5 else Vector2.ZERO
+		s.aplicar_comando(e, {"t": "entrada", "mov": m, "mira": e.yaw})
 		return
 
 	var hacia := objetivo.pos - e.pos
@@ -64,7 +81,11 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 			return
 
 	var preferida := float(conf.get("distancia_preferida", 9.0))
-	if huyendo:
+	if perfil == "agresivo":
+		mov = dir + lateral * 0.25 if dist > float(conf.get("rango_melee", 2.2)) * 0.8 else lateral * 0.3
+	elif perfil == "distancia" and dist < float(conf.get("distancia_minima", 7.0)):
+		mov = -dir + lateral * 0.4   # mantiene la distancia
+	elif huyendo:
 		mov = -dir + lateral * 0.6
 	elif dist > preferida + 2.0:
 		mov = dir + lateral * 0.3
@@ -83,6 +104,21 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 		return
 	# Mirar al objetivo antes de actuar.
 	e.yaw = atan2(dir.x, dir.z)
+	if perfil == "rebelde":
+		if t_genjutsu <= 0.0 and dist <= float(conf.get("genjutsu_rango", 14.0)):
+			t_genjutsu = float(conf.get("genjutsu_recarga", 12.0)) * rng.randf_range(0.8, 1.2)
+			s.npc_genjutsu(e, objetivo, float(conf.get("genjutsu_duracion", 3.5)))
+			t_reaccion = 0.6
+			return
+		if t_humo <= 0.0 and (dist < 3.0 or e.vida < float(e.stats["vida_max"]) * 0.5):
+			t_humo = float(conf.get("humo_recarga", 9.0)) * rng.randf_range(0.8, 1.2)
+			s.npc_humo(e, objetivo.pos)
+			t_reaccion = 0.4
+			return
+	if perfil == "distancia" and dist <= 15.0 and e.recarga("dragon_agua") <= 0.0 and rng.randf() < 0.25:
+		s.aplicar_comando(e, {"t": "accion", "id": "dragon_agua", "objetivo": objetivo.id})
+		t_reaccion = 1.2
+		return
 	if dist <= float(conf.get("rango_melee", 2.2)) and not huyendo:
 		s.aplicar_comando(e, {"t": "accion", "id": "golpe"})
 		t_reaccion = 0.15

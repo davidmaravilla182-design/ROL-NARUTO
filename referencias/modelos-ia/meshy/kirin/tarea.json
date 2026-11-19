@@ -1,0 +1,17 @@
+{
+ "id": "01a1f294-9615-7761-8c3d-3693153e14ee",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 308101772,
+ "prompt": "eastern dragon beast made of lightning diving down from the sky, open jaws, long serpentine body, horns, stylized anime game asset, single creature, dramatic pose, clean readable silhouette, no base, no ground",
+ "texture_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795071190215,
+ "progress": 100,
+ "started_at": 1795071190223,
+ "finished_at": 1795071224281,
+ "task_error": null,
+ "consumed_credits": 5
+}

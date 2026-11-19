@@ -123,6 +123,8 @@ static func vestir(pv: PersonajeVisual, aspecto: Dictionary, aldea: Dictionary, 
 ## Con el ninja del modelo IA la ropa ya viene en la malla: solo se añade la máscara (ropa de sigilo).
 ## El impermeable se resuelve recoloreando chaleco y camisa (PersonajeVisual.recolorear).
 static func vestir_ia(pv: PersonajeVisual, aspecto: Dictionary) -> void:
+	for acc in aspecto.get("accesorios", []):
+		_accesorio(pv, str(acc))
 	if aspecto.get("mascara", false):
 		var cabeza := pv.hueso("Cabeza")
 		var mascara := Materiales.caja(Vector3(0.15, 0.07, 0.05), Materiales.solido(Color(0.25, 0.27, 0.3), 0.5, 0.4))
@@ -134,6 +136,80 @@ static func vestir_ia(pv: PersonajeVisual, aspecto: Dictionary) -> void:
 			filtro.position = Vector3(0.045 * lado, 0.025, 0.112)
 			filtro.rotation_degrees = Vector3(90, 0, 0)
 			cabeza.add_child(filtro)
+
+
+## Accesorios de los NPC (piezas hechas por código, pegadas a los huesos).
+static func _accesorio(pv: PersonajeVisual, id: String) -> void:
+	match id:
+		"kunai":
+			var mano := pv.hueso("ManoD")
+			var hoja := MeshInstance3D.new()
+			var pm := PrismMesh.new()
+			pm.size = Vector3(0.05, 0.2, 0.012)
+			pm.material = Materiales.solido(Color(0.75, 0.78, 0.82), 0.25, 0.9)
+			hoja.mesh = pm
+			hoja.position = Vector3(0, -0.2, 0.03)
+			hoja.rotation_degrees = Vector3(180, 0, 0)
+			mano.add_child(hoja)
+			var mango := Materiales.cilindro(0.012, 0.012, 0.09, Materiales.solido(Color(0.12, 0.12, 0.14), 0.8), 6)
+			mango.position = Vector3(0, -0.07, 0.03)
+			mano.add_child(mango)
+			var anillo := Materiales.cilindro(0.022, 0.022, 0.008, Materiales.solido(Color(0.6, 0.6, 0.65), 0.3, 0.8), 8)
+			anillo.position = Vector3(0, -0.01, 0.03)
+			anillo.rotation_degrees = Vector3(90, 0, 0)
+			mano.add_child(anillo)
+		"respirador":
+			pass   # lo pone «mascara» (respirador con filtros)
+		"mascara_rebelde":
+			# Máscara blanca agrietada que cubre la cara, con rendijas para los ojos.
+			var cabeza := pv.hueso("Cabeza")
+			var m := Materiales.esfera(0.105, Materiales.solido(Color(0.88, 0.86, 0.82), 0.6), 12)
+			m.scale = Vector3(0.95, 1.15, 0.45)
+			m.position = Vector3(0, 0.07, 0.08)
+			cabeza.add_child(m)
+			for lado in [-1.0, 1.0]:
+				var ojo := Materiales.caja(Vector3(0.04, 0.012, 0.01), Materiales.solido(Color(0.05, 0.05, 0.06), 0.9))
+				ojo.position = Vector3(0.035 * lado, 0.1, 0.128)
+				cabeza.add_child(ojo)
+			var grieta := Materiales.caja(Vector3(0.005, 0.07, 0.006), Materiales.solido(Color(0.25, 0.22, 0.2), 0.9))
+			grieta.position = Vector3(0.02, 0.06, 0.13)
+			grieta.rotation_degrees = Vector3(0, 0, 20)
+			cabeza.add_child(grieta)
+		"banda_tachada":
+			# Raya horizontal sobre la placa de la banda (desertores).
+			var raya := Materiales.caja(Vector3(0.1, 0.007, 0.006), Materiales.solido(Color(0.1, 0.08, 0.08), 0.9))
+			raya.position = Vector3(0, 0.155, 0.112)
+			pv.hueso("Cabeza").add_child(raya)
+		"delantal":
+			var d := Materiales.caja(Vector3(0.36, 0.5, 0.012), Materiales.solido(Color(0.82, 0.78, 0.68), 0.95))
+			d.position = Vector3(0, -0.12, 0.14)
+			pv.hueso("Caderas").add_child(d)
+			var pecho := Materiales.caja(Vector3(0.24, 0.2, 0.012), Materiales.solido(Color(0.82, 0.78, 0.68), 0.95))
+			pecho.position = Vector3(0, 0.05, 0.15)
+			pv.hueso("Pecho").add_child(pecho)
+		"sombrero_paja":
+			# Sombrero cónico de paja para la lluvia.
+			var sombrero := Materiales.cilindro(0.015, 0.33, 0.16, Materiales.solido(Color(0.74, 0.62, 0.36), 0.95), 16)
+			sombrero.position = Vector3(0, 0.27, 0.0)
+			pv.hueso("Cabeza").add_child(sombrero)
+		"pergamino":
+			# Pergamino grande cruzado en la espalda.
+			var rollo := Materiales.cilindro(0.06, 0.06, 0.62, Materiales.solido(Color(0.86, 0.8, 0.66), 0.9), 12)
+			rollo.position = Vector3(0, 0.0, -0.17)
+			rollo.rotation_degrees = Vector3(0, 0, 70)
+			pv.hueso("Pecho").add_child(rollo)
+			for lado in [-1.0, 1.0]:
+				var tapa := Materiales.cilindro(0.065, 0.065, 0.05, Materiales.solido(Color(0.55, 0.12, 0.1), 0.7), 12)
+				tapa.position = Vector3(cos(deg_to_rad(-20)) * 0.3 * lado, sin(deg_to_rad(70)) * 0.3 * lado * 0.36, -0.17)
+				tapa.rotation_degrees = Vector3(0, 0, 70)
+				pv.hueso("Pecho").add_child(tapa)
+		"chaleco_rango":
+			# Hombreras del chaleco de rango alto.
+			for lado in ["I", "D"]:
+				var h := Materiales.esfera(0.075, Materiales.solido(Color(0.32, 0.38, 0.3), 0.7), 10)
+				h.scale = Vector3(1.0, 0.6, 1.1)
+				h.position = Vector3(0, 0.04, 0)
+				pv.hueso("Brazo" + lado).add_child(h)
 
 
 ## Abanico del clan: parte superior roja redondeada, franja inferior blanca y mango.

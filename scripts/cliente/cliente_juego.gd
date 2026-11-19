@@ -123,6 +123,7 @@ func _ready() -> void:
 	add_child(servidor)
 	servidor.iniciar(mapa)
 	servidor.poblar_entrenamiento()
+	servidor.poblar_aldea()
 	var local := TransporteLocal.new()
 	local.name = "Transporte"
 	add_child(local)
@@ -848,6 +849,16 @@ func _procesar_evento(ev: Dictionary) -> void:
 		"nivel":
 			if id == mi_id:
 				hud.poner_nivel(int(ev["nivel"]))
+		"genjutsu":
+			# Genjutsu del rebelde: al objetivo se le nubla la pantalla; todos ven el destello morado del lanzador.
+			var lanz := _pos_entidad(int(ev["entidad"]))
+			efectos.rafaga(lanz + Vector3(0, 1.5, 0), {"cantidad": 30, "vida": 0.8, "radio": 0.5, "vel_min": 1.0, "vel_max": 3.0,
+				"tam_min": 0.1, "tam_max": 0.25, "color": Color(0.7, 0.3, 1.0, 0.9)})
+			if int(ev["objetivo"]) == mi_id:
+				hud.genjutsu(float(ev.get("duracion", 3.0)))
+				sonidos.tocar("trueno", -12.0, 1.6)
+		"humo":
+			efectos.humo(ev["pos"])
 		"reaparecer":
 			_anuncio_fin = ""
 			hud.banner("")

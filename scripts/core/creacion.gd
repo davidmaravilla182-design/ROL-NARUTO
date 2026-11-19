@@ -116,6 +116,13 @@ static func aspecto_visual(pj: Dictionary) -> Dictionary:
 	r["pelo"] = str(a.get("pelo", "#1a1f2e"))
 	r["ojos"] = str(a.get("ojos", "#151212"))
 	r["peinado"] = str(a.get("peinado", "puntas"))
+	r["ropa"] = str(a.get("ropa", "chaleco")) if c.get("ropas", {}).has(str(a.get("ropa", ""))) else "chaleco"
+	# Colores por pieza (opcionales): prenda e interior; si no, los de la plantilla de la ropa.
+	if _color_valido(a.get("color_prenda")):
+		r["color_prenda"] = str(a["color_prenda"])
+	if _color_valido(a.get("color_interior")):
+		r["camisa"] = str(a["color_interior"])
+		r["pantalon"] = Color.html(str(a["color_interior"])).darkened(0.12).to_html(false)
 	var comp: Dictionary = c.get("complexiones", {}).get(str(a.get("complexion", "media")), {})
 	r["escala"] = [float(comp.get("ancho", 1.0)), float(comp.get("alto", 1.0))]
 	return r
@@ -177,7 +184,7 @@ static func validar(datos: Variant) -> Dictionary:
 	var asp: Dictionary = pj["aspecto"]
 	if c["peinados"].has(str(a_in.get("peinado", ""))):
 		asp["peinado"] = str(a_in["peinado"])
-	for k in ["pelo", "ojos", "piel"]:
+	for k in ["pelo", "ojos", "piel", "color_prenda", "color_interior"]:
 		if _color_valido(a_in.get(k)):
 			asp[k] = str(a_in[k])
 	if c["complexiones"].has(str(a_in.get("complexion", ""))):

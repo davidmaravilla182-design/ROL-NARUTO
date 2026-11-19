@@ -404,6 +404,12 @@ func _paso_apariencia() -> void:
 		ropas[k] = c["ropas"][k]["nombre"]
 	_contenido.add_child(_texto(Datos.texto("pj_ropa"), 20))
 	_contenido.add_child(_opciones(ropas, str(a["ropa"]), func(k): a["ropa"] = k; _cambio(true)))
+	# Colores por pieza: la prenda elegida y la ropa interior (camiseta y pantalón).
+	var defecto_prenda := str(c["ropas"].get(str(a["ropa"]), {}).get("aspecto", {}).get("chaleco", "#56644e"))
+	_contenido.add_child(_texto(Datos.texto("pj_color_prenda"), 20))
+	_contenido.add_child(_colores(c.get("colores_prenda", []), str(a.get("color_prenda", defecto_prenda)), func(k): a["color_prenda"] = k; _cambio(true)))
+	_contenido.add_child(_texto(Datos.texto("pj_color_interior"), 20))
+	_contenido.add_child(_colores(c.get("colores_interior", []), str(a.get("color_interior", "#1a1d26")), func(k): a["color_interior"] = k; _cambio(true)))
 
 
 func _paso_aldea() -> void:

@@ -43,9 +43,9 @@ def activo(o, *otros):
     bpy.context.view_layer.objects.active = o
 
 
-def importar():
+def importar(ruta=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=os.path.join(REF, "ninja-meshy.glb"))
+    bpy.ops.import_scene.gltf(filepath=ruta or os.path.join(REF, "ninja-meshy.glb"))
     o = [x for x in bpy.data.objects if x.type == "MESH"][0]
     o.name = "NINJA"
     activo(o)
@@ -361,4 +361,5 @@ def main():
     log("listo: %d triángulos → %s" % (tris, ruta), med)
 
 
-main()
+if __name__ == "__main__":
+    main()

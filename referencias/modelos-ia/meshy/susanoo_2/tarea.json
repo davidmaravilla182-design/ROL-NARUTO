@@ -1,0 +1,17 @@
+{
+ "id": "01a1f294-79fb-70d3-b532-2cb250f36354",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 332473702,
+ "prompt": "giant spectral warrior torso with muscular arms holding a large bow, horned demon face, half body, stylized anime game asset, single creature, dramatic pose, clean readable silhouette, no base, no ground",
+ "texture_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795071182273,
+ "progress": 100,
+ "started_at": 1795071182295,
+ "finished_at": 1795071216273,
+ "task_error": null,
+ "consumed_credits": 5
+}

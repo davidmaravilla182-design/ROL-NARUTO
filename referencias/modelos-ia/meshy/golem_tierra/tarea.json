@@ -1,0 +1,17 @@
+{
+ "id": "01a1f295-5a49-71be-a99b-01f4572d6f19",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 704359117,
+ "prompt": "giant rock golem made of stacked boulders and earth rising from the ground, heavy fists, glowing cracks, stylized anime game asset, single creature, dramatic pose, clean readable silhouette, no base, no ground",
+ "texture_prompt": "giant rock golem made of stacked boulders and earth rising from the ground, heavy fists, glowing cracks. grey brown rock and earth, mossy stones, orange glowing cracks",
+ "status": "SUCCEEDED",
+ "created_at": 1795071239147,
+ "progress": 100,
+ "started_at": 1795071239157,
+ "finished_at": 1795071269838,
+ "task_error": null,
+ "consumed_credits": 10
+}

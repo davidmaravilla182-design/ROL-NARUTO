@@ -36,6 +36,27 @@ static func construir(e: Escenario, m: Mapa) -> void:
 					break
 		lista.append({"nodo": n, "tipo": pt["tipo"], "distrito": pt["distrito"]})
 		k += 1
+	# Personajes de misiones (comerciante, instructor): figuras completas en su distrito; dicen la misión que darán.
+	for npc in Datos.escenario.get("aldea", {}).get("npcs", {}).get("mision", []):
+		var c2 := Vector2(float(npc["pos"][0]), float(npc["pos"][1]))
+		var pv := PersonajeVisual.new()
+		pv.name = "npc_" + str(npc["plantilla"])
+		e.sectores.agregar(pv, c2)
+		pv.construir(str(npc["plantilla"]))
+		pv.global_position = Vector3(c2.x, 0, c2.y)
+		pv.rotation.y = deg_to_rad(float(npc.get("giro", 0.0)))
+		pv.reproducir("quieto", 0.0)
+		var marca := MeshInstance3D.new()
+		var pm := PrismMesh.new()
+		pm.size = Vector3(0.35, 0.4, 0.35)
+		pm.material = Materiales.emisivo(Color(1.0, 0.75, 0.3), 2.6)
+		marca.mesh = pm
+		marca.rotation_degrees = Vector3(180, 0, 0)
+		marca.position = Vector3(0, 2.35, 0)
+		marca.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		pv.add_child(marca)
+		lista.append({"nodo": pv, "tipo": "npc_mision", "distrito": str(npc["distrito"]), "nombre": Datos.personaje(str(npc["plantilla"])).get("nombre", ""),
+			"mision": str(npc.get("mision", ""))})
 
 
 static func dialogos() -> Dictionary:
@@ -47,6 +68,8 @@ static func dialogos() -> Dictionary:
 ## Texto al interactuar: un aldeano dice una frase de su distrito (o una común); una misión dice cuál será.
 static func texto(p: Dictionary, nombre_distrito: String) -> String:
 	var d := dialogos()
+	if p["tipo"] == "npc_mision":
+		return "%s: «Pronto tendré un encargo para ti: %s.»" % [str(p.get("nombre", "")), str(p.get("mision", ""))]
 	if p["tipo"] == "mision":
 		return "Misión: próximamente\n«%s» · %s" % [str(d.get("misiones", {}).get(p["distrito"], "")), nombre_distrito]
 	var frases: Array = (d.get("distritos", {}).get(p["distrito"], []) as Array).duplicate()

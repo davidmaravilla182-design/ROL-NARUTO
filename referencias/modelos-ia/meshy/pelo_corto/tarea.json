@@ -1,0 +1,17 @@
+{
+ "id": "01a1f299-293d-75ce-a362-2353a818525d",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 1178968576,
+ "prompt": "anime short messy hair wig with layered strands and side bangs, natural and not helmet shaped, stylized anime game asset, hair piece only, single object, no head, no face, no body, hollow inside, clean shapes",
+ "texture_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795071486924,
+ "progress": 100,
+ "started_at": 1795071486932,
+ "finished_at": 1795071513190,
+ "task_error": null,
+ "consumed_credits": 5
+}

@@ -1,0 +1,17 @@
+{
+ "id": "01a1f295-a010-7315-a028-6ab17f5a76ff",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 2819684480,
+ "prompt": "eastern dragon made of twisted tree trunks and wooden roots rising from the ground, bark texture, open jaws, stylized anime game asset, single creature, dramatic pose, clean readable silhouette, no base, no ground",
+ "texture_prompt": "eastern dragon made of twisted tree trunks and wooden roots rising from the ground, bark texture, open jaws. twisted brown bark wood, light wood at the cracks, green moss, roots",
+ "status": "SUCCEEDED",
+ "created_at": 1795071257031,
+ "progress": 100,
+ "started_at": 1795071257039,
+ "finished_at": 1795071284114,
+ "task_error": null,
+ "consumed_credits": 10
+}

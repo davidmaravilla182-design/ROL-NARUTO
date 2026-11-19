@@ -18,8 +18,9 @@ import meshy  # noqa: E402
 
 RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 CARPETA = os.path.join(RAIZ, "referencias", "modelos-ia", "meshy")
-ESTADO = os.path.join(CARPETA, "lote.json")
-MAX_CREDITOS = 350   # presupuesto de la noche (incluye reintentos)
+ESTADO = os.path.join(CARPETA, "lote.json" if os.environ.get("MESHY_LOTE", "mapa") == "mapa" else "lote_%s.json" % os.environ["MESHY_LOTE"])
+MAX_CREDITOS = int(os.environ.get("MESHY_MAX", "350"))   # presupuesto de la noche (incluye reintentos)
+LOTE = os.environ.get("MESHY_LOTE", "mapa")
 
 ESTILO = ("stylized anime video game asset, rainy dark industrial ninja village, "
           "clean readable shapes, single object, no ground plane")
@@ -60,6 +61,29 @@ MODELOS = {
 }
 
 
+# Lote v0.7: peinados y formas de jutsus. Solo malla (5 créditos): el color y los efectos los pone el shader del juego.
+# Los que llevan textura (refine, +10) usan la paleta de cada uno.
+ESTILO_PELO = "stylized anime game asset, hair piece only, single object, no head, no face, no body, hollow inside, clean shapes"
+ESTILO_JUTSU = "stylized anime game asset, single creature, dramatic pose, clean readable silhouette, no base, no ground"
+MODELOS_V07 = {
+    "pelo_puntas": (12000, "anime ninja spiky hair wig with many sharp spikes pointing back and up, short bangs", None),
+    "pelo_corto": (12000, "anime short messy hair wig with layered strands and side bangs, natural and not helmet shaped", None),
+    "pelo_largo": (12000, "anime long straight hair wig falling to the middle of the back with long front bangs", None),
+    "pelo_coleta": (12000, "anime hair wig tied in a high ponytail with loose front bangs", None),
+    "susanoo_1": (6000, "giant spectral ribcage and spine skeleton torso with arms, ethereal chakra guardian", None),
+    "susanoo_2": (8000, "giant spectral warrior torso with muscular arms holding a large bow, horned demon face, half body", None),
+    "susanoo_3": (10000, "giant armored samurai spirit warrior with long nose tengu mask helmet, wings of armor plates, holding a long sword, full body", None),
+    "kirin": (8000, "eastern dragon beast made of lightning diving down from the sky, open jaws, long serpentine body, horns", None),
+    "dragon_agua": (8000, "eastern water dragon with big open jaws, long serpentine body rising up in an arc, fins, whiskers", None),
+    "dragon_madera": (8000, "eastern dragon made of twisted tree trunks and wooden roots rising from the ground, bark texture, open jaws",
+                      "twisted brown bark wood, light wood at the cracks, green moss, roots"),
+    "golem_tierra": (8000, "giant rock golem made of stacked boulders and earth rising from the ground, heavy fists, glowing cracks",
+                     "grey brown rock and earth, mossy stones, orange glowing cracks"),
+}
+if LOTE == "v07":
+    MODELOS = {k: (v[0], v[1]) for k, v in MODELOS_V07.items()}
+
+
 def cargar():
     if os.path.exists(ESTADO):
         return json.load(open(ESTADO))
@@ -84,12 +108,13 @@ def paso(est, nombre):
     if m["fase"] in ("listo", "fallido"):
         return True
     if m["fase"] == "nuevo":
-        if est["creditos"] + 15 > MAX_CREDITOS:
+        if est["creditos"] + (5 if LOTE == "v07" and MODELOS_V07[nombre][2] is None else 15) > MAX_CREDITOS:
             log(nombre, "sin presupuesto")
             return True
         m["fase"] = "creando_vista"   # marca antes de pedir: si se corta, no se recrea a ciegas
         guardar(est)
-        m["vista"] = meshy.texto_a_3d_vista("%s, %s" % (desc, ESTILO), polys)
+        estilo = ESTILO if LOTE == "mapa" else (ESTILO_PELO if nombre.startswith("pelo_") else ESTILO_JUTSU)
+        m["vista"] = meshy.texto_a_3d_vista("%s, %s" % (desc, estilo), polys)
         m["fase"] = "vista"
         m["creditos"] += 5
         est["creditos"] += 5
@@ -98,10 +123,18 @@ def paso(est, nombre):
         return False
     if m["fase"] == "vista":
         e = meshy.estado(m["vista"], "text-to-3d")
+        if e["status"] == "SUCCEEDED" and LOTE == "v07" and MODELOS_V07[nombre][2] is None:
+            # Solo malla: se descarga la vista previa (sin textura) y listo.
+            meshy.bajar(e, os.path.join(CARPETA, nombre))
+            m["fase"] = "listo"
+            guardar(est)
+            log(nombre, "LISTO (solo malla)")
+            return True
         if e["status"] == "SUCCEEDED":
             m["fase"] = "creando_textura"
             guardar(est)
-            m["textura"] = meshy.texto_a_3d_textura(m["vista"], "%s. %s" % (desc, PALETA))
+            tex = PALETA if LOTE == "mapa" else MODELOS_V07[nombre][2]
+            m["textura"] = meshy.texto_a_3d_textura(m["vista"], "%s. %s" % (desc, tex))
             m["fase"] = "textura"
             m["creditos"] += 10
             est["creditos"] += 10
