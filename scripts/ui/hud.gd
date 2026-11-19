@@ -41,6 +41,9 @@ var _mensaje_t := 0.0
 var _banner: Control
 var _banner_txt := ""
 var _banner_sub := ""
+var _banner_t := 0.0
+var _retrato_conf: Array = []
+const BANNER_DURACION := 4.0
 var _overlay: ColorRect
 var _overlay_mat: ShaderMaterial
 var _overlay_val := 0.0
@@ -144,6 +147,8 @@ void fragment() {
 
 	retrato = Retrato.new()
 	raiz.add_child(retrato)
+	if not _retrato_conf.is_empty():
+		retrato.callv("configurar", _retrato_conf)
 
 	_enemigo_panel = Control.new()
 	_enemigo_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -297,8 +302,9 @@ func _reordenar() -> void:
 	_sellos_panel.size = Vector2(640, 110)
 	_mensaje.position = Vector2(0, t.y * 0.24)
 	_mensaje.size = Vector2(t.x, 50)
-	_banner.position = Vector2(t.x * 0.5 - 340, t.y * 0.34)
-	_banner.size = Vector2(680, 130)
+	# En la franja libre bajo la barra superior: no tapa al personaje ni al retrato.
+	_banner.size = Vector2(440, 78)
+	_banner.position = Vector2(t.x * 0.5 - 220, maxf(arr + 140.0, t.y * 0.2))
 
 
 func _sobre_cancelar(pos_global: Vector2) -> bool:
@@ -436,17 +442,25 @@ func banner(txt: String, sub := "") -> void:
 	_banner_txt = txt
 	_banner_sub = sub
 	_banner.visible = txt != ""
+	_banner.modulate.a = 1.0
+	_banner_t = BANNER_DURACION if txt != "" else 0.0
 	_banner.queue_redraw()
 
 
 func _dibujar_banner() -> void:
 	var r := Rect2(Vector2.ZERO, _banner.size)
 	Estilo.dibujar_pergamino(_banner, r, 0.95)
-	Estilo.texto(_banner, Vector2(0, 66), _banner_txt, 48, Color(0.55, 0.06, 0.08), r.size.x, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_titulo(), 0)
-	Estilo.texto(_banner, Vector2(0, 108), _banner_sub, 24, Color(0.2, 0.15, 0.12), r.size.x, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_ui(), 0)
+	Estilo.texto(_banner, Vector2(0, 40), _banner_txt, 30, Color(0.55, 0.06, 0.08), r.size.x, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_titulo(), 0)
+	Estilo.texto(_banner, Vector2(0, 64), _banner_sub, 16, Color(0.2, 0.15, 0.12), r.size.x, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_ui(), 0)
 
 
 func _process(delta: float) -> void:
+	# El letrero se desvanece solo (en tiempo real: la cámara lenta no lo alarga).
+	if _banner_t > 0.0:
+		_banner_t -= delta / maxf(Engine.time_scale, 0.05)
+		_banner.modulate.a = clampf(_banner_t / 0.6, 0.0, 1.0)
+		if _banner_t <= 0.0:
+			_banner.visible = false
 	if _mensaje_t > 0.0:
 		_mensaje_t -= delta
 		_mensaje.modulate.a = clampf(_mensaje_t / 0.5, 0.0, 1.0)
@@ -531,3 +545,9 @@ func poner_info_red(t: String) -> void:
 	var vp := get_viewport().get_visible_rect().size
 	_info_red.size = Vector2(vp.x, 30)
 	_info_red.position = Vector2(0, vp.y - 40)
+
+
+## Retrato 3D del jugador (se conserva si la interfaz se reconstruye al cambiar de repertorio).
+func configurar_retrato(asp: Dictionary, clan: String, nombre: String, plantilla: String) -> void:
+	_retrato_conf = [asp, clan, nombre, plantilla]
+	retrato.configurar(asp, clan, nombre, plantilla)

@@ -51,6 +51,14 @@ func _torres_cajas() -> void:
 			ts.append(Transform3D(Basis.from_scale(Vector3(m.x * 2, float(o["alto"]), m.y * 2)), Vector3(c.x, float(o["alto"]) * 0.5, c.y)))
 	if ts.is_empty():
 		return
+	if not mapa.piezas.is_empty() and ResourceLoader.exists("res://assets/modelos/caja_madera.glb"):
+		# Con el trazado del kit: cajas de madera de Blender escaladas a la huella de cada obstáculo.
+		var tk: Array = []
+		for t in ts:
+			var sc: Vector3 = (t as Transform3D).basis.get_scale() / 1.1
+			tk.append(Transform3D(Basis.from_scale(sc), Vector3(t.origin.x, 0, t.origin.z)))
+		add_child(Kit.multimalla("caja_madera", tk, true))
+		return
 	_mmi(_mm_caja(ts, Shaders.toon_tex("lamina", Color(0.95, 0.8, 0.8), Vector2.ONE, true, 0.5, 0.4, 0.6, Materiales.grosor_contorno)), true)
 
 

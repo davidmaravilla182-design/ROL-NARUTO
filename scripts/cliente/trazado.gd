@@ -25,6 +25,13 @@ static func construir(e: Escenario, m: Mapa) -> void:
 		por_tipo[tipo].append(t)
 	for tipo in por_tipo.keys():
 		e.add_child(Kit.multimalla(tipo, por_tipo[tipo], Ajustes.calidad == "alta" or tipo == "edificio"))
+	# Piezas del suelo de la plaza: una llamada de dibujo por tipo (MultiMesh).
+	var props_t: Dictionary = {}
+	for p in m.props:
+		var cpr: Vector2 = p["centro"]
+		props_t.get_or_add(str(p["tipo"]), []).append(Transform3D(Basis(Vector3.UP, deg_to_rad(float(p["giro"]))), Vector3(cpr.x, 0, cpr.y)))
+	for tipo_p in props_t.keys():
+		e.add_child(Kit.multimalla(tipo_p, props_t[tipo_p], calidad_alta and tipo_p != "rejilla_suelo"))
 	var arcos_t: Array = []
 	for a in m.arcos:
 		var ca: Vector2 = a["centro"]

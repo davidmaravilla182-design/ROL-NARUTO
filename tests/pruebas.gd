@@ -27,6 +27,7 @@ func _initialize() -> void:
 	probar_jugador_puede_ganar()
 	probar_textos_sin_codigo()
 	probar_plataforma_lengua()
+	probar_piezas_suelo()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -439,3 +440,21 @@ func probar_plataforma_lengua() -> void:
 	comprobar(absf(j.pos.y - h) < 0.05 and j.en_suelo, "un personaje cae sobre la lengua y se queda parado (y=%.2f)" % j.pos.y)
 	comprobar(m.dentro_plataforma(Vector3(c.x, h - 0.5, c.y)) and not m.dentro_plataforma(Vector3(c.x, h + 1.0, c.y)), "los proyectiles chocan con la lengua")
 	s.free()
+
+
+## Piezas del suelo de la plaza (kit de Blender): cajas, barriles y tuberías chocan; las rejillas no.
+func probar_piezas_suelo() -> void:
+	var m := Mapa.generar()
+	var tipos := {}
+	for p in m.props:
+		tipos[p["tipo"]] = int(tipos.get(p["tipo"], 0)) + 1
+	comprobar(tipos.size() >= 5 and m.props.size() >= 30, "la plaza tiene piezas de suelo de 5 tipos (%s)" % str(tipos))
+	var barril: Vector2 = Vector2.ZERO
+	var rejilla: Vector2 = Vector2.ZERO
+	for p in m.props:
+		if p["tipo"] == "barril":
+			barril = p["centro"]
+		if p["tipo"] == "rejilla_suelo":
+			rejilla = p["centro"]
+	comprobar(m.punto_bloqueado(barril, 0.3), "un barril bloquea el paso")
+	comprobar(not m.punto_bloqueado(rejilla + Vector2(0.5, 0.5), 0.1), "sobre una rejilla se puede caminar")

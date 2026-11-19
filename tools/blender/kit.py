@@ -365,6 +365,66 @@ def torre_cabeza(rng):
     return unir(o, "torre_cabeza")
 
 
+# ------------------------------------------------------------------ piezas a nivel del suelo (plaza)
+def caja_madera(rng):
+    """Caja de madera de 1,1 m con tablas, travesaños en cruz y esquineros de metal."""
+    t = 1.1
+    o = [caja((t, t, t), "madera", pos=(0, 0, t / 2), bisel=0.02)]
+    for cara_y in (-1, 1):
+        y = cara_y * (t / 2 + 0.012)
+        for z in (0.08, t - 0.08):
+            o.append(caja((t, 0.03, 0.1), "madera", pos=(0, y, z)))
+        d = math.hypot(t, t - 0.2)
+        o.append(caja((d, 0.03, 0.09), "madera", pos=(0, y, t / 2), rot=(0, math.atan2(t - 0.2, t), 0)))
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            o.append(caja((0.06, 0.06, t + 0.01), "lamina", pos=(sx * t / 2, sy * t / 2, t / 2)))
+    return unir(o, "caja_madera")
+
+
+def caja_metal(rng):
+    """Contenedor de lámina de 2,2 × 1,2 × 1,3 m con nervios y una puerta con cerrojo."""
+    o = [caja((2.2, 1.2, 1.3), "lamina", pos=(0, 0, 0.65), bisel=0.03)]
+    for x in (-0.8, -0.4, 0.0, 0.4, 0.8):
+        for y in (-0.61, 0.61):
+            o.append(caja((0.05, 0.03, 1.2), "lamina", pos=(x, y, 0.65)))
+    o.append(caja((0.03, 1.0, 1.1), "oscuro", pos=(1.11, 0, 0.62)))
+    o.append(cilindro(0.025, 1.0, "tuberia", pos=(1.14, 0.2, 0.12), seg=6))
+    return unir(o, "caja_metal")
+
+
+def barril(rng):
+    """Barril de metal de 0,6 m de diámetro con aros y tapa con boca."""
+    o = [cilindro(0.3, 0.9, "tuberia", seg=14, bisel=0.02)]
+    for z in (0.12, 0.45, 0.78):
+        o.append(cilindro(0.315, 0.04, "lamina", pos=(0, 0, z), seg=14))
+    o.append(cilindro(0.05, 0.03, "oscuro", pos=(0.14, 0, 0.9), seg=8))
+    return unir(o, "barril")
+
+
+def rejilla_suelo(rng):
+    """Rejilla de desagüe de 2 × 2 m casi a ras del suelo: marco, barras y fondo oscuro."""
+    o = [caja((2.0, 2.0, 0.02), "oscuro", pos=(0, 0, 0.005))]
+    for s in (-1, 1):
+        o.append(caja((2.0, 0.08, 0.04), "lamina", pos=(0, s * 0.96, 0.02)))
+        o.append(caja((0.08, 2.0, 0.04), "lamina", pos=(s * 0.96, 0, 0.02)))
+    for k in range(9):
+        o.append(caja((0.04, 1.84, 0.03), "lamina", pos=(-0.8 + k * 0.2, 0, 0.018)))
+    return unir(o, "rejilla_suelo")
+
+
+def tubo_suelo(rng):
+    """Tubería de 6 m tendida a 0,35 m del suelo sobre soportes, con bridas, codo que entra al suelo y válvula."""
+    o = [tubo([(-3.0, 0, 0.35), (2.3, 0, 0.35), (3.0, 0, 0.35), (3.0, 0, -0.3)], 0.22, "tuberia", seg=12, radio_codo=0.4, bridas=(1.5, 3.5))]
+    for x in (-2.2, 0.0, 2.0):
+        o.append(caja((0.12, 0.6, 0.14), "lamina", pos=(x, 0, 0.07)))
+        o.append(caja((0.12, 0.08, 0.36), "lamina", pos=(x, 0.26, 0.18)))
+        o.append(caja((0.12, 0.08, 0.36), "lamina", pos=(x, -0.26, 0.18)))
+    o.append(cilindro(0.05, 0.35, "tuberia", pos=(-1.0, 0, 0.55), seg=8))
+    o.append(cilindro(0.18, 0.04, "lamina", pos=(-1.0, 0, 0.9), seg=12))
+    return unir(o, "tubo_suelo")
+
+
 def muneco(rng):
     """Muñeco de práctica: poste de madera, travesaño, torso de paja atado con cuerdas, cabeza y diana.
     Se exporta en dos partes: la base (fija) y el cuerpo (que se sacude con los golpes), con el pivote en el suelo."""
@@ -398,6 +458,7 @@ def muneco_cuerpo(rng):
 PIEZAS = {
     "muneco": muneco, "muneco_cuerpo": muneco_cuerpo,
     "torre_cabeza": torre_cabeza,
+    "caja_madera": caja_madera, "caja_metal": caja_metal, "barril": barril, "rejilla_suelo": rejilla_suelo, "tubo_suelo": tubo_suelo,
     "silo_lejano": silo_lejano, "bloque_lejano": bloque_lejano,
     "silo": silo, "edificio": edificio, "farol": farol, "barandal": barandal, "pasarela": pasarela,
     "tubo_largo": tubo_largo, "tubo_arco": tubo_arco, "tanque": tanque, "muro_canal": muro_canal, "toldo": toldo,

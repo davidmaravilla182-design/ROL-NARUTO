@@ -10,6 +10,7 @@ var charcos: Array = []      # [{centro: Vector2, radio: float}]
 var pasarelas: Array = []    # [{a: int, b: int, altura: float}] (solo visual)
 var munecos: Array = []      # [Vector2]
 var piezas: Array = []       # trazado: [{tipo, centro: Vector2, giro: float (grados)}]
+var props: Array = []        # piezas del suelo de la plaza: [{tipo, centro: Vector2, giro}]
 var plataformas: Array = []  # suelos elevados: [{centro: Vector2, medio: Vector2, altura: float, grosor: float}] (lengua de la torre)
 var arcos: Array = []        # [{centro: Vector2, giro: float}]
 var tubos: Array = []        # [{centro: Vector2, giro: float, altura: float}]
@@ -92,6 +93,9 @@ func _generar(conf: Dictionary) -> void:
 			continue
 		obstaculos.append({"centro": c2, "medio": medio2, "alto": rng.randf_range(1.0, 2.2), "tipo": "caja"})
 		colocados += 1
+
+	if conf.has("trazado"):
+		_props(conf["trazado"])
 
 	# Charcos: algunos fijos (bajo los muñecos, para demostrar la cadena de rayo) y otros aleatorios.
 	for ch in conf["charcos_fijos"]:
@@ -178,8 +182,30 @@ func dentro_plataforma(q: Vector3) -> bool:
 	return false
 
 
-func _se_solapa(c: Vector2, medio: Vector2, margen: float) -> bool:
+## Piezas del suelo de la plaza (después de las cajas del campo, para no cambiar su colocación).
+func _props(tz: Dictionary) -> void:
+	var huellas: Dictionary = tz.get("huellas", {})
+	for p in tz.get("props", []):
+		var tipo_p := str(p["tipo"])
+		var cp := _v2(p["pos"])
+		var gp := float(p.get("giro", 0.0))
+		var hp: Array = huellas.get(tipo_p, [])
+		if not hp.is_empty():
+			if _se_solapa(cp, Vector2(float(hp[0]), float(hp[1])) * 0.5, 0.1, true):
+				continue
+			var medio_p := Vector2(float(hp[0]), float(hp[1])) * 0.5
+			if absf(fmod(gp, 90.0)) > 1.0:
+				medio_p = Vector2.ONE * maxf(medio_p.x, medio_p.y) * 0.8
+			elif int(round(gp / 90.0)) % 2 == 1:
+				medio_p = Vector2(medio_p.y, medio_p.x)
+			obstaculos.append({"centro": cp, "medio": medio_p, "alto": float(hp[2]), "tipo": "prop"})
+		props.append({"tipo": tipo_p, "centro": cp, "giro": gp})
+
+
+func _se_solapa(c: Vector2, medio: Vector2, margen: float, salvo_props := false) -> bool:
 	for o in obstaculos:
+		if salvo_props and o["tipo"] == "prop":
+			continue
 		var oc: Vector2 = o["centro"]
 		var om: Vector2 = o["medio"]
 		if absf(c.x - oc.x) < medio.x + om.x + margen and absf(c.y - oc.y) < medio.y + om.y + margen:

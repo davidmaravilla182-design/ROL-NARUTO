@@ -8,6 +8,12 @@ var aspecto: Dictionary = {}
 var sharingan := false
 var _val := {"vida": [1.0, 1.0, 1.0, 1.0], "chakra": [1.0, 1.0, 1.0, 1.0], "estamina": [1.0, 1.0, 1.0, 1.0]}  # [valor, max, mostrado, estela]
 var _sacudida := 0.0
+var clan := ""
+var _vp: SubViewport
+var _pv: PersonajeVisual
+var _emblema: Texture2D
+var _t_render := 0.0
+var _sharingan_dibujado := false
 const COLORES := {"vida": [Color(0.86, 0.16, 0.18), Color(1.0, 0.45, 0.35)], "chakra": [Color(0.18, 0.45, 1.0), Color(0.5, 0.8, 1.0)], "estamina": [Color(0.25, 0.75, 0.32), Color(0.6, 1.0, 0.55)]}
 
 
@@ -15,6 +21,65 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(470, 132)
 	size = custom_minimum_size
+
+
+## Retrato 3D: el mismo modelo del jugador (personalización incluida) en un viewport pequeño.
+## Se renderiza unos instantes y se congela; vuelve a pintarse al cambiar el modo ocular.
+func configurar(p_aspecto: Dictionary, p_clan: String, p_nombre: String, plantilla := "") -> void:
+	aspecto = p_aspecto
+	clan = p_clan
+	nombre = p_nombre
+	var ruta := "res://assets/texturas/emblema_%s.png" % clan
+	_emblema = load(ruta) if ResourceLoader.exists(ruta) else null
+	if _vp != null:
+		_vp.queue_free()
+	_vp = SubViewport.new()
+	_vp.size = Vector2i(200, 200)
+	_vp.own_world_3d = true
+	_vp.transparent_bg = true
+	_vp.msaa_3d = Viewport.MSAA_2X
+	add_child(_vp)
+	var mundo := WorldEnvironment.new()
+	var env := Environment.new()
+	env.background_mode = Environment.BG_CLEAR_COLOR
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.55, 0.58, 0.72)
+	env.ambient_light_energy = 0.9
+	mundo.environment = env
+	_vp.add_child(mundo)
+	var sol := DirectionalLight3D.new()
+	sol.rotation_degrees = Vector3(-25, 35, 0)
+	sol.light_energy = 1.2
+	_vp.add_child(sol)
+	var calida := OmniLight3D.new()
+	calida.position = Vector3(-0.6, 1.7, 0.8)
+	calida.light_color = Color(1.0, 0.7, 0.45)
+	calida.light_energy = 0.8
+	calida.omni_range = 3.0
+	_vp.add_child(calida)
+	_pv = PersonajeVisual.new()
+	_vp.add_child(_pv)
+	if aspecto.is_empty() and plantilla != "":
+		_pv.construir(plantilla)
+	else:
+		_pv.construir_aspecto(aspecto, str(aspecto.get("aldea", "lluvia")), clan)
+	_pv.rotation.y = deg_to_rad(18)
+	_pv.reproducir("quieto", 0.0)
+	var cam := Camera3D.new()
+	cam.fov = 24.0
+	# Encuadre de busto: a la altura de la cabeza (la complexión cambia la estatura).
+	var alto := 1.62 * _pv.scale.y
+	cam.transform = Transform3D(Basis(), Vector3(0.05, alto + 0.02, 1.25)).looking_at(Vector3(0, alto - 0.04, 0), Vector3.UP)
+	_vp.add_child(cam)
+	cam.current = true
+	_renderizar()
+
+
+func _renderizar() -> void:
+	if _vp == null:
+		return
+	_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_t_render = 0.4
 
 
 func fijar(clave: String, valor: float, maximo: float) -> void:
@@ -35,6 +100,14 @@ func _process(delta: float) -> void:
 		else:
 			v[3] = move_toward(float(v[3]), frac, delta * 0.45)
 	_sacudida = move_toward(_sacudida, 0.0, delta * 3.0)
+	if _pv != null and sharingan != _sharingan_dibujado:
+		_sharingan_dibujado = sharingan
+		_pv.poner_sharingan(sharingan)
+		_renderizar()
+	if _t_render > 0.0:
+		_t_render -= delta
+		if _t_render <= 0.0:
+			_vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	queue_redraw()
 
 
@@ -42,7 +115,10 @@ func _draw() -> void:
 	var off := Vector2(sin(Time.get_ticks_msec() * 0.08) * 4.0 * _sacudida, 0)
 	var retrato_r := Rect2(Vector2(0, 0) + off, Vector2(120, 120))
 	Estilo.dibujar_marco(self, Rect2(Vector2(0, 0) + off, Vector2(size.x, 124)), 0.82, false)
-	_dibujar_cara(retrato_r.grow(-10))
+	if _vp != null:
+		_dibujar_retrato_3d(retrato_r.grow(-10))
+	else:
+		_dibujar_cara(retrato_r.grow(-10))
 	var x0 := 128.0
 	Estilo.texto(self, Vector2(x0, 30) + off, nombre, 22, Estilo.PAPEL, -1, HORIZONTAL_ALIGNMENT_LEFT, Estilo.fuente_titulo(), 5)
 	var filas := [["vida", 42.0, 26.0], ["chakra", 72.0, 22.0], ["estamina", 98.0, 14.0]]
@@ -79,7 +155,20 @@ func _relleno(r: Rect2, sesgo: float, frac: float, col: Color) -> void:
 	draw_colored_polygon(pts, col)
 
 
-## Cara estilizada: fondo rojo con el abanico, pelo en picos, banda con placa y ojos.
+## Fondo con el emblema del clan y el busto 3D encima.
+func _dibujar_retrato_3d(r: Rect2) -> void:
+	draw_rect(r, Color(0.13, 0.1, 0.16))
+	for i in 5:
+		draw_rect(Rect2(r.position + Vector2(0, i * r.size.y / 5.0), Vector2(r.size.x, r.size.y / 10.0)), Color(0, 0, 0, 0.14))
+	if _emblema != null:
+		draw_texture_rect(_emblema, r.grow(-8), false, Color(1, 1, 1, 0.35))
+	if sharingan:
+		draw_rect(r, Color(0.6, 0.0, 0.05, 0.2))
+	draw_texture_rect(_vp.get_texture(), r, false)
+	draw_rect(r, Estilo.ACERO_BORDE, false, 2.0)
+
+
+## Cara estilizada (sin 3D): fondo rojo con el abanico, pelo en picos, banda con placa y ojos.
 func _dibujar_cara(r: Rect2) -> void:
 	var c := r.get_center() + Vector2(0, 6)
 	var s := r.size.x / 100.0

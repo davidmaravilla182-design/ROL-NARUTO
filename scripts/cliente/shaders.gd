@@ -239,6 +239,7 @@ render_mode cull_back;
 uniform vec4 color : source_color = vec4(0.08, 0.11, 0.15, 1.0);
 uniform float densidad = 1.6;
 uniform float fuerza = 1.0;
+uniform vec4 reflejo : source_color = vec4(0.42, 0.46, 0.62, 1.0);
 varying vec3 wpos;
 RUIDO
 float ondas(vec2 p) {
@@ -272,9 +273,12 @@ void fragment() {
 	}
 	NORMAL = normalize((VIEW_MATRIX * vec4(n, 0.0)).xyz);
 	ALBEDO = color.rgb;
-	METALLIC = 0.55;
-	ROUGHNESS = 0.06;
-	SPECULAR = 0.6;
+	METALLIC = 0.85;
+	ROUGHNESS = 0.03;
+	SPECULAR = 0.8;
+	// Espejo de agua: el cielo se refleja más cuanto más rasante es la mirada (fresnel), deformado por las ondas.
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+	EMISSION = reflejo.rgb * (0.12 + fres * 0.55);
 }
 """
 

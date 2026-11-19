@@ -159,3 +159,9 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - Ninja: reemplaza al personaje de los jugadores (también la vista previa de la creación y los clones). El enemigo de la IA conserva el personaje anterior con impermeable y máscara, para distinguirlo.
 - La textura del ninja se reduce a 1024 px: +6,6 MB de memoria de video en lugar de +18,6 MB.
 - Impermeable con el ninja IA: recoloreo de chaleco y camisa (la capa del cuerpo anterior no encaja en el nuevo esqueleto).
+
+### Ajustes tras probar en el celular (retrato, plaza y letrero)
+- Retrato del HUD: el mismo PersonajeVisual del jugador en un SubViewport de 200 px (busto), con el emblema del clan de fondo. Se renderiza unos instantes y se congela; solo se repinta al encender o apagar un modo ocular (casi sin costo por fotograma).
+- Plaza: 5 piezas nuevas del kit de Blender (caja de madera, contenedor, barril, rejilla de suelo, tubería a ras del suelo con válvula) colocadas en `data/escenario.json → trazado.props` con su huella de colisión (la rejilla no choca; la tubería se puede saltar). Se colocan después de las cajas del campo y sin encimarse con ellas, para no cambiar el campo de combate. Las cajas del campo usan ahora la caja de madera.
+- Charcos: más charcos alrededor de la plaza y shader más espejo (metálico 0,85, rugosidad 0,03 y reflejo del cielo por fresnel).
+- Letrero de victoria/derrota: más pequeño, bajo la barra superior y se desvanece solo a los 4 s.

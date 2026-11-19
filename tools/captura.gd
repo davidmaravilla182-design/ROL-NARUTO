@@ -292,7 +292,11 @@ func _guion_comparar() -> void:
 		[4.4, func(): _foto_medida("c6_ninja_espalda")],
 		[4.45, func(): _cam(PI * 0.5, 2.4, -0.08, 1.3)],
 		[4.9, func(): _foto_medida("c7_ninja_lado")],
-		[5.0, func():
+		[4.95, func(): _libre(Vector3(-10, 1.7, 8), Vector3(-21, 0.4, -6))],
+		[5.3, func(): _foto_medida("c8_plaza_suelo")],
+		[5.35, func(): _libre(Vector3(12, 1.6, -8), Vector3(18, 0.2, -18))],
+		[5.7, func(): _foto_medida("c9_plaza_canal")],
+		[5.8, func():
 			var f := FileAccess.open(salida.path_join("medidas.txt"), FileAccess.WRITE)
 			f.store_string("\n".join(_medidas))
 			quit(0)],

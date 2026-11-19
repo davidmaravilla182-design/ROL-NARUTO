@@ -578,6 +578,10 @@ func _crear_visual(e: Dictionary) -> void:
 			pv.construir(str(e["plantilla"]))
 		else:
 			pv.construir_aspecto(asp, str(asp.get("aldea", "lluvia")), str(asp.get("clan", "")))
+		if int(e["id"]) == mi_id:
+			# Retrato del HUD con el mismo modelo y la misma personalización.
+			var clan_r := str(asp.get("clan", Datos.personaje(str(e["plantilla"])).get("clan", "")))
+			hud.configurar_retrato(asp, clan_r, str(_info.get(mi_id, {}).get("nombre", e.get("nombre", ""))), str(e["plantilla"]))
 		nodo = pv
 	nodo.name = "Entidad_%d" % int(e["id"])
 	nodo.position = e["pos"]
