@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "meshy": {
+      "command": "npx",
+      "args": ["-y", "@meshy-ai/meshy-mcp-server@0.6.12"],
+      "env": {
+        "MESHY_API_KEY": "msy_relleno_el_proxy_pone_la_clave_real",
+        "MESHY_CLIENT": "sombras-de-la-lluvia/0.5"
+      }
+    }
+  }
+}

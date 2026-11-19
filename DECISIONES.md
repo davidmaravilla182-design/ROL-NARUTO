@@ -165,3 +165,15 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - Plaza: 5 piezas nuevas del kit de Blender (caja de madera, contenedor, barril, rejilla de suelo, tubería a ras del suelo con válvula) colocadas en `data/escenario.json → trazado.props` con su huella de colisión (la rejilla no choca; la tubería se puede saltar). Se colocan después de las cajas del campo y sin encimarse con ellas, para no cambiar el campo de combate. Las cajas del campo usan ahora la caja de madera.
 - Charcos: más charcos alrededor de la plaza y shader más espejo (metálico 0,85, rugosidad 0,03 y reflejo del cielo por fresnel).
 - Letrero de victoria/derrota: más pequeño, bajo la barra superior y se desvanece solo a los 4 s.
+
+
+## Conexión con Meshy (generación de modelos 3D por IA)
+- **Clave**: es un *network secret* del entorno para `api.meshy.ai`; el proxy de salida la agrega a cada solicitud. Nunca va en el repositorio ni en archivos. Los clientes mandan solicitudes sin cabecera `Authorization`.
+- **API REST** (lo que se usa en las sesiones): base `https://api.meshy.ai`. Saldo: `GET /openapi/v1/balance`. Imagen a 3D: `POST /openapi/v1/image-to-3d` y `GET /openapi/v1/image-to-3d/{id}`. Cliente en `tools/meshy.py` (`saldo`, `imagen`, `estado`, `esperar` que descarga GLB, texturas y miniatura). La imagen viaja como data URI (JPEG), no hace falta subirla a ningún lado.
+- **Smart Topology**: `model_type: "smart-topology"` + `ai_model: "meshy-t2.5"` (detalle para juegos, `target_polycount` de 100 a 30.000) o `meshy-t2` (partes separadas, hasta 15.000). Solo triángulos. Textura 2K por defecto (`texture_resolution`).
+- **Costos** (docs.meshy.ai/en/api/pricing, noviembre 2026): Smart Topology con textura 2K = 15 créditos; solo malla = 5. meshy-7.1/meshy-6 con textura 2K o 4K = 30, 8K = 35; geometría Ultra +5. Remesh, rigging (5) y animación se cobran aparte.
+- **Saldo al conectar**: 1.165 créditos (1.105 mensuales que se renuevan el 19/12/2026 y 60 permanentes).
+- **Descargas**: los archivos vienen de `assets.meshy.ai` (y `cdn.meshy.ai`) con URLs firmadas de CloudFront. El proxy deja pasar ambos dominios; sin firma responden 403 `MissingKey`/`AccessDenied`, lo que es normal.
+- **Servidor MCP**: `.mcp.json` del proyecto con `@meshy-ai/meshy-mcp-server@0.6.12` por `npx` y `MESHY_API_KEY` de relleno (el proxy pone la real). Probado a mano por stdio: `meshy_check_balance` responde. Sus herramientas aparecen al iniciar una sesión nueva en este proyecto; mientras tanto la API REST hace lo mismo.
+- **Antes de gastar créditos se confirma con el usuario** el costo de cada generación.
+- **Flujo recomendado** para piezas nuevas: Smart Topology ~30k + textura 2K → revisar en Blender (vistas) → reducir y LOD con los scripts de `tools/blender/` → shader del juego. Para personajes, pedir ropa y cabello por separado (ver la prueba de la torre y el ninja).
