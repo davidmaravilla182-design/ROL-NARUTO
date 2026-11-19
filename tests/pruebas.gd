@@ -26,6 +26,7 @@ func _initialize() -> void:
 	probar_ia_puede_ganar()
 	probar_jugador_puede_ganar()
 	probar_textos_sin_codigo()
+	probar_plataforma_lengua()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -413,3 +414,28 @@ func probar_textos_sin_codigo() -> void:
 					limpio = false
 					printerr("    '%s' aparece en %s/%s" % [p, ruta, f])
 	comprobar(dir != null and limpio, "sin nombres de la serie escritos en el código")
+
+
+## La lengua de la torre (modelo IA) es una plataforma: se cae encima y los proyectiles chocan con ella.
+func probar_plataforma_lengua() -> void:
+	var m := Mapa.generar()
+	comprobar(m.plataformas.size() == 1, "la lengua de la torre es una plataforma del mapa")
+	if m.plataformas.is_empty():
+		return
+	var pl: Dictionary = m.plataformas[0]
+	var c: Vector2 = pl["centro"]
+	var h := float(pl["altura"])
+	comprobar(h > 20.0, "la plataforma está en lo alto de la torre (%.1f m)" % h)
+	# La torre está detrás del canal, fuera del área jugable: se amplía el límite para la prueba.
+	m.limite = 200.0
+	var s := ServidorJuego.new()
+	s.auto_procesar = false
+	s.iniciar(m)
+	s.agregar_jugador(1)
+	var j := s.entidad_de_peer(1)
+	j.pos = Vector3(c.x, h + 3.0, c.y)
+	for i in 60:
+		s.paso(s.dt_tick)
+	comprobar(absf(j.pos.y - h) < 0.05 and j.en_suelo, "un personaje cae sobre la lengua y se queda parado (y=%.2f)" % j.pos.y)
+	comprobar(m.dentro_plataforma(Vector3(c.x, h - 0.5, c.y)) and not m.dentro_plataforma(Vector3(c.x, h + 1.0, c.y)), "los proyectiles chocan con la lengua")
+	s.free()

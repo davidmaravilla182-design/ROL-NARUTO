@@ -694,6 +694,8 @@ func _actualizar_proyectiles(dt: float) -> void:
 		var choca := impacto != null
 		if not choca and pos.y - radio * 0.25 <= 0.0 and not p.get("rastrero", false):
 			choca = true
+		if not choca and mapa.dentro_plataforma(pos):
+			choca = true
 		if not choca and mapa.punto_bloqueado(Vector2(pos.x, pos.z), radio * 0.6, pos.y, true):
 			choca = true
 		if not choca and float(p["recorrido"]) >= float(p["alcance"]):
@@ -810,8 +812,9 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	e.vel_y -= Datos.sim("gravedad") * dt * (0.3 if Genericas.planea(e) and e.vel_y < 0.0 else 1.0)
 	var nueva := e.pos + horiz * dt
 	nueva.y = e.pos.y + e.vel_y * dt
-	if nueva.y <= 0.0:
-		nueva.y = 0.0
+	var suelo := mapa.altura_suelo(Vector2(nueva.x, nueva.z), e.pos.y)
+	if nueva.y <= suelo:
+		nueva.y = suelo
 		e.vel_y = 0.0
 		e.en_suelo = true
 	else:

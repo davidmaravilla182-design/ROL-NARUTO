@@ -24,6 +24,9 @@ func _initialize() -> void:
 	if OS.get_environment("GUION") == "tecnicas":
 		_guion_tecnicas()
 		return
+	if OS.get_environment("GUION") == "comparar":
+		_guion_comparar()
+		return
 	if OS.get_environment("GUION") == "todos":
 		_guion_todos(OS.get_environment("FILTRO"))
 		return
@@ -242,3 +245,55 @@ func _guion_todos(filtro: String) -> void:
 					_accion("modo")])
 			t0 += 3.5
 	guion.append([t0, func(): quit(0)])
+
+
+## Guion GUION=comparar: mismos puntos de cámara antes/después de cambiar modelos, con medidas
+## (llamadas de dibujo, primitivas, objetos y memoria de video) guardadas en medidas.txt.
+var _medidas: Array = []
+
+
+func _medir(nombre: String) -> void:
+	var vp := root.get_viewport().get_viewport_rid()
+	var tipo := RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE
+	var linea := "%s: llamadas=%d primitivas=%d objetos=%d mem_video=%.1fMB mem_texturas=%.1fMB mem_buffers=%.1fMB mem_estatica=%.1fMB" % [nombre,
+		RenderingServer.viewport_get_render_info(vp, tipo, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		RenderingServer.viewport_get_render_info(vp, tipo, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME),
+		RenderingServer.viewport_get_render_info(vp, tipo, RenderingServer.VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME),
+		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0,
+		Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED) / 1048576.0,
+		Performance.get_monitor(Performance.RENDER_BUFFER_MEM_USED) / 1048576.0,
+		Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0]
+	_medidas.append(linea)
+	print("MEDIDA ", linea)
+
+
+func _foto_medida(nombre: String) -> void:
+	_guardar(nombre)
+	_medir(nombre)
+
+
+func _guion_comparar() -> void:
+	Perfil.cargar()
+	Perfil.elegir(-1)   # personaje de práctica: el mismo en antes y después
+	guion = [
+		[0.85, func(): menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[0.9, func(): _enemigo(false)],
+		[1.6, func(): _libre(Vector3(4, 3.0, 16), Vector3(-4, 40, -66))],
+		[2.0, func(): _foto_medida("c1_torre_desde_campo")],
+		[2.05, func(): _libre(Vector3(34, 14, -16), Vector3(-4, 36, -68))],
+		[2.4, func(): _foto_medida("c2_torre_cerca")],
+		[2.45, func(): _libre(Vector3(14, 16, 22), Vector3(-4, 2, -10))],
+		[2.8, func(): _foto_medida("c3_panoramica")],
+		[2.85, func(): _seguir(); _listo(Vector3(0, 0, 10)); _cam(0.0, 6.0, -0.15, 1.6)],
+		[3.4, func(): _foto_medida("c4_juego")],
+		[3.45, func(): _cam(PI, 2.4, -0.08, 1.3)],
+		[3.9, func(): _foto_medida("c5_ninja_frente")],
+		[3.95, func(): _cam(0.0, 2.4, -0.08, 1.3)],
+		[4.4, func(): _foto_medida("c6_ninja_espalda")],
+		[4.45, func(): _cam(PI * 0.5, 2.4, -0.08, 1.3)],
+		[4.9, func(): _foto_medida("c7_ninja_lado")],
+		[5.0, func():
+			var f := FileAccess.open(salida.path_join("medidas.txt"), FileAccess.WRITE)
+			f.store_string("\n".join(_medidas))
+			quit(0)],
+	]

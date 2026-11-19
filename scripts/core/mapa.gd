@@ -10,6 +10,7 @@ var charcos: Array = []      # [{centro: Vector2, radio: float}]
 var pasarelas: Array = []    # [{a: int, b: int, altura: float}] (solo visual)
 var munecos: Array = []      # [Vector2]
 var piezas: Array = []       # trazado: [{tipo, centro: Vector2, giro: float (grados)}]
+var plataformas: Array = []  # suelos elevados: [{centro: Vector2, medio: Vector2, altura: float, grosor: float}] (lengua de la torre)
 var arcos: Array = []        # [{centro: Vector2, giro: float}]
 var tubos: Array = []        # [{centro: Vector2, giro: float, altura: float}]
 var canal: Dictionary = {}   # {x_min, x_max, z_sur, z_norte, nivel_agua}
@@ -114,6 +115,8 @@ func _trazado(tz: Dictionary) -> void:
 		var c := _v2(p["pos"])
 		var giro := float(p.get("giro", 0.0))
 		piezas.append({"tipo": tipo, "centro": c, "giro": giro})
+		if tipo == "torre_ia":
+			_plataforma_torre(c, giro)
 		if huellas.has(tipo):
 			var h: Array = huellas[tipo]
 			var medio := Vector2(float(h[0]), float(h[1])) * 0.5
@@ -139,6 +142,40 @@ func _trazado(tz: Dictionary) -> void:
 		# El canal frena a los personajes (aunque salten) pero los proyectiles pasan por encima del agua.
 		obstaculos.append({"centro": Vector2(cx, cz), "medio": medio_c, "alto": 50.0, "tipo": "canal", "solo_personajes": true})
 	puentes = tz.get("puentes", [])
+
+
+## La lengua de la torre es una plataforma: se puede caer encima y los proyectiles chocan con ella.
+func _plataforma_torre(c: Vector2, giro: float) -> void:
+	var t: Dictionary = Datos.escenario.get("torre_ia", {})
+	if t.is_empty():
+		return
+	var mn: Array = t["lengua"]["min"]
+	var mx: Array = t["lengua"]["max"]
+	var g := deg_to_rad(giro)
+	var centro_l := Vector2((float(mn[0]) + float(mx[0])) * 0.5, (float(mn[2]) + float(mx[2])) * 0.5).rotated(-g)
+	var medio := Vector2(float(mx[0]) - float(mn[0]), float(mx[2]) - float(mn[2])) * 0.5
+	if int(round(giro / 90.0)) % 2 == 1:
+		medio = Vector2(medio.y, medio.x)
+	plataformas.append({"centro": c + centro_l, "medio": medio, "altura": float(t["lengua"]["superficie"]), "grosor": 2.0})
+
+
+## Altura del suelo bajo un punto: 0 o la superficie de una plataforma si se está encima (o cayendo sobre ella).
+func altura_suelo(p: Vector2, y: float) -> float:
+	var h := 0.0
+	for pl in plataformas:
+		var d: Vector2 = (p - pl["centro"]).abs()
+		if d.x <= pl["medio"].x and d.y <= pl["medio"].y and y >= float(pl["altura"]) - 0.6:
+			h = maxf(h, float(pl["altura"]))
+	return h
+
+
+## ¿El punto está dentro del volumen de una plataforma? (los proyectiles chocan con ella)
+func dentro_plataforma(q: Vector3) -> bool:
+	for pl in plataformas:
+		var d: Vector2 = (Vector2(q.x, q.z) - pl["centro"]).abs()
+		if d.x <= pl["medio"].x and d.y <= pl["medio"].y and q.y <= float(pl["altura"]) and q.y >= float(pl["altura"]) - float(pl["grosor"]):
+			return true
+	return false
 
 
 func _se_solapa(c: Vector2, medio: Vector2, margen: float) -> bool:

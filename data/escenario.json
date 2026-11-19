@@ -129,6 +129,11 @@
     20.0,
     20.0,
     80.0
+   ],
+   "torre_ia": [
+    34.0,
+    34.0,
+    74.0
    ]
   },
   "canal": {
@@ -280,10 +285,10 @@
     "giro": 0
    },
    {
-    "tipo": "torre_cabeza",
+    "tipo": "torre_ia",
     "pos": [
      -4.0,
-     -62.0
+     -76.0
     ],
     "giro": 0
    }
@@ -346,5 +351,59 @@
   "niebla_altura_densidad": 0.08,
   "exposicion": 1.05,
   "glow_umbral": 0.8
+ },
+ "torre_ia": {
+  "_nota": "Generado por tools/blender/torre_ia.py: torre de los modelos IA (coordenadas locales de Godot, metros).",
+  "alto": 74.0,
+  "ancho": 42.08,
+  "fondo": 51.09,
+  "triangulos": [
+   29963,
+   9728,
+   2990
+  ],
+  "ventanas": 126,
+  "distancia_alineacion": 0.0054,
+  "ojos": [
+   {
+    "centro": [
+     -2.737,
+     50.93,
+     12.456
+    ],
+    "normal": [
+     0.055,
+     -0.612,
+     0.789
+    ],
+    "radio": 1.97
+   },
+   {
+    "centro": [
+     8.498,
+     51.254,
+     10.666
+    ],
+    "normal": [
+     0.327,
+     -0.03,
+     0.944
+    ],
+    "radio": 1.57
+   }
+  ],
+  "lengua": {
+   "min": [
+    -1.403,
+    28.395,
+    17.06
+   ],
+   "max": [
+    13.485,
+    35.764,
+    25.544
+   ],
+   "superficie": 31.71
+  }
  }
 }

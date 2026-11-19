@@ -15,6 +15,11 @@ static func construir(e: Escenario, m: Mapa) -> void:
 		var c: Vector2 = p["centro"]
 		var t := Transform3D(Basis(Vector3.UP, deg_to_rad(float(p["giro"]))), Vector3(c.x, 0, c.y))
 		var tipo := str(p["tipo"])
+		if tipo == "torre_ia":
+			if TorreIA.disponible():
+				e.add_child(TorreIA.crear(c, float(p["giro"])))
+				continue
+			tipo = "torre_cabeza"   # sin el modelo IA, la torre procedural
 		if not por_tipo.has(tipo):
 			por_tipo[tipo] = []
 		por_tipo[tipo].append(t)
@@ -42,7 +47,7 @@ static func construir(e: Escenario, m: Mapa) -> void:
 ## y una luz fría sobre el rostro, como en la ilustración de referencia.
 static func _hito(e: Escenario, m: Mapa) -> void:
 	for p in m.piezas:
-		if p["tipo"] != "torre_cabeza":
+		if not (p["tipo"] in ["torre_cabeza", "torre_ia"]):
 			continue
 		var c: Vector2 = p["centro"]
 		var f := frente(p) * -1.0   # el rostro mira a -Y de Blender = +Z de Godot rotado

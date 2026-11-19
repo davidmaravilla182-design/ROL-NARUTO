@@ -459,6 +459,94 @@ void fragment() {
 """
 
 ## Indicador de apuntado en el suelo: franja con flechas que avanzan.
+## Torre de los modelos IA: color por vértice (de TRELLIS) + detalle triplanar de concreto/lámina,
+## metal mojado con chorreaduras de lluvia y bandas de luz estilo anime.
+const TORRE_IA := """
+shader_type spatial;
+render_mode cull_back;
+uniform sampler2D tex_detalle : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D tex_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float escala_mundo = 0.22;
+uniform float brillo = 2.7;
+uniform float humedad = 0.75;
+uniform float chorreo = 1.0;
+uniform vec4 color_sombra : source_color = vec4(0.42, 0.44, 0.6, 1.0);
+varying vec3 wpos;
+varying vec3 wnorm;
+varying vec3 col;
+
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wnorm = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	col = COLOR.rgb;
+}
+
+void fragment() {
+	vec3 b = pow(abs(wnorm), vec3(4.0));
+	b /= (b.x + b.y + b.z);
+	vec3 p = wpos * escala_mundo;
+	vec3 det = texture(tex_detalle, p.zy).rgb * b.x + texture(tex_detalle, p.xz).rgb * b.y + texture(tex_detalle, p.xy).rgb * b.z;
+	vec3 nm = texture(tex_normal, p.zy).rgb * b.x + texture(tex_normal, p.xz).rgb * b.y + texture(tex_normal, p.xy).rgb * b.z;
+	// El color de TRELLIS manda; el detalle aporta grano de metal y concreto.
+	float lum = dot(det, vec3(0.33));
+	vec3 alb = col * brillo * mix(0.75, 1.25, lum);
+	float sat = length(col - vec3(dot(col, vec3(0.33))));
+	// Metal gris (poco saturado) liso y mojado; óxido y tuberías más ásperos.
+	float metal = clamp(1.0 - sat * 9.0, 0.0, 1.0);
+	float arriba = clamp(wnorm.y, 0.0, 1.0);
+	float chorros = 0.0;
+	if (chorreo > 0.0) {
+		float col_x = floor((wpos.x + wpos.z) * 2.5);
+		float h = fract(sin(col_x * 12.9898) * 43758.5453);
+		float y = fract(wpos.y * 0.05 + TIME * (0.18 + h * 0.3) + h * 7.0);
+		chorros = step(0.7, h) * smoothstep(0.0, 0.08, y) * smoothstep(0.35, 0.1, y) * (1.0 - arriba) * chorreo;
+	}
+	float mojado = clamp(humedad * (0.4 + arriba * 0.6) + chorros * 0.6, 0.0, 1.0);
+	ALBEDO = alb * mix(1.0, 0.7, mojado);
+	METALLIC = metal * 0.18;
+	ROUGHNESS = clamp(mix(0.7, 0.2, metal) * mix(1.0, 0.35, mojado), 0.05, 1.0);
+	NORMAL_MAP = nm;
+	NORMAL_MAP_DEPTH = 0.6;
+}
+
+void light() {
+	float ndl = dot(NORMAL, LIGHT);
+	float l = clamp(ndl * 0.5 + 0.5, 0.0, 1.0);
+	if (LIGHT_IS_DIRECTIONAL) {
+		l *= mix(0.45, 1.0, ATTENUATION);
+		float bb = smoothstep(0.42, 0.5, l) * 0.55 + smoothstep(0.68, 0.74, l) * 0.45;
+		DIFFUSE_LIGHT += mix(color_sombra.rgb, vec3(1.0), bb) * LIGHT_COLOR / PI;
+	} else {
+		DIFFUSE_LIGHT += clamp(ndl, 0.0, 1.0) * ATTENUATION * LIGHT_COLOR / PI;
+	}
+	vec3 h = normalize(VIEW + LIGHT);
+	float spec = pow(max(dot(NORMAL, h), 0.0), 40.0);
+	SPECULAR_LIGHT += smoothstep(0.3, 0.9, spec) * LIGHT_COLOR * 0.12 * (1.0 - ROUGHNESS) * ATTENUATION;
+}
+"""
+
+## Ojo de la torre: anillos concéntricos morados con brillo leve que respira.
+const OJO_TORRE := """
+shader_type spatial;
+render_mode unshaded, cull_disabled;
+uniform vec4 color_iris : source_color = vec4(0.62, 0.42, 0.95, 1.0);
+uniform vec4 color_anillo : source_color = vec4(0.22, 0.08, 0.38, 1.0);
+uniform float anillos = 4.0;
+uniform float brillo = 1.4;
+void fragment() {
+	vec2 q = UV * 2.0 - 1.0;
+	float r = length(q);
+	if (r > 1.0) discard;
+	float banda = smoothstep(0.42, 0.5, abs(fract(r * anillos) - 0.5) * 2.0);
+	vec3 c = mix(color_anillo.rgb, color_iris.rgb, banda);
+	c = mix(c, vec3(0.08, 0.02, 0.14), smoothstep(0.16, 0.1, r));
+	c *= mix(0.55, 1.0, smoothstep(1.0, 0.75, r));
+	float pulso = 0.85 + 0.15 * sin(TIME * 1.3);
+	ALBEDO = c;
+	EMISSION = c * brillo * pulso * 0.6;
+}
+"""
+
 const INDICADOR := """
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never, blend_add, fog_disabled;
@@ -503,6 +591,8 @@ static func shader(clave: String) -> Shader:
 		"espectral": return _shader(clave, ESPECTRAL)
 		"cascada": return _shader(clave, CASCADA)
 		"indicador": return _shader(clave, INDICADOR)
+		"torre_ia": return _shader(clave, TORRE_IA)
+		"ojo_torre": return _shader(clave, OJO_TORRE)
 	push_error("Shader desconocido " + clave)
 	return null
 
