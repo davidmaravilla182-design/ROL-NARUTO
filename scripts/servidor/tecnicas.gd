@@ -174,9 +174,11 @@ static func preparar_kirin(s: ServidorJuego, e: EntidadServidor, nivel: int) -> 
 		e.yaw = s._yaw_hacia(e.pos, obj.pos)
 	var golpes := int(nd.get("golpes", 1))
 	var intervalo := float(nd.get("intervalo", 0.0))
-	e.poner_estado("kirin", 0.35 + golpes * intervalo + 0.5, {"jutsu": "kirin", "nivel": nivel, "punto": punto,
-		"objetivo": obj.id if obj != null else -1, "quedan": golpes, "siguiente": 0.35, "intervalo": maxf(intervalo, 0.01)})
-	s._evento({"tipo": "kirin_invocar", "entidad": e.id, "nivel": nivel, "punto": punto})
+	var carga := float(nd.get("carga", 0.35))
+	e.poner_estado("kirin", carga + golpes * intervalo + 0.5, {"jutsu": "kirin", "nivel": nivel, "punto": punto,
+		"objetivo": obj.id if obj != null else -1, "quedan": golpes, "siguiente": carga, "intervalo": maxf(intervalo, 0.01)})
+	s._evento({"tipo": "kirin_invocar", "entidad": e.id, "nivel": nivel, "punto": punto, "carga": carga,
+		"objetivo": obj.id if obj != null else -1})
 
 
 static func tick_kirin(s: ServidorJuego, e: EntidadServidor, dt: float) -> void:

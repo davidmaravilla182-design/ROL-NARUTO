@@ -463,7 +463,8 @@
     "luz": 6.0,
     "luz_rango": 40.0,
     "marca": 3.5,
-    "particulas": 120
+    "particulas": 120,
+    "carga": 1.1
    },
    {
     "descripcion": "Una bestia de rayo baja del cielo.",
@@ -478,7 +479,8 @@
     "luz": 9.0,
     "luz_rango": 70.0,
     "marca": 6.0,
-    "particulas": 220
+    "particulas": 220,
+    "carga": 1.3
    },
    {
     "descripcion": "Tormenta de varios Kirin sobre el área.",
@@ -494,11 +496,13 @@
     "luz": 12.0,
     "luz_rango": 90.0,
     "marca": 5.0,
-    "particulas": 300
+    "particulas": 300,
+    "carga": 1.5
    }
   ],
   "clima": "tormenta",
-  "rol": "ataque"
+  "rol": "ataque",
+  "_nota_carga": "carga: segundos de tormenta en remolino sobre el objetivo antes de que caiga el dragón de rayo."
  },
  "manto_rayo": {
   "nombre": "Manto de Rayo",

@@ -284,18 +284,26 @@ func _dragon(nodo: Node3D, radio: float, c: Color, n: int, fuego: bool) -> void:
 	else:
 		mat = Materiales.transparente(Color(c.r, c.g, c.b, 0.8), false)
 	# Dragones de agua y de madera: modelo de Meshy (agua que fluye / madera con su textura) y el cuerpo detrás.
-	var modelo: MeshInstance3D = null
+	var modelo: Node3D = null
+	var mat_modelo: Material = null
 	if not fuego and not tierra:
-		if madera:
-			modelo = Kit.modelo_jutsu("dragon_madera")
-		else:
+		# Con cadena de huesos (ondula como serpiente); si falta, el modelo estático.
+		if not madera:
 			var ma := Shaders.material("agua_cuerpo")
 			ma.set_shader_parameter("color", Color(c.r, c.g, c.b).darkened(0.2))
-			modelo = Kit.modelo_jutsu("dragon_agua", ma)
+			mat_modelo = ma
+		modelo = DragonVivo.crear("dragon_madera" if madera else "dragon_agua", mat_modelo)
+		if modelo == null:
+			modelo = Kit.modelo_jutsu("dragon_madera") if madera else Kit.modelo_jutsu("dragon_agua", mat_modelo)
 	if modelo != null:
-		modelo.scale = Vector3.ONE * radio * (1.1 if not madera else 0.9)
+		var esc_m := radio * (1.1 if not madera else 0.9)
 		modelo.position = Vector3(0, -radio * 1.2, radio * 0.6)
 		nodo.add_child(modelo)
+		if modelo is DragonVivo:
+			(modelo as DragonVivo).anticipar(esc_m)
+			nodo.set_meta("dragon_color", c)
+		else:
+			modelo.scale = Vector3.ONE * esc_m
 		if madera:
 			_raices_surgen(nodo.global_position, radio)
 		else:
@@ -306,7 +314,7 @@ func _dragon(nodo: Node3D, radio: float, c: Color, n: int, fuego: bool) -> void:
 		nodo.add_child(cuerpo_m)
 		for i in mini(n, 5):
 			var r_m := radio * lerpf(0.55, 0.2, float(i) / 4.0)
-			var seg_m: MeshInstance3D = Materiales.esfera(r_m, mat if madera else modelo.material_override, 8)
+			var seg_m: MeshInstance3D = Materiales.esfera(r_m, mat if madera else mat_modelo, 8)
 			seg_m.top_level = true
 			cuerpo_m.add_child(seg_m)
 			seg_m.global_position = nodo.global_position

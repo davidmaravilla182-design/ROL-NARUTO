@@ -696,6 +696,26 @@ func dialogo(texto: String, segundos := 4.5) -> void:
 
 
 ## Genjutsu: nubla y hace girar la pantalla durante «segundos» (entra y sale suave).
+## Destello blanco a pantalla completa (impacto del Kirin): aparece de golpe y se apaga.
+var _destello_ms := 0
+
+
+func destello_pantalla(segundos: float, intensidad := 0.95) -> void:
+	# Uno solo por ráfaga (el Kirin de nivel 3 cae varias veces seguidas).
+	if Time.get_ticks_msec() - _destello_ms < 1500:
+		return
+	_destello_ms = Time.get_ticks_msec()
+	var r := ColorRect.new()
+	r.color = Color(1, 1, 1, intensidad)
+	r.set_anchors_preset(Control.PRESET_FULL_RECT)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(r)
+	var tw := create_tween()
+	tw.tween_interval(segundos * 0.15)
+	tw.tween_property(r, "color:a", 0.0, segundos * 0.85).set_ease(Tween.EASE_IN)
+	tw.tween_callback(r.queue_free)
+
+
 ## Líneas de velocidad de anime (golpes fuertes): rayas radiales desde los bordes hacia el centro.
 func lineas_velocidad(segundos: float) -> void:
 	if _lineas == null:

@@ -49,9 +49,15 @@ func evento(ev: Dictionary, mi_id: int, pos_entidad: Callable, visual_de: Callab
 	var propio := int(ev.get("entidad", -1)) == mi_id
 	match tipo:
 		"kirin_invocar":
-			# El cielo se oscurece y retumba antes de la caída.
+			# El cielo se oscurece y retumba: nubes de tormenta giran sobre el objetivo; luego cae el dragón de rayo.
 			if efectos.escenario != null:
 				efectos.escenario.destello(Color(0.5, 0.6, 1.0), 1.5 + nivel, 0.6)
+			var carga := float(ev.get("carga", 0.35))
+			var obj_k := int(ev.get("objetivo", -1))
+			var seguir := func() -> Vector3:
+				var pp: Vector3 = pos_entidad.call(obj_k) if obj_k >= 0 else Vector3.ZERO
+				return pp if pp != Vector3.ZERO else (ev["punto"] as Vector3)
+			tormenta(ev["punto"], nivel, carga, seguir)
 			if sonidos != null:
 				sonidos.tocar("trueno", -6.0 + nivel * 2.0, 1.2)
 			if propio and nivel >= 3:
@@ -105,49 +111,177 @@ func evento(ev: Dictionary, mi_id: int, pos_entidad: Callable, visual_de: Callab
 
 # ------------------------------------------------------------------ Kirin
 
+const ALTURA_TORMENTA := 24.0
+const VUELO_DRAGON := 0.6
+
+
+## Tormenta en remolino sobre el objetivo durante la carga; al final, el dragón de rayo baja en espiral.
+func tormenta(punto: Vector3, nivel: int, carga: float, objetivo: Callable) -> void:
+	var raiz := Node3D.new()
+	add_child(raiz)
+	raiz.global_position = Vector3(punto.x, punto.y + ALTURA_TORMENTA, punto.z)
+	var radio := 12.0 + nivel * 3.0
+	# Dos anillos de nubes (ancho arriba, embudo más abajo) que giran y se cierran.
+	for capa in 2:
+		var p := efectos.particulas({"cantidad": 60 if capa == 0 else 30, "vida": carga + 1.2, "explosividad": 1.0, "una_vez": true,
+			"vel_min": 0.0, "vel_max": 0.3, "tam_min": 11.0 - capa * 4.0, "tam_max": 17.0 - capa * 5.0, "escala_inicio": 0.5, "escala_fin": 0.9,
+			"color": Color(0.09, 0.1, 0.14, 0.92), "color_fin": Color(0.08, 0.09, 0.12, 0.0), "aditivo": false, "local": true})
+		var pm := p.process_material as ParticleProcessMaterial
+		pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+		pm.emission_ring_axis = Vector3.UP
+		pm.emission_ring_radius = radio * (1.0 if capa == 0 else 0.45)
+		pm.emission_ring_inner_radius = radio * (0.35 if capa == 0 else 0.1)
+		pm.emission_ring_height = 2.5
+		p.position.y = -capa * 4.0
+		# Nubes de tormenta sin niebla (si no, a esa altura se aclaran y no se leen contra el cielo).
+		var mq := (p.draw_pass_1 as QuadMesh).material.duplicate() as StandardMaterial3D
+		mq.disable_fog = true
+		(p.draw_pass_1 as QuadMesh).material = mq
+		raiz.add_child(p)
+		p.emitting = true
+	var brillo := efectos.particulas({"cantidad": 8, "vida": carga + 0.8, "explosividad": 1.0, "una_vez": true, "radio": radio * 0.3,
+		"vel_min": 0.0, "vel_max": 0.1, "tam_min": radio * 0.8, "tam_max": radio * 1.2, "escala_inicio": 0.2, "escala_fin": 1.0,
+		"color": Color(0.35, 0.5, 0.95, 0.35), "local": true})
+	brillo.position.y = -2.5
+	raiz.add_child(brillo)
+	brillo.emitting = true
+	var luz := OmniLight3D.new()
+	luz.light_color = Color(0.6, 0.75, 1.0)
+	luz.light_energy = 0.0
+	luz.omni_range = radio * 3.0
+	luz.position.y = -3.0
+	raiz.add_child(luz)
+	var tw := raiz.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(raiz, "rotation:y", TAU * (1.2 + nivel * 0.3), carga + 1.0).set_ease(Tween.EASE_IN)
+	tw.tween_property(raiz, "scale", Vector3(0.6, 1.0, 0.6), carga).set_ease(Tween.EASE_IN)
+	tw.chain().tween_property(raiz, "scale", Vector3(1.4, 1.0, 1.4), 1.0)
+	tw.chain().tween_callback(raiz.queue_free)
+	# Relámpagos dentro de las nubes (cada vez más seguidos) y la luz que parpadea.
+	var n_rel := 4 + nivel * 2
+	for k in n_rel:
+		var t_k := carga * pow(float(k) / n_rel, 0.7)
+		var tr := raiz.create_tween()
+		tr.tween_interval(t_k)
+		tr.tween_callback(func():
+			var c := raiz.global_position
+			var a := c + Vector3(randf_range(-radio, radio), randf_range(-1, 1), randf_range(-radio, radio)) * 0.6
+			var b := c + Vector3(randf_range(-radio, radio), randf_range(-3, 0), randf_range(-radio, radio)) * 0.6
+			efectos.rayos_fugaces([[a, b]], 0.12, 0.15, 1)
+			luz.light_energy = 3.0 + nivel
+			var tl := luz.create_tween()
+			tl.tween_property(luz, "light_energy", 0.3, 0.12))
+	if sonidos != null:
+		var ts := raiz.create_tween()
+		ts.tween_interval(carga * 0.5)
+		ts.tween_callback(func(): sonidos.tocar("trueno", -10.0, 0.8))
+	# El dragón sale de la tormenta un poco antes del golpe y baja en espiral hasta el objetivo.
+	var td := create_tween()
+	td.tween_interval(maxf(carga - VUELO_DRAGON, 0.0))
+	td.tween_callback(func(): _dragon_rayo(raiz.global_position, nivel, objetivo))
+
+
+func _dragon_rayo(desde: Vector3, nivel: int, objetivo: Callable) -> void:
+	# Cuerpo sólido y brillante (se lee bien la cabeza); el halo lo ponen la luz, las chispas y los rayos.
+	var mk := Materiales.emisivo(Color(0.62, 0.86, 1.0), 2.6)
+	var escala: float = [2.4, 3.2, 4.2][nivel - 1]
+	var dragon: Node3D = DragonVivo.crear("kirin", mk)
+	if dragon == null:
+		dragon = Kit.modelo_jutsu("kirin", mk)
+		if dragon == null:
+			return
+		dragon.scale = Vector3.ONE * escala
+	else:
+		(dragon as DragonVivo).amplitud = 0.4
+		(dragon as DragonVivo).frecuencia = 10.0
+		(dragon as DragonVivo).anticipar(escala, 0.25)
+	add_child(dragon)
+	dragon.global_position = desde
+	var luz := OmniLight3D.new()
+	luz.light_color = Color(0.6, 0.85, 1.0)
+	luz.light_energy = 5.0
+	luz.omni_range = 18.0
+	dragon.add_child(luz)
+	var chispas := efectos.particulas({"cantidad": 60, "vida": 0.3, "radio": 1.0, "vel_min": 1.0, "vel_max": 4.0, "tam_min": 0.1, "tam_max": 0.25,
+		"estirado": true, "tam_quad": Vector2(0.05, 0.6), "color": Color(0.8, 0.95, 1.0)})
+	dragon.add_child(chispas)
+	chispas.emitting = true
+	var a0 := randf() * TAU
+	var r0 := 7.0
+	var anterior := desde
+	var vuelo := func(t: float) -> void:
+		if not is_instance_valid(dragon):
+			return
+		var meta: Vector3 = objetivo.call()
+		var u := 1.0 - t
+		var a := a0 + t * PI * 1.6
+		var p := meta + Vector3(cos(a) * r0 * u, ALTURA_TORMENTA * pow(u, 1.4) + 1.0, sin(a) * r0 * u)
+		if p.distance_to(anterior) > 0.01:
+			dragon.look_at_from_position(p, p + (p - anterior), Vector3.UP, true)   # la cabeza (+Z del modelo) hacia donde va
+		anterior = p
+		# Rayos que recorren el cuerpo (entre huesos) cada pocos cuadros.
+		if dragon is DragonVivo and randf() < 0.45:
+			var sk := (dragon as DragonVivo).esqueleto
+			var pares: Array = []
+			for i in range(0, sk.get_bone_count() - 1, 2):
+				pares.append([sk.global_transform * sk.get_bone_global_pose(i).origin, sk.global_transform * sk.get_bone_global_pose(i + 2 if i + 2 < sk.get_bone_count() else i + 1).origin])
+			efectos.rayos_fugaces(pares, 0.1 + nivel * 0.04, 0.08, 1)
+	var tw := create_tween()
+	tw.tween_method(vuelo, 0.0, 1.0, VUELO_DRAGON).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tw.tween_callback(func():
+		if is_instance_valid(dragon):
+			if dragon is DragonVivo:
+				(dragon as DragonVivo).desvanecer(Color(0.7, 0.9, 1.0), efectos, 0.3)
+			else:
+				dragon.queue_free())
+
+
 func kirin(pos: Vector3, nivel: int, radio: float, bestia: bool) -> void:
 	var nd := Datos.nivel_jutsu("kirin", nivel)
-	var arriba := pos + Vector3(randf_range(-3, 3), 70.0, randf_range(-3, 3))
+	var arriba := pos + Vector3(randf_range(-3, 3), ALTURA_TORMENTA, randf_range(-3, 3))
 	var pares: Array = [[arriba, pos]]
 	if bestia:
-		# La bestia: varios rayos gruesos entrelazados.
 		for k in 3:
 			pares.append([arriba + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2)), pos + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8))])
-	# La bestia de rayo (modelo de Meshy con el shader espectral azul) cae en picada; más grande en cada nivel.
-	var mk := Shaders.material("espectral")
-	mk.set_shader_parameter("color", Color(0.55, 0.8, 1.0))
-	mk.set_shader_parameter("intensidad", 4.5)
-	var cabeza: Node3D = Kit.modelo_jutsu("kirin", mk)
-	var lenta_caida := 0.55
-	if cabeza == null:
-		if not bestia:
-			cabeza = null
-		else:
-			cabeza = Materiales.esfera(1.4 if nivel < 3 else 1.1, Materiales.emisivo(Color(0.75, 0.9, 1.0), 4.0), 10)
-			cabeza.scale = Vector3(1.0, 0.7, 1.6)
-			lenta_caida = 0.22
-	else:
-		cabeza.scale = Vector3.ONE * [1.8, 2.8, 4.5][nivel - 1]
-	if cabeza != null:
-		add_child(cabeza)
-		cabeza.global_position = arriba
-		cabeza.look_at(pos, Vector3.FORWARD)
-		var tw := create_tween()
-		tw.tween_property(cabeza, "global_position", pos + Vector3(0, 1.0, 0), lenta_caida).set_ease(Tween.EASE_IN)
-		tw.tween_callback(cabeza.queue_free)
-	efectos.rayos_fugaces(pares, 0.35 if bestia else 0.22, 0.5, 3)
+	efectos.rayos_fugaces(pares, 0.4 if bestia else 0.26, 0.5, 3)
+	# Impacto: chispas, polvo y piedras.
 	efectos.rafaga(pos + Vector3(0, 0.5, 0), {"cantidad": int(nd.get("particulas", 120)), "vida": 0.6, "radio": radio * 0.3, "vel_min": 8.0, "vel_max": 18.0,
 		"frenado": 10.0, "tam_min": 0.06, "tam_max": 0.14, "color": Efectos.COLOR_RAYO_NUCLEO, "estirado": true, "tam_quad": Vector2(0.4, 3.0)})
 	efectos.rafaga(Vector3(pos.x, 0.3, pos.z), {"cantidad": 40, "vida": 1.2, "radio": radio * 0.6, "direccion": Vector3.UP, "dispersion": 50.0,
 		"vel_min": 2.0, "vel_max": 6.0, "gravedad": Vector3(0, -6, 0), "tam_min": 0.4, "tam_max": 0.9, "color": Color(0.7, 0.75, 0.85, 0.5), "aditivo": false})
+	efectos.rafaga(Vector3(pos.x, 0.3, pos.z), {"cantidad": 24, "vida": 1.0, "radio": radio * 0.3, "direccion": Vector3.UP, "dispersion": 45.0,
+		"vel_min": 5.0, "vel_max": 10.0, "gravedad": Vector3(0, -20, 0), "tam_min": 0.12, "tam_max": 0.28, "color": Color(0.25, 0.25, 0.28, 1.0), "aditivo": false})
 	efectos.luz_temporal(pos + Vector3(0, 3, 0), Efectos.COLOR_RAYO, float(nd.get("luz", 6.0)), float(nd.get("luz_rango", 40.0)), 0.6)
 	if efectos.escenario != null:
 		efectos.escenario.destello(Color(0.75, 0.85, 1.0), 3.0 + nivel * 1.5, 0.45)
 	efectos.sacudir_desde(pos, float(nd.get("sacudida", 0.8)))
-	efectos.marca_suelo(pos, float(nd.get("marca", 3.0)), Color(0.04, 0.05, 0.1, 0.9), true)
+	# Cráter con grietas y chispas que siguen saltando un rato.
+	efectos.marca_suelo(pos, float(nd.get("marca", 3.0)) * 1.2, Color(0.03, 0.035, 0.06, 0.95), true)
+	_chispas_residuales(pos, radio, 2.0 + nivel * 0.5)
 	if sonidos != null:
 		sonidos.tocar("trueno", 2.0, 1.4)
 		sonidos.tocar("explosion", -2.0, 1.3)
+
+
+## Chispas eléctricas que siguen saltando en el cráter y pequeños arcos al azar.
+func _chispas_residuales(pos: Vector3, radio: float, segundos: float) -> void:
+	var p := efectos.particulas({"cantidad": 40, "vida": 0.35, "radio": radio * 0.5, "direccion": Vector3.UP, "dispersion": 70.0,
+		"vel_min": 1.5, "vel_max": 4.0, "gravedad": Vector3(0, -8, 0), "tam_min": 0.05, "tam_max": 0.12, "estirado": true,
+		"tam_quad": Vector2(0.03, 0.35), "color": Color(0.75, 0.9, 1.0)})
+	add_child(p)
+	p.global_position = Vector3(pos.x, pos.y + 0.15, pos.z)
+	p.emitting = true
+	var tw := p.create_tween()
+	for k in int(segundos / 0.25):
+		tw.tween_interval(0.25)
+		tw.tween_callback(func():
+			if randf() < 0.6:
+				var a := randf() * TAU
+				var c := Vector3(pos.x, pos.y + 0.1, pos.z)
+				efectos.rayos_fugaces([[c + Vector3(cos(a), 0, sin(a)) * radio * 0.2, c + Vector3(cos(a + 0.8), 0.3, sin(a + 0.8)) * radio * 0.6]], 0.04, 0.1, 1))
+	tw.tween_callback(func(): p.emitting = false)
+	tw.tween_interval(0.5)
+	tw.tween_callback(p.queue_free)
 
 
 # ------------------------------------------------------------------ esfera giratoria (Rasengan)

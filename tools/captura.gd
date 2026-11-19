@@ -36,6 +36,9 @@ func _initialize() -> void:
 	if OS.get_environment("GUION") == "comparar":
 		_guion_comparar()
 		return
+	if OS.get_environment("GUION") == "kirin":
+		_guion_kirin()
+		return
 	if OS.get_environment("GUION") == "combate":
 		_guion_combate()
 		return
@@ -95,7 +98,7 @@ func _initialize() -> void:
 
 func _guardar(nombre: String) -> void:
 	root.get_viewport().get_texture().get_image().save_png(salida.path_join(nombre + ".png"))
-	print("captura ", nombre, " t=", snappedf(t, 0.01))
+	print("captura ", nombre, " t=", snappedf(t, 0.01), " ms=", Time.get_ticks_msec())
 	if OS.get_environment("GUION") == "combate":
 		for e in juego.servidor.entidades:
 			if e.tipo == "jugador" or (e.tipo == "enemigo" and e.pos.y > -10):
@@ -275,6 +278,29 @@ func _guion_combate() -> void:
 		_accion("golpe")])
 	g.append([t0 + 0.3, func(): _guardar("x0_choque")])
 	g.append([t0 + 0.6, func(): quit(0)])
+	guion = g
+
+
+## Guion GUION=kirin: tormenta, dragón de rayo e impacto en N1, N2 y N3 (secuencia de 6 cuadros por nivel).
+func _guion_kirin() -> void:
+	var g := [[0.85, func(): menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[0.9, func(): _enemigo(false)]]
+	var t0 := 1.6
+	for n in [1, 2, 3]:
+		var carga: float = [1.1, 1.3, 1.5][n - 1]
+		g.append([t0, func():
+			juego.transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["kirin", "", "", ""], "modo": "sharingan", "prueba": true})
+			juego.hud.construir({"activos": ["kirin", "", "", ""], "modo": "sharingan", "niveles_max": {}})
+			_nivel(n)])
+		g.append([t0 + 0.1, func(): _listo(Vector3(0, 0, 10)); _rival1(Vector3(0, 0, -6)); _seguir(); _cam(0.55, 15.0, 0.25, 2.5)])
+		g.append([t0 + 0.2, func(): _accion("modo")])
+		g.append([t0 + 0.35, func(): _accion("kirin")])
+		var base := t0 + 0.35 + 0.77   # sellos ≈ 0,77 s hasta el evento kirin_invocar
+		var marcas := [[0.3, "a_nubes"], [carga * 0.6, "b_remolino"], [carga - 0.35, "c_dragon"], [carga - 0.12, "d_dragon_baja"], [carga + 0.04, "e_impacto"], [carga + 0.6, "f_crater"]]
+		for m in marcas:
+			g.append([base + float(m[0]), func(): _guardar("kirin_n%d_%s" % [n, m[1]])])
+		t0 = base + carga + 2.2
+	g.append([t0, func(): quit(0)])
 	guion = g
 
 

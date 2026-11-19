@@ -779,7 +779,9 @@ func _actualizar_proyectiles(lista: Array) -> void:
 			var n: Node3D = _proyectiles[id]["nodo"]
 			# Deja que las partículas se apaguen antes de borrar.
 			for c in n.get_children():
-				if c is GPUParticles3D:
+				if c is DragonVivo:
+					(c as DragonVivo).desvanecer(n.get_meta("dragon_color", Color(0.6, 0.8, 1.0)), efectos)
+				elif c is GPUParticles3D:
 					(c as GPUParticles3D).emitting = false
 				elif c is MeshInstance3D or c is OmniLight3D:
 					c.visible = false
@@ -865,6 +867,10 @@ func _procesar_evento(ev: Dictionary) -> void:
 			sonidos.tocar("golpe", 0.0, 1.9)
 			pausa_impacto(float(ev.get("pausa", 0.12)))
 			camara.sacudir(0.35)
+		"kirin":
+			# El dragón de rayo toca el suelo: destello blanco a pantalla completa para quien lo ve de cerca.
+			if _pos_entidad(mi_id).distance_to(ev["pos"]) < 45.0:
+				hud.destello_pantalla(0.45 + int(ev.get("nivel", 1)) * 0.12, 0.75 + int(ev.get("nivel", 1)) * 0.08)
 		"estrellar":
 			efectos.estrellar(ev["pos"])
 			sonidos.tocar("explosion", -8.0, 1.5)

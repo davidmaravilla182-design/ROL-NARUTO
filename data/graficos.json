@@ -178,5 +178,22 @@
       0.1223
     ],
     "profundidad_cabeza": 0.217
+  },
+  "cadenas_jutsu": {
+    "jutsu_kirin": {
+      "huesos": 10,
+      "largo": 5.0,
+      "eje": "y"
+    },
+    "jutsu_dragon_agua": {
+      "huesos": 9,
+      "largo": 4.0,
+      "eje": "z"
+    },
+    "jutsu_dragon_madera": {
+      "huesos": 8,
+      "largo": 6.88,
+      "eje": "y"
+    }
   }
 }
