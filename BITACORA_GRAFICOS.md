@@ -105,3 +105,49 @@ Cada entrada: qué se hizo, cómo se verificó, capturas comparadas, problemas y
 - Manos simples (manoplas); los dedos para los sellos serían el siguiente salto del personaje.
 - Reflejos del agua: solo sonda estática + brillos; un reflejo planar del canal sería más fiel pero caro en móvil.
 - Contorno del rostro de la torre poco legible desde la plaza en calidad baja (sin glow).
+
+
+## M1 — mapa completo de la aldea (v0.6, noche)
+- Isla en un lago con muralla, puente y 8 distritos generados por `tools/aldea.py`; 18 modelos de Meshy (Text to 3D,
+  Smart Topology) procesados con `tools/blender/pieza_ia.py` (textura 1024/512 px, LOD lejano 160–2500 triángulos);
+  piezas tipo Lego nuevas en `kit.py` (escalera, losa, columna, muro_aldea, torreta, chimenea, desagüe); texturas CC0
+  de Poly Haven para suelo/concreto/lámina/techo.
+- Atmósfera en todo el mapa: lluvia y capas de niebla que siguen a la cámara, charcos con ondas (170), vapor de
+  chimeneas/talleres/azoteas, goteo de toldos y pasarelas, cascadas del canal, relámpagos alrededor de la cámara.
+- Medido con `tools/captura_distritos.gd` (xvfb, renderizador móvil, 1280×720, calidad alta). **Los FPS de este entorno
+  son de software (llvmpipe, 1–3 fps) y no sirven para el teléfono**: los FPS reales del S26 Ultra hay que leerlos en el
+  panel de diagnóstico del juego (Ajustes → mostrar FPS). Lo comparable son llamadas de dibujo y primitivas:
+
+| Vista | Llamadas | Primitivas | Sectores activos | Captura |
+|---|---|---|---|---|
+| d1_plaza_a_pie | 300 | 357k | 5 | ![](referencias/capturas-mapa/d1_plaza_a_pie.jpg) |
+| d1_plaza_aereo | 332 | 358k | 5 | ![](referencias/capturas-mapa/d1_plaza_aereo.jpg) |
+| d1_plaza_calle | 308 | 331k | 5 | ![](referencias/capturas-mapa/d1_plaza_calle.jpg) |
+| d2_canal_a_pie | 173 | 270k | 4 | ![](referencias/capturas-mapa/d2_canal_a_pie.jpg) |
+| d2_canal_aereo | 316 | 280k | 1 | ![](referencias/capturas-mapa/d2_canal_aereo.jpg) |
+| d2_canal_calle | 133 | 181k | 5 | ![](referencias/capturas-mapa/d2_canal_calle.jpg) |
+| d3_mercado_a_pie | 128 | 239k | 4 | ![](referencias/capturas-mapa/d3_mercado_a_pie.jpg) |
+| d3_mercado_aereo | 187 | 251k | 3 | ![](referencias/capturas-mapa/d3_mercado_aereo.jpg) |
+| d3_mercado_calle | 92 | 157k | 5 | ![](referencias/capturas-mapa/d3_mercado_calle.jpg) |
+| d4_residencial_a_pie | 125 | 225k | 5 | ![](referencias/capturas-mapa/d4_residencial_a_pie.jpg) |
+| d4_residencial_aereo | 106 | 171k | 5 | ![](referencias/capturas-mapa/d4_residencial_aereo.jpg) |
+| d4_residencial_calle | 82 | 187k | 4 | ![](referencias/capturas-mapa/d4_residencial_calle.jpg) |
+| d5_industrial_a_pie | 90 | 195k | 4 | ![](referencias/capturas-mapa/d5_industrial_a_pie.jpg) |
+| d5_industrial_aereo | 154 | 190k | 2 | ![](referencias/capturas-mapa/d5_industrial_aereo.jpg) |
+| d5_industrial_calle | 113 | 163k | 5 | ![](referencias/capturas-mapa/d5_industrial_calle.jpg) |
+| d6_academia_a_pie | 89 | 195k | 4 | ![](referencias/capturas-mapa/d6_academia_a_pie.jpg) |
+| d6_academia_aereo | 136 | 249k | 5 | ![](referencias/capturas-mapa/d6_academia_aereo.jpg) |
+| d6_academia_calle | 118 | 194k | 6 | ![](referencias/capturas-mapa/d6_academia_calle.jpg) |
+| d7_puerta_a_pie | 166 | 214k | 4 | ![](referencias/capturas-mapa/d7_puerta_a_pie.jpg) |
+| d7_puerta_aereo | 251 | 246k | 1 | ![](referencias/capturas-mapa/d7_puerta_aereo.jpg) |
+| d7_puerta_calle | 59 | 115k | 5 | ![](referencias/capturas-mapa/d7_puerta_calle.jpg) |
+| d8_torre_a_pie | 164 | 242k | 7 | ![](referencias/capturas-mapa/d8_torre_a_pie.jpg) |
+| d8_torre_aereo | 210 | 268k | 6 | ![](referencias/capturas-mapa/d8_torre_aereo.jpg) |
+| d8_torre_calle | 51 | 118k | 7 | ![](referencias/capturas-mapa/d8_torre_calle.jpg) |
+| e1_llegada_puente | 260 | 285k | 1 | ![](referencias/capturas-mapa/e1_llegada_puente.jpg) |
+| e2_aldea_completa | 213 | 211k | 0 | ![](referencias/capturas-mapa/e2_aldea_completa.jpg) |
+
+- Lo más pesado es la plaza (≈300 llamadas, ≈360k primitivas en alta): muchos tipos de objetos distintos en pocas
+  celdas y la torre cerca. En calidad media/baja las distancias de dibujo bajan a 80/60 m (edificios) y 55/38 m (objetos).
+- Siguiente: medir en el S26 Ultra; si la plaza no llega a 60 en alta, juntar los objetos pequeños en menos MultiMesh
+  (celdas de 96 m para objetos) y bajar el LOD cercano de las casas.

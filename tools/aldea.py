@@ -318,6 +318,16 @@ def main():
         t.prop("farol_calle", -3.6, float(z), 90, 1.0, forzar=True, reservas=False)
         t.prop("farol_calle", 3.6, float(z) + 4.5, 270, 1.0, forzar=True, reservas=False)
     t.dispersar([-22, 153, 22, 172], ["caja_ia", "barril", "sacos", "carreta", "roca"], 12, "gris")
+    # ---------------------------------------------------------------- 8. torre: sede del líder
+    # Terraza de acceso al pie del rostro (2,5 m) con escalinata desde la avenida y dos torres de guardia.
+    t.h.setdefault("torreta", [6.0, 6.0, 21.0])
+    t.plataforma(0.0, -59.0, 12.0, 3.6, 2.5, "techo")
+    t.plataforma(0.0, -51.0, 4.0, 4.4, 0.0, "escalera", 2.5, "z")
+    for x in (-17.0, 17.0):
+        t.pieza("torreta", x, -58.0, 0, 0.8, forzar=True)
+    # ---------------------------------------------------------------- 7. puerta: torres de guardia junto al vano
+    for x in (-24.0, 24.0):
+        t.pieza("torreta", x, PUERTA_Z - 6.0, 0, 0.9, forzar=True)
     # ---------------------------------------------------------------- torre: explanada con faroles
     for x, z in [(-20, -62), (20, -62), (-26, -76), (26, -76)]:
         t.prop("farol_calle", x, z, 0, 1.2, forzar=True)

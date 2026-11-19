@@ -180,3 +180,39 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - **Primer modelo por API** (19/11/2026): `edificio.png` → tarea `01a1f1e0-dc7a-7692-a35a-ef998a3108cc`, Smart Topology meshy-t2.5, 30k pedidos → 26.082 triángulos, textura 2K. Costó 15 créditos (`consumed_credits` de la tarea). Tardó ~40 s. Descarga verificada desde `assets.meshy.ai`. Los archivos caducan a los 3 días (`expires_at`): se guarda el original en `referencias/modelos-ia/meshy-edificio/` (sin las URLs firmadas). Integrado con `tools/blender/edificio_ia.py` (escala 8,5 m, textura a 1024 px, LOD lejano de 6k) en lugar del edificio genérico de (−26, −13), mirando al campo.
 - **Límite de descargas del plan web**: la API no lo reporta. `GET /openapi/v1/balance` solo da créditos (los generados por API descuentan del mismo saldo mensual); `GET /openapi/v1/usage/tasks` responde 403 «solo planes Studio y Enterprise». Las descargas por API son URLs firmadas sin contador visible.
 - **Presupuesto acordado**: hasta 100 créditos por sesión sin preguntar (reportando al final cuánto y en qué); cualquier operación de más de 30 créditos se consulta antes.
+
+## v0.6 — mapa completo de la aldea (trabajo nocturno)
+- **Trazado como datos**: `tools/aldea.py` genera (semilla fija) todo el trazado en `data/escenario.json`: bloque
+  `aldea` (centro, radio caminable, zonas extra, 8 distritos con rectángulo y nombre corto, 24 puntos de misión/aldeanos)
+  y `trazado` (piezas, objetos, plataformas/escaleras, muralla, tuberías, puentes, canal, obstáculos extra). El juego no
+  decide nada del diseño; se rehace con `python3 tools/aldea.py`. Las piezas hechas a mano de la plaza se conservan
+  (`PLAZA_BASE` y `props_base`).
+- **Isla circular**: radio caminable 146 m alrededor de la torre (0, −80); muralla visual a 150 m (74 tramos de
+  `muro_aldea` + torretas cada 7); lago de 600 m; puente de 80 m y embarcadero como zonas caminables extra. El borde se
+  impone con un círculo en `Mapa.dentro_de_la_aldea` (más barato y exacto que 74 cajas de colisión).
+- **Rejilla espacial** (celdas de 8 m) para obstáculos: con ~750 obstáculos las consultas por tick siguen siendo
+  baratas; se reindexa sola si cambia la lista (las pruebas agregan obstáculos a mano).
+- **Verticalidad**: todos los techos de obstáculos son suelo (`altura_suelo`), plataformas con rampa (altura0 → altura
+  a lo largo de un eje) para escaleras, y **caminar por paredes con chakra**: empujar 0,15 s contra una pared de más de
+  2 m sube a 6,5 m/s gastando 4 de chakra por segundo; arriba el techo es suelo. Las cajas y barriles se saltan (no se
+  trepa sin querer en combate). Valores en `data/reglas.json → simulacion`.
+- **Colisión de arcos**: la puerta de la aldea y la entrada del mercado no usan su huella (taparían el paso): llevan
+  `"colision": false` y dos cajas laterales en `trazado.obstaculos_extra`.
+- **Dibujo por celdas con LOD**: MultiMesh por tipo y por celda de 48 m, cada uno con su distancia de dibujo; los
+  modelos de Meshy tienen versión lejana (Blender, colapso) que entra a una distancia que depende de su peso
+  (`sqrt(3000 / triángulos)`); oclusores de caja en los edificios grandes. Distancias por calidad en `Trazado._distancias`.
+- **Sectores** (`Sectores`): un nodo por distrito con lo dinámico (luces, vapor, cascadas, goteo, aldeanos, misiones);
+  fuera de su rectángulo + margen (70/55/35 m según calidad) se oculta y deja de procesarse. No se libera memoria: con
+  todo el trazado en MultiMesh la carga inicial es corta y evita tirones al cruzar distritos.
+- **Viaje rápido** solo para pruebas: comando `viajar` validado en el servidor (id de distrito ASCII ≤ 32), lleva al
+  hueco libre junto al primer aldeano del distrito. Funciona igual en red local.
+- **Variación**: giro, escala (0,88–1,12) y tinte por copia (paletas gris/lila/cálido/óxido) mediante
+  `INSTANCE_CUSTOM` en el shader `toon_tex` (un solo material por modelo).
+- **Texturas CC0**: Poly Haven (ambientCG está bloqueado por la red del entorno) para suelo, concreto, lámina y techo,
+  ajustadas a la paleta (`tools/texturas_polyhaven.py`, créditos en `assets/texturas/CREDITOS.md`).
+- **Meshy**: Text to 3D con Smart Topology (meshy-t2.5): fase de malla 5 créditos + textura 10 = 15 por modelo; los
+  originales (GLB y textura 2K) quedan en `referencias/modelos-ia/meshy/<modelo>/` fuera del repositorio (pesan 137 MB);
+  en el repositorio solo miniatura, `tarea.json` y `lote.json`. La API responde 429 si hay demasiadas tareas a la vez:
+  `tools/meshy_lote.py` vuelve atrás la fase y reintenta (un 4xx no cobra).
+- **Niebla** 0,0055 (antes 0,016) y plano lejano de la cámara a 700 m para que la torre se vea desde todo el mapa;
+  las capas de niebla siguen a la cámara.

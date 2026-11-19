@@ -15,10 +15,10 @@
 - [x] 4. Zona residencial (torres apiladas, pasarelas).                      → APK
 - [x] 5. Distrito industrial (tuberías, chimeneas con vapor, tanques).
 - [x] 6. Academia ninja (edificio + patio de prácticas).                     → APK
-- [ ] 7. Puerta principal y muralla (puente sobre el lago).
-- [ ] 8. Torre del rostro al centro (sede del líder), integrada.             → APK
-- [ ] 9. Red local en el mapa nuevo (bots en distintos distritos), FPS/draw calls por distrito.
-- [ ] 10. Cierre: BITACORA_GRAFICOS.md (capturas y FPS), PROGRESO.md, APK final, reporte.
+- [x] 7. Puerta principal y muralla (puente sobre el lago).
+- [x] 8. Torre del rostro al centro (sede del líder), integrada.             → APK
+- [x] 9. Red local en el mapa nuevo (bots en distintos distritos), FPS/draw calls por distrito.
+- [x] 10. Cierre: BITACORA_GRAFICOS.md (capturas y FPS), PROGRESO.md, APK final, reporte.
 
 ## Registro
 - **Base lista**: isla (radio caminable 146 m) en un lago de 600 m, muralla de 74 tramos + torres, puente de 80 m
@@ -39,6 +39,16 @@
   tuberías elevadas; academia de Meshy (escala 1,25) con patio de prácticas (4 muñecos, faroles, bancas).
   Escalada: solo paredes de más de 2 m y tras empujar 0,15 s (en combate no se trepa a las cajas sin querer).
   Calles reservadas libres de objetos; pruebas de recorrido: plaza → puerta → puente → orilla y plaza → torre.
+- **Distritos 7 y 8**: puerta de Meshy con vano libre (colisión solo en los cuerpos laterales), 2 torres de guardia,
+  puente con 18 faroles; torre del líder con terraza de acceso a 2,5 m, escalinata y 2 torres de guardia.
+- **Cierre**: capturas de los 8 distritos en `referencias/capturas-mapa/` y tabla de llamadas/primitivas en
+  BITACORA_GRAFICOS.md (M1). Pruebas: 110 + 88 + 36 + 23 (red, con bots en distritos distintos) + humo.
+
+### Pendiente / siguiente
+- Medir FPS reales en el S26 Ultra por distrito (panel de diagnóstico) y ajustar distancias de dibujo si hace falta.
+- Revisar en el teléfono la orientación de algunos modelos de Meshy (frente de casas y talleres).
+- Misiones y aldeanos son marcadores: falta su lógica (diálogo, objetivos).
+- La muralla no se puede escalar (el borde es un círculo); los sectores ocultan pero no liberan memoria.
 - **Meshy**: 18 modelos (Text to 3D, Smart Topology meshy-t2.5, 15 créditos c/u = 270). Saldo 1135 → 865.
 
 ---

@@ -113,7 +113,8 @@ func _medir(nombre: String) -> void:
 	var vp := root.get_viewport().get_viewport_rid()
 	var tipo := RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE
 	var sect: Sectores = juego.escenario.sectores
-	var linea := "%s: llamadas=%d primitivas=%d objetos=%d sectores_activos=%d mem_video=%.1fMB" % [nombre,
+	var linea := "%s: fps_software=%d llamadas=%d primitivas=%d objetos=%d sectores_activos=%d mem_video=%.1fMB" % [nombre,
+		Engine.get_frames_per_second(),
 		RenderingServer.viewport_get_render_info(vp, tipo, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
 		RenderingServer.viewport_get_render_info(vp, tipo, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME),
 		RenderingServer.viewport_get_render_info(vp, tipo, RenderingServer.VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME),
