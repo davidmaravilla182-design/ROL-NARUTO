@@ -1,4 +1,30 @@
-# PROGRESO — v0.5: creación de personaje y red local
+# PROGRESO — Noche del mapa completo de Amegakure (v0.6)
+
+> Si el contexto se resume: releer PROGRESO.md, DECISIONES.md y BITACORA_GRAFICOS.md antes de seguir.
+> Cada distrito: pruebas headless → capturas → commit + push. Cada 2 distritos: APK en demo-latest + workflow.
+> Meshy: presupuesto 350 créditos esta noche; preguntar solo si una operación pasa de 30. Lote en `tools/meshy_lote.py`
+> (estado en `referencias/modelos-ia/meshy/lote.json`: NO recrear tareas ya creadas).
+
+## Tareas de esta noche (en orden)
+- [ ] 0. Base: mapa grande (lago, isla, muralla), sectores con carga por distancia, suelos elevados/rampas, techos caminables,
+        caminar por paredes con chakra, minimapa, mapa completo, viaje rápido, puntos de misión y aldeanos.
+- [ ] 0b. Lote Meshy (18 modelos, ~270 créditos) en segundo plano + procesado en Blender (1024/512 px, LOD lejano).
+- [ ] 1. Plaza y campo de entrenamiento (ampliado y lleno de objetos).
+- [ ] 2. Distrito del canal (más puentes, cascadas de desagües).            → APK
+- [ ] 3. Mercado (calle techada, puestos, luz cálida).
+- [ ] 4. Zona residencial (torres apiladas, pasarelas).                      → APK
+- [ ] 5. Distrito industrial (tuberías, chimeneas con vapor, tanques).
+- [ ] 6. Academia ninja (edificio + patio de prácticas).                     → APK
+- [ ] 7. Puerta principal y muralla (puente sobre el lago).
+- [ ] 8. Torre del rostro al centro (sede del líder), integrada.             → APK
+- [ ] 9. Red local en el mapa nuevo (bots en distintos distritos), FPS/draw calls por distrito.
+- [ ] 10. Cierre: BITACORA_GRAFICOS.md (capturas y FPS), PROGRESO.md, APK final, reporte.
+
+## Registro
+
+---
+
+# Historial: v0.5 creación de personaje y red local
 
 > Si el contexto se resume: releer este archivo y DECISIONES.md.
 
