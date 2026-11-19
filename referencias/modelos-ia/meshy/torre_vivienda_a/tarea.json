@@ -1,0 +1,17 @@
+{
+ "id": "01a1f1fd-4e73-7258-8d9c-f06ebe443765",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 1321872208,
+ "prompt": "tall cylindrical residential tower, stacked concrete rings with many small windows, external pipes spiraling up, ring shaped metal walkway balconies, antenna on top, stylized anime video game asset, rainy dark industrial ninja village, clean readable shapes, single object, no ground plane",
+ "texture_prompt": "tall cylindrical residential tower, stacked concrete rings with many small windows, external pipes spiraling up, ring shaped metal walkway balconies, antenna on top. stained weathered grey concrete with rain streaks, dark gunmetal riveted metal sheets, burgundy red rusty pipes, small lilac purple accents, warm amber lit windows and lamps, muted desaturated colors, hand painted texture, wet surfaces",
+ "status": "SUCCEEDED",
+ "created_at": 1795061274522,
+ "progress": 100,
+ "started_at": 1795061274538,
+ "finished_at": 1795061322143,
+ "task_error": null,
+ "consumed_credits": 10
+}

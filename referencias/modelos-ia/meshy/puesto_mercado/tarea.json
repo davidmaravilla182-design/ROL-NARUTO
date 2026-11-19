@@ -1,0 +1,17 @@
+{
+ "id": "01a1f1fe-73a5-727b-aa1a-27431cb37482",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 3706258803,
+ "prompt": "street food market stall with wooden counter and striped fabric awning, hanging paper lanterns, stylized anime video game asset, rainy dark industrial ninja village, clean readable shapes, single object, no ground plane",
+ "texture_prompt": "street food market stall with wooden counter and striped fabric awning, hanging paper lanterns. stained weathered grey concrete with rain streaks, dark gunmetal riveted metal sheets, burgundy red rusty pipes, small lilac purple accents, warm amber lit windows and lamps, muted desaturated colors, hand painted texture, wet surfaces",
+ "status": "SUCCEEDED",
+ "created_at": 1795061348527,
+ "progress": 100,
+ "started_at": 1795061348537,
+ "finished_at": 1795061398753,
+ "task_error": null,
+ "consumed_credits": 10
+}

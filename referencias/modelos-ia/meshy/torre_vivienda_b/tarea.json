@@ -1,0 +1,17 @@
+{
+ "id": "01a1f1fd-5901-75f6-afb0-4fc63dbf1ffa",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 2638847719,
+ "prompt": "tall cylindrical housing tower with a wider mushroom shaped top cap, iron bands, vertical pipes, small round windows, metal stair platforms around the base, stylized anime video game asset, rainy dark industrial ninja village, clean readable shapes, single object, no ground plane",
+ "texture_prompt": "tall cylindrical housing tower with a wider mushroom shaped top cap, iron bands, vertical pipes, small round windows, metal stair platforms around the base. stained weathered grey concrete with rain streaks, dark gunmetal riveted metal sheets, burgundy red rusty pipes, small lilac purple accents, warm amber lit windows and lamps, muted desaturated colors, hand painted texture, wet surfaces",
+ "status": "SUCCEEDED",
+ "created_at": 1795061276870,
+ "progress": 100,
+ "started_at": 1795061276897,
+ "finished_at": 1795061322475,
+ "task_error": null,
+ "consumed_credits": 10
+}

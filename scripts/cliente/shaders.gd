@@ -101,10 +101,13 @@ uniform vec4 emision : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float emision_fuerza = 0.0;
 varying vec3 wpos;
 varying vec3 wnorm;
+varying vec3 tinte_inst;
 
 void vertex() {
 	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	wnorm = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+	// Variación por copia (MultiMesh con datos propios): tinte en INSTANCE_CUSTOM.rgb si a > 0.5.
+	tinte_inst = INSTANCE_CUSTOM.a > 0.5 ? INSTANCE_CUSTOM.rgb : vec3(1.0);
 }
 
 vec4 muestra(sampler2D t, vec2 uv) { return texture(t, uv); }
@@ -123,7 +126,7 @@ void fragment() {
 		c = texture(tex_color, uv);
 		nm = texture(tex_normal, uv).rgb;
 	}
-	vec3 alb = c.rgb * tinte.rgb;
+	vec3 alb = c.rgb * tinte.rgb * tinte_inst;
 	float rug = c.a;
 	// Humedad: caras hacia arriba encharcadas; paredes con chorreaduras animadas que bajan.
 	float arriba = clamp(wnorm.y, 0.0, 1.0);

@@ -99,7 +99,9 @@ func _ready() -> void:
 	hud.name = "Hud"
 	add_child(hud)
 	Perfil.cargar()
+	hud.configurar_mapa(mapa)
 	hud.construir(Perfil.repertorio())
+	hud.viajar_pedido.connect(func(id): transporte.enviar({"t": Protocolo.C_VIAJAR, "distrito": id}))
 	hud.accion.connect(_on_accion)
 	hud.apuntar.connect(_on_apuntar)
 	hud.soltar.connect(_on_soltar)
@@ -555,6 +557,7 @@ func _on_estado(est: Dictionary) -> void:
 		_procesar_evento(ev)
 	if not yo.is_empty():
 		hud.actualizar(yo, enemigo)
+		_actualizar_mapa(yo, est["entidades"])
 		if _visuales.has(mi_id) and camara.objetivo == null:
 			camara.objetivo = _visuales[mi_id]["nodo"]
 		_comprobar_fin(yo, enemigo)
@@ -666,7 +669,9 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 		"esquiva":
 			pv.reproducir("esquivar", 0.05)
 		_:
-			if not bool(e["en_suelo"]):
+			if bool(e.get("escalando", false)):
+				pv.reproducir("correr", 0.1)
+			elif not bool(e["en_suelo"]):
 				pv.reproducir("saltar", 0.1)
 			elif float(v["vel"]) > 1.0:
 				pv.reproducir("correr", 0.15)
@@ -919,3 +924,15 @@ func prueba_humo(frame: int) -> void:
 		626: transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": ["muro_tierra", "rasenshuriken", "", ""], "modo": "", "prueba": true})
 		628: _on_accion("muro_tierra")
 		632: _on_accion("rasenshuriken")
+
+
+## Minimapa y mapa completo: yo, los demás jugadores (azul) y los enemigos (rojo).
+func _actualizar_mapa(yo: Dictionary, entidades: Array) -> void:
+	var otros: Array = []
+	for e in entidades:
+		if int(e["id"]) == mi_id or e["tipo"] == "muneco" or float(e["vida"]) <= 0.0:
+			continue
+		var p: Vector3 = e["pos"]
+		otros.append({"pos": Vector2(p.x, p.z), "color": Color(0.35, 0.7, 1.0) if e["tipo"] == "jugador" else Color(1.0, 0.3, 0.3)})
+	var mp: Vector3 = yo["pos"]
+	hud.actualizar_mapa(Vector2(mp.x, mp.z), float(yo["yaw"]), otros)

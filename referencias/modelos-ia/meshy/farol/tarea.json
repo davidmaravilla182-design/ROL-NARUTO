@@ -1,0 +1,17 @@
+{
+ "id": "01a1f1fd-7b61-7040-8d43-277cf621dcc1",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 3933837601,
+ "prompt": "street lamp post with a hanging amber glass lantern, iron pole, stylized anime video game asset, rainy dark industrial ninja village, clean readable shapes, single object, no ground plane",
+ "texture_prompt": "street lamp post with a hanging amber glass lantern, iron pole. stained weathered grey concrete with rain streaks, dark gunmetal riveted metal sheets, burgundy red rusty pipes, small lilac purple accents, warm amber lit windows and lamps, muted desaturated colors, hand painted texture, wet surfaces",
+ "status": "SUCCEEDED",
+ "created_at": 1795061285525,
+ "progress": 100,
+ "started_at": 1795061285557,
+ "finished_at": 1795061326767,
+ "task_error": null,
+ "consumed_credits": 10
+}

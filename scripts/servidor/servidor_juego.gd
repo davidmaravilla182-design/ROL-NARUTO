@@ -121,6 +121,9 @@ func recibir_comando(peer_id: int, cmd_crudo: Variant) -> void:
 				yo.reiniciar()
 				_evento({"tipo": "reaparecer", "entidad": yo.id})
 		return
+	if cmd["t"] == Protocolo.C_VIAJAR:
+		_viajar(entidad_de_peer(peer_id), str(cmd["distrito"]))
+		return
 	var e := entidad_de_peer(peer_id)
 	if e == null:
 		return
@@ -820,6 +823,18 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	else:
 		e.en_suelo = false
 	var p2 := mapa.resolver_colision(Vector2(nueva.x, nueva.z), Datos.sim("radio_entidad"), nueva.y)
+	# Caminar por paredes con chakra: empujar contra una pared más alta que uno la sube.
+	e.escalando = false
+	if puede_moverse and e.entrada_mov.length() > 0.3 and e.chakra > Datos.sim("escalada_chakra_min"):
+		var empujado := Vector2(nueva.x, nueva.z) - p2
+		var quiere := Vector2(horiz.x, horiz.z)
+		if empujado.length() > 0.001 and quiere.length() > 0.1 and empujado.normalized().dot(quiere.normalized()) > 0.4:
+			var tope := mapa.altura_pared(p2, Datos.sim("radio_entidad") + 0.12, nueva.y)
+			if tope > nueva.y + 0.25:
+				e.vel_y = Datos.sim("escalada_velocidad")
+				e.chakra = maxf(e.chakra - Datos.sim("escalada_chakra_seg") * dt, 0.0)
+				e.escalando = true
+				e.en_suelo = false
 	if e.estado == "chidori_embiste" and p2.distance_to(Vector2(nueva.x, nueva.z)) > 0.05:
 		# Chocó contra una pared: termina el embiste.
 		e.empuje = Vector3.ZERO
@@ -834,6 +849,22 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 			p2 = o.pos2() + d.normalized() * minimo
 	e.pos = Vector3(p2.x, nueva.y, p2.y)
 	e.en_charco = e.en_suelo and mapa.en_charco(p2)
+
+
+## Viaje rápido (pruebas): lleva al jugador a un hueco libre del distrito (junto a su primer aldeano).
+func _viajar(e: EntidadServidor, id: String) -> void:
+	if e == null or not e.vivo() or mapa.distrito(id).is_empty():
+		return
+	var destino: Vector2 = mapa.distrito(id)["centro"]
+	for pt in mapa.puntos:
+		if pt["distrito"] == id and pt["tipo"] == "aldeano":
+			destino = (pt["centro"] as Vector2) + Vector2(2.0, 2.0)
+			break
+	destino = mapa.resolver_colision(destino, Datos.sim("radio_entidad"), 0.0)
+	e.pos = Vector3(destino.x, mapa.altura_suelo(destino, 0.0), destino.y)
+	e.vel_y = 0.0
+	e.empuje = Vector3.ZERO
+	_evento({"tipo": "mensaje", "entidad": e.id, "clave": "msg_viaje", "args": [str(mapa.distrito(id)["nombre"])]})
 
 
 # ---------------------------------------------------------------- utilidades

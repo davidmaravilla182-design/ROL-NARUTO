@@ -22,6 +22,7 @@ var yaw := 0.0
 var vel_y := 0.0
 var empuje := Vector3.ZERO    # velocidad externa (esquiva, retroceso) que decae
 var en_suelo := true
+var escalando := false   # subiendo por una pared con chakra
 var en_charco := false
 
 var vida := 100.0
@@ -224,5 +225,6 @@ func a_estado() -> Dictionary:
 		"empuje": empuje.length() > 0.05,
 		"recargas": r,
 		"en_suelo": en_suelo,
+		"escalando": escalando,
 		"en_charco": en_charco,
 	}

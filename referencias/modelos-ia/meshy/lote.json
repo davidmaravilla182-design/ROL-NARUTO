@@ -1,0 +1,131 @@
+{
+ "modelos": {
+  "barril": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-22cb-762b-ba57-c53c35d5fcff",
+   "textura": "01a1f1fc-8137-779b-8e0a-e655bf06b869"
+  },
+  "casa_chica": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-4d36-720b-afd8-856e5f5dc3e4",
+   "textura": "01a1f1fd-32ed-7775-8722-0276d6caac9e"
+  },
+  "edificio_mediano": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-59fb-74d2-8b67-09155738cf13",
+   "textura": "01a1f1fd-3c05-74f4-b706-6008d718b111"
+  },
+  "taller_industrial": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-6473-7176-8f66-8f39c89eccbd",
+   "textura": "01a1f1fd-45ff-7370-83de-971be6fc1c31"
+  },
+  "torre_vivienda_a": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-6df9-7327-9eb4-67de80f09844",
+   "textura": "01a1f1fd-4e73-7258-8d9c-f06ebe443765"
+  },
+  "torre_vivienda_b": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-7714-74be-856e-692b91e53481",
+   "textura": "01a1f1fd-5901-75f6-afb0-4fc63dbf1ffa"
+  },
+  "caja": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-89ef-75f9-99d0-66f3618f9def",
+   "textura": "01a1f1fd-68ea-765e-93c6-97698b232f6e"
+  },
+  "tanque_agua": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-92b1-74bf-ae6a-58908e0e233a",
+   "textura": "01a1f1fd-71c8-741e-9eef-a8294451ac08"
+  },
+  "farol": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-9ba0-7073-b424-e583bb749820",
+   "textura": "01a1f1fd-7b61-7040-8d43-277cf621dcc1"
+  },
+  "carreta": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-a709-7412-a4a9-af5467516d3f",
+   "textura": "01a1f1fd-8421-7570-807a-0a5fe1d450a8"
+  },
+  "sacos": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-af20-77bf-8331-1d59d0e4ef09",
+   "textura": "01a1f1fd-8e85-7738-b642-3b439d46f8f1"
+  },
+  "pila_tuberias": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-b74d-726c-8540-c9b3ee3d9781",
+   "textura": "01a1f1fe-6647-74aa-bd1a-a70e0b93db41"
+  },
+  "roca": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-c0d8-7654-b1c6-dfb798829725",
+   "textura": "01a1f1fe-6c1c-70be-b013-cb3df226a861"
+  },
+  "banca": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-c9bd-73b0-8d80-a0f474095f35",
+   "textura": "01a1f1fe-703a-71d2-9090-9b3531b7dd47"
+  },
+  "puesto_mercado": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-d2fd-715f-9bc2-9e3c07432669",
+   "textura": "01a1f1fe-73a5-727b-aa1a-27431cb37482"
+  },
+  "puerta_aldea": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-dc73-7243-8237-708cef62889b",
+   "textura": "01a1f1fe-7a29-7339-b909-887089f4c188"
+  },
+  "academia": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-e512-7594-876c-42a41ee5e3f5",
+   "textura": "01a1f1fe-7f7e-72eb-a32d-81667f24e9cc"
+  },
+  "entrada_mercado": {
+   "fase": "listo",
+   "reintentos": 0,
+   "creditos": 15,
+   "vista": "01a1f1fc-ed66-7396-a591-ac2ef2331422",
+   "textura": "01a1f1fd-d809-776d-b03b-30827a38ddc1"
+  }
+ },
+ "creditos": 270
+}

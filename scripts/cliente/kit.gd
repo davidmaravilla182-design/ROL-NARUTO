@@ -10,6 +10,9 @@ static var _mats: Dictionary = {}
 const COLOR_VENTANA := Color(1.0, 0.68, 0.32)
 
 
+const ESCALABLES := {"losa": "suelo", "columna": "concreto", "escalera": "rejilla"}
+
+
 static func material_para(nombre: String) -> Material:
 	var clave := nombre + "_" + str(Materiales.grosor_contorno)
 	if _mats.has(clave):
@@ -35,7 +38,12 @@ static func material_para(nombre: String) -> Material:
 		"luz": m = Materiales.emisivo(Color(1.0, 0.78, 0.45), 2.2)
 		"oscuro": m = Materiales.solido(Color(0.06, 0.06, 0.08), 0.4)
 		"cable": m = Materiales.solido(Color(0.03, 0.03, 0.04), 0.6)
-		_: m = Materiales.solido(Color(0.5, 0.5, 0.5))
+		_:
+			# Modelos de Meshy procesados en Blender: material con el nombre de la pieza y su textura.
+			if ResourceLoader.exists("res://assets/texturas/%s_color.png" % nombre):
+				m = Shaders.toon_tex(nombre, Color(0.9, 0.89, 0.93), Vector2.ONE, false, 0.25, 0.1, 0.5, c)
+			else:
+				m = Materiales.solido(Color(0.5, 0.5, 0.5))
 	_mats[clave] = m
 	return m
 
@@ -85,14 +93,22 @@ static func instancia(nombre: String, t := Transform3D.IDENTITY, sombras := true
 
 
 ## Muchas copias de una pieza en una sola llamada de dibujo.
-static func multimalla(nombre: String, transformaciones: Array, sombras := true) -> MultiMeshInstance3D:
+## tintes (opcional): un Color por copia para variar el color (lo lee el shader toon_tex).
+static func multimalla(nombre: String, transformaciones: Array, sombras := true, tintes: Array = []) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_custom_data = not tintes.is_empty()
 	mm.mesh = malla(nombre)
 	mm.instance_count = transformaciones.size()
 	for i in transformaciones.size():
 		mm.set_instance_transform(i, transformaciones[i])
+		if not tintes.is_empty():
+			var t: Color = tintes[i % tintes.size()]
+			mm.set_instance_custom_data(i, Color(t.r, t.g, t.b, 1.0))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
+	# Piezas que se escalan a cualquier tamaño (losas, columnas, escaleras): textura en coordenadas de mundo.
+	if nombre in ESCALABLES:
+		mmi.material_override = Shaders.toon_tex(ESCALABLES[nombre], Color(0.9, 0.9, 0.95), Vector2.ONE, true, 0.5, 0.35, 0.6)
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if sombras else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return mmi

@@ -6,9 +6,9 @@
 > (estado en `referencias/modelos-ia/meshy/lote.json`: NO recrear tareas ya creadas).
 
 ## Tareas de esta noche (en orden)
-- [ ] 0. Base: mapa grande (lago, isla, muralla), sectores con carga por distancia, suelos elevados/rampas, techos caminables,
+- [x] 0. Base: mapa grande (lago, isla, muralla), sectores con carga por distancia, suelos elevados/rampas, techos caminables,
         caminar por paredes con chakra, minimapa, mapa completo, viaje rápido, puntos de misión y aldeanos.
-- [ ] 0b. Lote Meshy (18 modelos, ~270 créditos) en segundo plano + procesado en Blender (1024/512 px, LOD lejano).
+- [x] 0b. Lote Meshy (18 modelos, ~270 créditos) en segundo plano + procesado en Blender (1024/512 px, LOD lejano).
 - [ ] 1. Plaza y campo de entrenamiento (ampliado y lleno de objetos).
 - [ ] 2. Distrito del canal (más puentes, cascadas de desagües).            → APK
 - [ ] 3. Mercado (calle techada, puestos, luz cálida).
@@ -21,6 +21,13 @@
 - [ ] 10. Cierre: BITACORA_GRAFICOS.md (capturas y FPS), PROGRESO.md, APK final, reporte.
 
 ## Registro
+- **Base lista**: isla (radio caminable 146 m) en un lago de 600 m, muralla de 74 tramos + torres, puente de 80 m
+  y embarcadero; 8 distritos con rectángulos y nombres; trazado generado por `tools/aldea.py` (345 edificios,
+  ~400 objetos, 12 plataformas/escaleras, 24 puntos de misión/aldeanos). Rejilla espacial de obstáculos (celdas de 8 m).
+  Techos caminables + escaleras/rampas + **caminar por paredes con chakra** (4 chakra/s, 6,5 m/s; prueba automática).
+  Cliente: MultiMesh por tipo y celda de 48 m con LOD cercano/lejano, oclusores de caja, sectores por distrito
+  (luces, partículas, cascadas, goteo, aldeanos) que se activan por distancia; minimapa, mapa completo y viaje rápido.
+- **Meshy**: 18 modelos (Text to 3D, Smart Topology meshy-t2.5, 15 créditos c/u = 270). Saldo 1135 → 865.
 
 ---
 

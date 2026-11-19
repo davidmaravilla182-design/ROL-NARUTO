@@ -28,6 +28,7 @@ func _initialize() -> void:
 	probar_textos_sin_codigo()
 	probar_plataforma_lengua()
 	probar_piezas_suelo()
+	probar_aldea()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -420,15 +421,14 @@ func probar_textos_sin_codigo() -> void:
 ## La lengua de la torre (modelo IA) es una plataforma: se cae encima y los proyectiles chocan con ella.
 func probar_plataforma_lengua() -> void:
 	var m := Mapa.generar()
-	comprobar(m.plataformas.size() == 1, "la lengua de la torre es una plataforma del mapa")
-	if m.plataformas.is_empty():
+	var lenguas := m.plataformas.filter(func(x): return x.get("tipo", "") == "lengua")
+	comprobar(lenguas.size() == 1, "la lengua de la torre es una plataforma del mapa")
+	if lenguas.is_empty():
 		return
-	var pl: Dictionary = m.plataformas[0]
+	var pl: Dictionary = lenguas[0]
 	var c: Vector2 = pl["centro"]
 	var h := float(pl["altura"])
 	comprobar(h > 20.0, "la plataforma está en lo alto de la torre (%.1f m)" % h)
-	# La torre está detrás del canal, fuera del área jugable: se amplía el límite para la prueba.
-	m.limite = 200.0
 	var s := ServidorJuego.new()
 	s.auto_procesar = false
 	s.iniciar(m)
@@ -458,3 +458,61 @@ func probar_piezas_suelo() -> void:
 			rejilla = p["centro"]
 	comprobar(m.punto_bloqueado(barril, 0.3), "un barril bloquea el paso")
 	comprobar(not m.punto_bloqueado(rejilla + Vector2(0.5, 0.5), 0.1), "sobre una rejilla se puede caminar")
+
+
+## Mapa completo: isla con muralla, distritos, puentes del canal, techos caminables, escaleras y escalada con chakra.
+func probar_aldea() -> void:
+	var m := Mapa.generar()
+	comprobar(m.distritos.size() == 8, "la aldea tiene 8 distritos (%d)" % m.distritos.size())
+	comprobar(m.distrito_en(m.inicio_jugador) == "plaza", "se aparece en la plaza")
+	var ids := {}
+	for pt in m.puntos:
+		ids[pt["distrito"]] = true
+	comprobar(ids.size() == 8, "cada distrito tiene puntos de misión y aldeanos")
+	# Límite: la isla y el puente; el lago no.
+	var lago := m.resolver_colision(Vector2(160, 60), 0.45)
+	comprobar(lago.distance_to(m.centro_aldea) <= m.radio_caminable + 0.01, "no se puede caminar sobre el lago")
+	var puente := m.resolver_colision(Vector2(0, 120), 0.45)
+	comprobar(puente.distance_to(Vector2(0, 120)) < 0.01, "se puede caminar por el puente de la puerta")
+	# El canal se cruza por los puentes y no por el agua.
+	var cz := (float(m.canal["z_sur"]) + float(m.canal["z_norte"])) * 0.5
+	comprobar(not m.punto_bloqueado(Vector2(0.0, cz), 0.45), "el puente central cruza el canal")
+	comprobar(m.punto_bloqueado(Vector2(7.5, cz), 0.45), "el agua del canal bloquea fuera de los puentes")
+	# Techos caminables y escaleras.
+	var casa: Dictionary = {}
+	for o in m.obstaculos:
+		if o["tipo"] == "casa_chica":
+			casa = o
+			break
+	comprobar(not casa.is_empty() and absf(m.altura_suelo(casa["centro"], float(casa["alto"]) + 0.2) - float(casa["alto"])) < 0.01, "el techo de una casa es suelo")
+	var esc := m.plataformas.filter(func(x): return x.has("altura0"))
+	comprobar(esc.size() >= 4, "hay escaleras entre niveles (%d)" % esc.size())
+	# Escalada con chakra: un jugador que empuja contra una pared sube y termina en el techo.
+	var s := ServidorJuego.new()
+	s.auto_procesar = false
+	s.iniciar(m)
+	s.agregar_jugador(1)
+	var j := s.entidad_de_peer(1)
+	var c: Vector2 = casa["centro"]
+	var md: Vector2 = casa["medio"]
+	j.pos = Vector3(c.x + md.x + 0.6, 0.0, c.y)
+	var chakra0 := j.chakra
+	var subio := false
+	for i in 150:
+		# Empuja hacia la pared hasta pasar el borde del techo; luego se suelta el control.
+		j.entrada_mov = Vector2(-1, 0) if j.pos.x > c.x + md.x - 1.0 else Vector2.ZERO
+		s.paso(s.dt_tick)
+		if j.escalando:
+			subio = true
+			chakra0 = minf(chakra0, j.chakra + 0.5)
+	comprobar(subio and chakra0 < j.stats["chakra_max"], "empujar contra la pared escala gastando chakra")
+	comprobar(absf(j.pos.y - float(casa["alto"])) < 0.1 and j.en_suelo, "tras escalar se queda parado en el techo (y=%.2f de %.2f)" % [j.pos.y, float(casa["alto"])])
+	# Sin chakra no se escala.
+	j.pos = Vector3(c.x + md.x + 0.6, 0.0, c.y)
+	j.vel_y = 0.0
+	j.chakra = 0.0
+	for i in 20:
+		j.entrada_mov = Vector2(-1, 0)
+		s.paso(s.dt_tick)
+	comprobar(j.pos.y < 0.5, "sin chakra no se escala")
+	s.free()

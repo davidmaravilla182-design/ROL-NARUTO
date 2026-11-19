@@ -15,6 +15,7 @@ signal reaparecer_pedido()
 signal salir_pedido()
 signal reinicio_pedido()
 signal camara_arrastre(relativo: Vector2)
+signal viajar_pedido(id: String)
 
 # id, color, radio base, ángulo en el arco (grados, 180 = izquierda, 270 = arriba), anillo (0 centro, 1 interior, 2 exterior), apuntable
 # Botones fijos: id, color, radio base, ángulo en el arco (180 = izquierda, 270 = arriba), anillo (0 centro, 1 interior, 2 exterior)
@@ -28,6 +29,9 @@ const BOTONES := [
 const RANURAS := [[56.0, 211.0, 1], [56.0, 251.0, 1], [50.0, 198.0, 2], [50.0, 226.0, 2]]
 const RANURA_MODO := [48.0, 256.0, 2]
 
+var minimapa: Minimapa
+var mapa_completo: MapaCompleto
+var _mapa: Mapa
 var raiz: Control
 var joystick: JoystickVirtual
 var area_camara: AreaCamara
@@ -162,6 +166,8 @@ void fragment() {
 	nivel = 0
 	_boton_nivel = _boton_texto(Datos.texto("hud_nivel_auto"), func(): _ciclar_nivel())
 	_boton_texto(Datos.texto("hud_reaparecer"), func(): reaparecer_pedido.emit())
+	if _mapa != null and _mapa.radio_caminable > 0.0:
+		_boton_texto(Datos.texto("hud_mapa"), func(): abrir_mapa())
 	_boton_texto(Datos.texto("hud_ajustes"), func(): abrir_ajustes())
 	_boton_texto(Datos.texto("hud_salir"), func(): salir_pedido.emit())
 
@@ -187,6 +193,10 @@ void fragment() {
 	_fps.add_theme_constant_override("outline_size", 5)
 	_fps.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 
+	if _mapa != null and _mapa.radio_caminable > 0.0:
+		minimapa = Minimapa.new()
+		raiz.add_child(minimapa)
+		minimapa.configurar(_mapa)
 	if not get_viewport().size_changed.is_connected(_reordenar):
 		get_viewport().size_changed.connect(_reordenar)
 	aplicar_ajustes()
@@ -284,6 +294,8 @@ func _reordenar() -> void:
 	_enemigo_panel.position = Vector2((t.x - ancho_e) * 0.5, arr)
 	_clima.position = Vector2(izq + 4, arr + 130)
 	_fps.position = Vector2(izq + 4, arr + 156)
+	if minimapa != null:
+		minimapa.position = Vector2(izq + 4, arr + 186)
 	var x := t.x - der
 	var sup: Array = []
 	for n in raiz.get_children():
@@ -551,3 +563,35 @@ func poner_info_red(t: String) -> void:
 func configurar_retrato(asp: Dictionary, clan: String, nombre: String, plantilla: String) -> void:
 	_retrato_conf = [asp, clan, nombre, plantilla]
 	retrato.configurar(asp, clan, nombre, plantilla)
+
+
+## Mapa de la aldea completa: minimapa en la esquina y botón «Mapa» (se llama antes de construir).
+func configurar_mapa(m: Mapa) -> void:
+	_mapa = m
+
+
+## Posiciones para el minimapa y el mapa completo (cada snapshot).
+func actualizar_mapa(yo: Vector2, yaw: float, otros: Array) -> void:
+	if minimapa != null:
+		minimapa.actualizar(yo, yaw, otros)
+	if mapa_completo != null and is_instance_valid(mapa_completo):
+		mapa_completo.actualizar(yo, otros)
+
+
+func abrir_mapa() -> void:
+	if _mapa == null:
+		return
+	if mapa_completo != null and is_instance_valid(mapa_completo):
+		mapa_completo.queue_free()
+		mapa_completo = null
+		return
+	mapa_completo = MapaCompleto.new()
+	raiz.add_child(mapa_completo)
+	mapa_completo.configurar(_mapa)
+	mapa_completo.viajar.connect(func(id):
+		viajar_pedido.emit(id)
+		mapa_completo.queue_free()
+		mapa_completo = null)
+	mapa_completo.cerrar.connect(func():
+		mapa_completo.queue_free()
+		mapa_completo = null)

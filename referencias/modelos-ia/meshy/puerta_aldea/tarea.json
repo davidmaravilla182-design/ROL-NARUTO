@@ -1,0 +1,17 @@
+{
+ "id": "01a1f1fe-7a29-7339-b909-887089f4c188",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 3484044902,
+ "prompt": "massive fortified village main gate set in a thick high concrete wall, two heavy riveted metal doors, guard towers on both sides, pipes and floodlights, imposing, stylized anime video game asset, rainy dark industrial ninja village, clean readable shapes, single object, no ground plane",
+ "texture_prompt": "massive fortified village main gate set in a thick high concrete wall, two heavy riveted metal doors, guard towers on both sides, pipes and floodlights, imposing. stained weathered grey concrete with rain streaks, dark gunmetal riveted metal sheets, burgundy red rusty pipes, small lilac purple accents, warm amber lit windows and lamps, muted desaturated colors, hand painted texture, wet surfaces",
+ "status": "SUCCEEDED",
+ "created_at": 1795061349564,
+ "progress": 100,
+ "started_at": 1795061349575,
+ "finished_at": 1795061395884,
+ "task_error": null,
+ "consumed_credits": 10
+}

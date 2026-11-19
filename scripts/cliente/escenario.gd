@@ -21,12 +21,18 @@ var _nubes_mat: ShaderMaterial
 var _rayo_cielo: Rayos
 var _t_relampago := 6.0
 var _relampago := 0.0
+var sectores: Sectores
+var _niebla_capas: Node3D
 
 
 func construir(p_mapa: Mapa) -> void:
 	mapa = p_mapa
 	_colores = Datos.escenario.get("colores", {})
 	Materiales.grosor_contorno = 0.03 if Ajustes.g("contorno_escenario", false) else 0.0
+	sectores = Sectores.new()
+	sectores.name = "Sectores"
+	add_child(sectores)
+	sectores.configurar(mapa)
 	_entorno()
 	_suelo()
 	_charcos()
@@ -133,6 +139,9 @@ func _suelo() -> void:
 	# Placas de metal mojado con textura horneada (1 placa = 1 m); refleja la sonda de reflejos.
 	# Si hay canal, el suelo se parte en dos franjas y deja el hueco del agua.
 	var mat := Shaders.toon_tex("suelo", Color(0.95, 0.95, 1.0), Vector2.ONE, true, 0.25, 0.25, 0.55)
+	if mapa.radio_caminable > 0.0:
+		_isla(mat)
+		return
 	var franjas: Array = [[-90.0, 90.0]]
 	if not mapa.canal.is_empty():
 		franjas = [[float(mapa.canal["z_sur"]), 90.0], [-90.0, float(mapa.canal["z_norte"])]]
@@ -147,6 +156,77 @@ func _suelo() -> void:
 		suelo.position = Vector3(0, 0, (z0 + z1) * 0.5)
 		suelo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(suelo)
+
+
+## Aldea completa: isla circular (con el hueco del canal), acantilado, lago alrededor y orilla lejana.
+func _isla(mat: Material) -> void:
+	var al: Dictionary = Datos.escenario.get("aldea", {})
+	var c := mapa.centro_aldea
+	var r := float(al.get("radio_muro", 150.0)) + 3.0
+	var cn := mapa.canal
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_normal(Vector3.UP)
+	var paso := 4.0
+	# Cuadrícula alineada con los bordes del canal (x_min y z_norte múltiplos de 4 m).
+	var x := floorf((c.x - r) / paso) * paso
+	while x < c.x + r:
+		var z := floorf((c.y - r) / paso) * paso + 1.0   # +1: -31 y -23 caen en bordes
+		while z < c.y + r:
+			var centro := Vector2(x + paso * 0.5, z + paso * 0.5)
+			var en_canal := not cn.is_empty() and centro.x > float(cn["x_min"]) and centro.x < float(cn["x_max"]) \
+				and centro.y > float(cn["z_norte"]) and centro.y < float(cn["z_sur"])
+			if centro.distance_to(c) < r and not en_canal:
+				for v in [Vector3(x, 0, z), Vector3(x + paso, 0, z), Vector3(x + paso, 0, z + paso),
+						Vector3(x, 0, z), Vector3(x + paso, 0, z + paso), Vector3(x, 0, z + paso)]:
+					st.add_vertex(v)
+			z += paso
+		x += paso
+	var suelo := MeshInstance3D.new()
+	suelo.mesh = st.commit()
+	suelo.material_override = mat
+	suelo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(suelo)
+	# Acantilado de concreto alrededor de la isla (de 0 a -6 m) y orilla exterior del lago.
+	var borde := Materiales.cilindro(r + 1.0, r + 2.5, 6.0, Shaders.toon_tex("concreto", Color(0.6, 0.62, 0.68), Vector2.ONE, true, 0.12, 0.0, 0.8), 96)
+	borde.position = Vector3(c.x, -3.05, c.y)
+	borde.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(borde)
+	var lago := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	var radio_lago := float(al.get("lago_radio", 600.0))
+	pm.size = Vector2(radio_lago * 2.0, radio_lago * 2.0)
+	var agua := Shaders.material("agua")
+	agua.set_shader_parameter("fuerza", 1.0 if Ajustes.g("ondas_charcos", true) else 0.0)
+	pm.material = agua
+	lago.mesh = pm
+	lago.position = Vector3(c.x, -1.6, c.y)
+	lago.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(lago)
+	# Orilla exterior: anillo de tierra oscura donde llega el puente (y donde se alza el horizonte).
+	var orilla := MeshInstance3D.new()
+	var anillo := SurfaceTool.new()
+	anillo.begin(Mesh.PRIMITIVE_TRIANGLES)
+	anillo.set_normal(Vector3.UP)
+	var r0 := 228.0
+	var r1 := radio_lago
+	var n := 96
+	for i in n:
+		var a0 := TAU * i / n
+		var a1 := TAU * (i + 1) / n
+		var p00 := Vector3(c.x + cos(a0) * r0, 0, c.y + sin(a0) * r0)
+		var p01 := Vector3(c.x + cos(a1) * r0, 0, c.y + sin(a1) * r0)
+		var p10 := Vector3(c.x + cos(a0) * r1, 0, c.y + sin(a0) * r1)
+		var p11 := Vector3(c.x + cos(a1) * r1, 0, c.y + sin(a1) * r1)
+		for v in [p00, p10, p11, p00, p11, p01]:
+			anillo.add_vertex(v)
+	orilla.mesh = anillo.commit()
+	orilla.material_override = mat
+	orilla.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(orilla)
+	# Embarcadero al final del puente (losa ancha a ras del suelo).
+	var emb := Kit.instancia("losa", Transform3D(Basis.from_scale(Vector3(48, 0.6, 26)), Vector3(0, 0.0, 162.0)), false)
+	add_child(emb)
 
 
 func _charcos() -> void:
@@ -349,14 +429,17 @@ func _atmosfera() -> void:
 		_nubes_mat = Shaders.material("nubes")
 		var nubes := MeshInstance3D.new()
 		var pm := PlaneMesh.new()
-		pm.size = Vector2(560, 560)
+		pm.size = Vector2(560, 560) if mapa.radio_caminable <= 0.0 else Vector2(1400, 1400)
 		pm.subdivide_width = 0
 		pm.material = _nubes_mat
 		nubes.mesh = pm
-		nubes.position = Vector3(0, 75, 0)
+		nubes.position = Vector3(mapa.centro_aldea.x, 75, mapa.centro_aldea.y)
 		nubes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(nubes)
-	# Capas de niebla: anillos de bancos verticales a distintas distancias.
+	# Capas de niebla: anillos de bancos verticales a distintas distancias (siguen a la cámara en el mapa grande).
+	_niebla_capas = Node3D.new()
+	_niebla_capas.name = "NieblaCapas"
+	add_child(_niebla_capas)
 	var capas := int(Ajustes.g("capas_niebla", 2))
 	for capa in capas:
 		var radio := (24.0 if mapa.piezas.is_empty() else 46.0) + capa * 16.0
@@ -374,7 +457,7 @@ func _atmosfera() -> void:
 			var mi := MeshInstance3D.new()
 			mi.mesh = q
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			add_child(mi)
+			_niebla_capas.add_child(mi)
 			mi.position = Vector3(cos(a) * radio, q.size.y * 0.42, sin(a) * radio)
 			mi.rotation.y = -a + PI * 0.5
 	if Ajustes.g("sonda_reflejos", true):
@@ -453,7 +536,8 @@ func destello(color: Color, energia: float, duracion: float) -> void:
 func _relampago_cielo() -> void:
 	var a := randf() * TAU
 	var d := randf_range(55.0, 95.0)
-	var arriba := Vector3(cos(a) * d, 72.0, sin(a) * d)
+	var base := Vector3.ZERO if camara == null else Vector3(camara.global_position.x, 0, camara.global_position.z)
+	var arriba := base + Vector3(cos(a) * d, 72.0, sin(a) * d)
 	var abajo := arriba + Vector3(randf_range(-12, 12), -randf_range(45.0, 65.0), randf_range(-12, 12))
 	_rayo_cielo.limpiar()
 	_rayo_cielo.agregar_rayo(arriba, abajo, 0.45, 3, 0.18, 6)
@@ -467,6 +551,10 @@ func _relampago_cielo() -> void:
 
 
 func _process(delta: float) -> void:
+	if camara != null:
+		sectores.camara = camara
+		if _niebla_capas != null and mapa.radio_caminable > 0.0:
+			_niebla_capas.position = Vector3(camara.global_position.x, 0, camara.global_position.z)
 	# Relámpagos ocasionales en el cielo.
 	if Ajustes.g("relampagos", true) and _rayo_cielo != null:
 		_t_relampago -= delta

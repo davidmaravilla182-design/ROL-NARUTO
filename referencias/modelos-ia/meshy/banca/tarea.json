@@ -1,0 +1,17 @@
+{
+ "id": "01a1f1fe-703a-71d2-9090-9b3531b7dd47",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 3203133121,
+ "prompt": "simple public bench made of wooden planks on metal frame, stylized anime video game asset, rainy dark industrial ninja village, clean readable shapes, single object, no ground plane",
+ "texture_prompt": "simple public bench made of wooden planks on metal frame. stained weathered grey concrete with rain streaks, dark gunmetal riveted metal sheets, burgundy red rusty pipes, small lilac purple accents, warm amber lit windows and lamps, muted desaturated colors, hand painted texture, wet surfaces",
+ "status": "SUCCEEDED",
+ "created_at": 1795061346852,
+ "progress": 100,
+ "started_at": 1795061346862,
+ "finished_at": 1795061393740,
+ "task_error": null,
+ "consumed_credits": 10
+}

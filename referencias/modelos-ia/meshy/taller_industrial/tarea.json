@@ -1,0 +1,17 @@
+{
+ "id": "01a1f1fd-45ff-7370-83de-971be6fc1c31",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 589173101,
+ "prompt": "industrial workshop warehouse building, wide low structure with sawtooth metal roof, big rolling garage door, tall chimney stack, external tanks and thick pipes along the side, stylized anime video game asset, rainy dark industrial ninja village, clean readable shapes, single object, no ground plane",
+ "texture_prompt": "industrial workshop warehouse building, wide low structure with sawtooth metal roof, big rolling garage door, tall chimney stack, external tanks and thick pipes along the side. stained weathered grey concrete with rain streaks, dark gunmetal riveted metal sheets, burgundy red rusty pipes, small lilac purple accents, warm amber lit windows and lamps, muted desaturated colors, hand painted texture, wet surfaces",
+ "status": "SUCCEEDED",
+ "created_at": 1795061271818,
+ "progress": 100,
+ "started_at": 1795061271830,
+ "finished_at": 1795061315417,
+ "task_error": null,
+ "consumed_credits": 10
+}

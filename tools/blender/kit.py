@@ -455,12 +455,95 @@ def muneco_cuerpo(rng):
     return unir(o, "muneco_cuerpo")
 
 
+# ---------------------------------------------------------------- piezas tipo Lego del mapa completo
+
+def escalera():
+    """Escalera metálica de 2 m de ancho que sube 1 m en 1 m de largo (+Y); se escala al tamaño de cada rampa.
+    Peldaños de rejilla, largueros y barandal a ambos lados."""
+    o = []
+    n = 6
+    for k in range(n):
+        y = -0.5 + (k + 0.5) / n
+        z = (k + 1) / n
+        o.append(caja((2.0, 1.0 / n + 0.02, 0.05), "rejilla", pos=(0, y, z - 0.025), tile=1.0))
+        o.append(caja((2.0, 0.03, z), "lamina", pos=(0, y + 0.5 / n, z / 2)))
+    for s in (-1, 1):
+        ang = math.atan2(1.0, 1.0)
+        o.append(caja((0.08, math.hypot(1, 1), 0.16), "lamina", pos=(s * 1.02, 0, 0.5), rot=(ang, 0, 0)))
+    return unir(o, "escalera")
+
+
+def losa():
+    """Losa de 1 × 1 m y 1 m de grueso (se escala): piso de rejilla con borde de lámina."""
+    o = [caja((1.0, 1.0, 0.25), "rejilla", pos=(0, 0, -0.125), tile=1.0)]
+    o.append(caja((1.0, 1.0, 0.75), "lamina", pos=(0, 0, -0.625)))
+    return unir(o, "losa")
+
+
+def columna():
+    """Columna de concreto de 1 m de alto (se escala en Z) con base y capitel de lámina."""
+    o = [caja((0.4, 0.4, 1.0), "concreto", pos=(0, 0, 0.5))]
+    o.append(caja((0.5, 0.5, 0.06), "lamina", pos=(0, 0, 0.03)))
+    o.append(caja((0.5, 0.5, 0.06), "lamina", pos=(0, 0, 0.97)))
+    return unir(o, "columna")
+
+
+def muro_aldea():
+    """Tramo de muralla de 12 m (X) × 4 m de grueso × 14 m de alto: concreto con contrafuertes,
+    almenas, pasarela superior, tuberías burdeos y faroles. El exterior mira a -Y."""
+    o = [caja((12.0, 4.0, 14.0), "concreto", pos=(0, 0, 7.0), bisel=0.05, tile=3.0)]
+    for x in (-6.0, 0.0):
+        o.append(caja((1.2, 1.4, 13.0), "concreto", pos=(x, -2.5, 6.5), bisel=0.05))
+    for k in range(6):
+        o.append(caja((1.2, 0.6, 1.0), "concreto", pos=(-5.0 + k * 2.0, -1.7, 14.5), bisel=0.03))
+    o.append(caja((12.0, 0.25, 0.5), "lamina", pos=(0, -2.05, 11.5)))
+    o.append(caja((12.0, 0.25, 0.5), "lamina", pos=(0, -2.05, 4.0)))
+    o.append(tubo([(-6.0, -2.25, 9.0), (6.0, -2.25, 9.0)], 0.35, "tuberia", seg=12, bridas=(0.2, 0.5, 0.8)))
+    o.append(tubo([(3.0, 2.2, 0.0), (3.0, 2.2, 12.0), (6.0, 2.2, 12.0)], 0.25, "tuberia", seg=10, radio_codo=0.6))
+    o += farol_pared((-3.0, -2.05, 12.6))
+    o.append(cilindro(0.18, 0.22, "luz", pos=(3.0, 2.15, 6.0), seg=8))
+    return unir(o, "muro_aldea")
+
+
+def torreta():
+    """Torre de vigilancia de la muralla: 6 × 6 m, 20 m de alto, con garita de lámina y foco."""
+    o = [caja((6.0, 6.0, 18.0), "concreto", pos=(0, 0, 9.0), bisel=0.06, tile=3.0)]
+    o.append(caja((7.0, 7.0, 0.4), "lamina", pos=(0, 0, 18.2)))
+    o.append(caja((5.0, 5.0, 2.4), "lamina", pos=(0, 0, 19.6), bisel=0.04))
+    for s in (-1, 1):
+        o.append(caja((3.4, 0.06, 0.9), "ventana", pos=(0, s * 2.52, 19.9)))
+        o.append(caja((0.06, 3.4, 0.9), "ventana", pos=(s * 2.52, 0, 19.9)))
+    o.append(caja((5.6, 5.6, 0.3), "techo", pos=(0, 0, 21.0)))
+    o.append(cilindro(0.35, 0.5, "luz", pos=(0, -3.0, 18.6), rot=(math.pi / 2, 0, 0), seg=10))
+    o.append(tubo([(2.5, -3.05, 0.0), (2.5, -3.05, 17.5)], 0.22, "tuberia", seg=10, bridas=(0.3, 0.6)))
+    return unir(o, "torreta")
+
+
+def chimenea():
+    """Chimenea industrial de 20 m: fuste de ladrillo/concreto con anillos de lámina y boca oscura (vapor en el juego)."""
+    o = [cilindro(1.1, 20.0, "concreto", seg=16, r2=0.8, tile=2.0)]
+    for z in (4.0, 9.0, 14.0, 19.0):
+        o.append(cilindro(1.15 - z * 0.017, 0.35, "lamina", pos=(0, 0, z), seg=16))
+    o.append(cilindro(0.65, 0.4, "oscuro", pos=(0, 0, 19.8), seg=12))
+    o.append(tubo([(0, -1.0, 0.0), (0, -1.0, 15.0)], 0.12, "tuberia", seg=8))
+    return unir(o, "chimenea")
+
+
+def desague():
+    """Boca de desagüe en una pared (frente -Y): tubo con brida y rejilla; el agua cae desde (0, -0.6, 0)."""
+    o = [tubo([(0, 0.3, 0), (0, -0.6, 0)], 0.38, "tuberia", seg=14, bridas=(0.2, -0.2))]
+    o.append(cilindro(0.3, 0.05, "oscuro", pos=(0, -0.62, 0), rot=(math.pi / 2, 0, 0), seg=14))
+    return unir(o, "desague")
+
+
 PIEZAS = {
     "muneco": muneco, "muneco_cuerpo": muneco_cuerpo,
     "torre_cabeza": torre_cabeza,
-    "caja_madera": caja_madera, "caja_metal": caja_metal, "barril": barril, "rejilla_suelo": rejilla_suelo, "tubo_suelo": tubo_suelo,
+    "caja_madera": caja_madera, "caja_metal": caja_metal, "barril_kit": barril, "rejilla_suelo": rejilla_suelo, "tubo_suelo": tubo_suelo,
     "silo_lejano": silo_lejano, "bloque_lejano": bloque_lejano,
     "silo": silo, "edificio": edificio, "farol": farol, "barandal": barandal, "pasarela": pasarela,
+    "escalera": escalera, "losa": losa, "columna": columna, "muro_aldea": muro_aldea, "torreta": torreta,
+    "chimenea": chimenea, "desague": desague,
     "tubo_largo": tubo_largo, "tubo_arco": tubo_arco, "tanque": tanque, "muro_canal": muro_canal, "toldo": toldo,
 }
 

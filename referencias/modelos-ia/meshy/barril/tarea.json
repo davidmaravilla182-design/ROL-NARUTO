@@ -1,0 +1,17 @@
+{
+ "id": "01a1f1fc-8137-779b-8e0a-e655bf06b869",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "smart-topology",
+ "seed": 3335419299,
+ "prompt": "metal oil barrel drum with ribs and dents, rusty, stylized anime video game asset, rainy dark industrial ninja village, clean readable shapes, single object, no ground plane",
+ "texture_prompt": "metal oil barrel drum with ribs and dents, rusty. stained weathered grey concrete with rain streaks, dark gunmetal riveted metal sheets, burgundy red rusty pipes, small lilac purple accents, warm amber lit windows and lamps, muted desaturated colors, hand painted texture, wet surfaces",
+ "status": "SUCCEEDED",
+ "created_at": 1795061221678,
+ "progress": 100,
+ "started_at": 1795061221689,
+ "finished_at": 1795061262139,
+ "task_error": null,
+ "consumed_credits": 10
+}

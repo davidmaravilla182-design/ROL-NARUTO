@@ -33,6 +33,8 @@
   "msg_desventaja": "Desventaja de naturaleza",
   "enemigo_huye": "¡El enemigo intenta huir!",
   "hud_ajustes": "Ajustes",
+  "hud_mapa": "Mapa",
+  "msg_viaje": "Viaje rápido: %s",
   "hud_cancelar": "Cancelar",
   "msg_cancelado": "Cancelado",
   "msg_fijado": "Objetivo fijado: {0}",

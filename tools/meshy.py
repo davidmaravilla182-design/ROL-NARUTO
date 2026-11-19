@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import time
+import urllib.parse
 import urllib.request
 
 API = os.environ.get("MESHY_API_HOST", "https://api.meshy.ai")
@@ -54,7 +55,22 @@ def imagen_a_3d(ruta, polys=30000, textura="2k", modelo="meshy-t2.5"):
     return _pedir("POST", "/openapi/v1/image-to-3d", cuerpo)["result"]
 
 
-def estado(tarea):
+def texto_a_3d_vista(prompt, polys=8000, modelo="meshy-t2.5"):
+    """Text to 3D, fase 1 (malla sin textura) con Smart Topology. Costo: 5 créditos."""
+    cuerpo = {"mode": "preview", "prompt": prompt[:800], "model_type": "smart-topology", "ai_model": modelo,
+              "target_polycount": int(polys), "topology": "triangle", "should_remesh": True}
+    return _pedir("POST", "/openapi/v2/text-to-3d", cuerpo)["result"]
+
+
+def texto_a_3d_textura(vista, texto_textura):
+    """Text to 3D, fase 2 (textura sobre la malla de la fase 1). Costo: 10 créditos."""
+    cuerpo = {"mode": "refine", "preview_task_id": vista, "texture_prompt": texto_textura[:600], "enable_pbr": False}
+    return _pedir("POST", "/openapi/v2/text-to-3d", cuerpo)["result"]
+
+
+def estado(tarea, tipo="image-to-3d"):
+    if tipo == "text-to-3d":
+        return _pedir("GET", "/openapi/v2/text-to-3d/" + tarea)
     return _pedir("GET", "/openapi/v1/image-to-3d/" + tarea)
 
 
@@ -65,10 +81,10 @@ def descargar(url, destino):
     return os.path.getsize(destino)
 
 
-def esperar(tarea, carpeta, cada=10, limite=1800):
+def esperar(tarea, carpeta, cada=10, limite=1800, tipo="image-to-3d"):
     t0 = time.time()
     while True:
-        e = estado(tarea)
+        e = estado(tarea, tipo)
         print("estado %s · progreso %s %%" % (e.get("status"), e.get("progress")), flush=True)
         if e.get("status") in ("SUCCEEDED", "FAILED", "CANCELED", "EXPIRED"):
             break
@@ -77,6 +93,11 @@ def esperar(tarea, carpeta, cada=10, limite=1800):
         time.sleep(cada)
     if e.get("status") != "SUCCEEDED":
         raise SystemExit("la tarea terminó en %s: %s" % (e.get("status"), e.get("task_error")))
+    return bajar(e, carpeta)
+
+
+def bajar(e, carpeta):
+    """Descarga GLB, texturas y miniatura de una tarea terminada (sin guardar las URL firmadas)."""
     os.makedirs(carpeta, exist_ok=True)
     archivos = {}
     for clave, url in (e.get("model_urls") or {}).items():
@@ -88,12 +109,16 @@ def esperar(tarea, carpeta, cada=10, limite=1800):
                 archivos["textura_%d_%s.png" % (i, clave)] = url
     if e.get("thumbnail_url"):
         archivos["miniatura.png"] = e["thumbnail_url"]
+    descargar_archivos(e, carpeta, archivos)
+    return e
+
+
+def descargar_archivos(e, carpeta, archivos):
     for nombre, url in archivos.items():
         tam = descargar(url, os.path.join(carpeta, nombre))
         print("descargado %-28s %8d bytes  (%s)" % (nombre, tam, urllib.parse.urlparse(url).netloc), flush=True)
     json.dump({k: v for k, v in e.items() if "url" not in k},
               open(os.path.join(carpeta, "tarea.json"), "w"), indent=1)
-    return e
 
 
 if __name__ == "__main__":
