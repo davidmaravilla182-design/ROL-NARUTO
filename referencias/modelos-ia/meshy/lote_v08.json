@@ -1,0 +1,25 @@
+{
+ "saldo_inicial": 749,
+ "tareas": {
+  "rig_cuerpo": [
+   "01a1f45d-6598-75c5-94f4-36e8a33790b0",
+   5
+  ],
+  "rig_golem": [
+   "01a1f45d-762d-76b0-8808-93bc8c0818af",
+   5
+  ],
+  "anim_ninja_a": [
+   "01a1f460-8057-760a-81bd-c078f4b98c1e",
+   30
+  ],
+  "anim_ninja_b": [
+   "01a1f460-81ee-7757-8c4e-9aa1daa50ba5",
+   30
+  ],
+  "anim_golem": [
+   "01a1f460-54bc-72ae-9762-6be969bc8d8b",
+   12
+  ]
+ }
+}

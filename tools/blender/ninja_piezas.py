@@ -134,13 +134,47 @@ def peinado(nombre, arm, caja):
     alto = mx[2] - mn[2]
     copa = P[P[:, 2] > mx[2] - alto * 0.22]
     ancho_copa = copa[:, 0].max() - copa[:, 0].min()
-    esc = ancho_cabeza * {"puntas": 1.55, "corto": 1.28, "largo": 1.2, "coleta": 1.2}.get(nombre, 1.25) / ancho_copa
+    esc0 = ancho_cabeza * {"puntas": 1.55, "corto": 1.28, "largo": 1.2, "coleta": 1.2}.get(nombre, 1.25) / ancho_copa
     centro_xy = Vector(((copa[:, 0].max() + copa[:, 0].min()) / 2, (copa[:, 1].max() + copa[:, 1].min()) / 2, mx[2]))
-    destino = Vector(((cmn[0] + cmx[0]) / 2, (cmn[1] + cmx[1]) / 2 + 0.008, cmx[2] + {"puntas": 0.15, "corto": 0.035}.get(nombre, 0.025)))
-    for v in o.data.vertices:
-        v.co = (v.co - centro_xy) * esc + destino
-    o.data.update()
+    base = Vector(((cmn[0] + cmx[0]) / 2, (cmn[1] + cmx[1]) / 2 + 0.008, cmx[2] + {"puntas": 0.15, "corto": 0.035}.get(nombre, 0.025)))
+    P0 = [v.co.copy() for v in o.data.vertices]
+
+    def colocar(obj, m, dy, dz):
+        for i, v in enumerate(obj.data.vertices):
+            v.co = (P0[i] - centro_xy) * esc0 * m + base + Vector((0.0, dy, dz))
+        obj.data.update()
+    # Búsqueda de escala y posición: el peinado debe cubrir todo el cuero cabelludo (rayos desde el cráneo hacia
+    # afuera) sin tapar los ojos. Se evalúa ya recortado el maniquí.
+    mejor = None
+    for m in (0.94, 1.0, 1.07, 1.15):
+        for dz in (-0.05, -0.03, -0.01, 0.01, 0.03):
+            for dy in (-0.015, 0.0, 0.015, 0.03):
+                prueba = o.copy()
+                prueba.data = o.data.copy()
+                bpy.context.scene.collection.objects.link(prueba)
+                colocar(prueba, m, dy, dz)
+                recortar_maniqui(prueba, nombre, silencioso=True)
+                cob, ojos = cobertura(prueba)
+                puntos = cob - 2.0 * ojos - abs(m - 1.0) * 0.1
+                if mejor is None or puntos > mejor[0]:
+                    mejor = (puntos, m, dy, dz, cob, ojos)
+                bpy.data.meshes.remove(prueba.data)
+    _, m, dy, dz, cob, ojos = mejor
+    colocar(o, m, dy, dz)
     recortar_maniqui(o, nombre)
+    COBERTURAS[nombre] = round(cob, 3)
+    log("peinado %s: escala ×%.2f, dy %.3f, dz %.3f → cuero cabelludo cubierto %.0f %%, ojos tapados %.0f %%" % (nombre, m, dy, dz, cob * 100, ojos * 100))
+    esc = esc0 * m
+    # Gorro de pelo pegado al cráneo (caras del cuero cabelludo del cuerpo infladas 4 mm): nunca queda calvo.
+    gorro = copiar_caras(CUERPO_OB[0], "gorro_" + nombre, lambda co, p_: co.z > 0.93 * H or (co.z > 0.875 * H and co.y > CABEZA["centro_y"] + 0.025)
+                         or (co.z > 0.9 * H and abs(co.x) > CABEZA["ancho"] * 0.36 and co.y > CABEZA["frente_y"] + 0.05), 0.004, suavizar=2)
+    for g0 in list(gorro.vertex_groups):
+        gorro.vertex_groups.remove(g0)
+    for m0 in list(gorro.modifiers):
+        gorro.modifiers.remove(m0)
+    N.activo(o, gorro)
+    bpy.ops.object.join()
+    o = bpy.context.view_layer.objects.active
     # Reducido a ~2.500 triángulos para el celular.
     t = sum(len(p.vertices) - 2 for p in o.data.polygons)
     if t > 2600:
@@ -159,10 +193,46 @@ def peinado(nombre, arm, caja):
 
 
 CUERPO_BVH = None
+CUERPO_OB = []
 CABEZA = {}
 
 
-def recortar_maniqui(o, nombre):
+COBERTURAS = {}
+CUERO = []   # [(punto, dirección)] del cuero cabelludo del cuerpo
+OJOS = []
+
+
+def preparar_cuero(ob):
+    """Puntos del cuero cabelludo (coronilla, nuca y lados por encima de las orejas) y de los ojos."""
+    P = np.array([tuple(v.co) for v in ob.data.vertices])
+    cab = P[P[:, 2] > 0.84 * H]
+    centro = Vector((0.0, float(np.median(cab[:, 1])), 0.90 * H))
+    rng = np.random.default_rng(3)
+    for v in ob.data.vertices:
+        co = v.co
+        cuero = co.z > 0.945 * H or (co.z > 0.885 * H and co.y > centro.y + 0.03) or (co.z > 0.91 * H and abs(co.x) > CABEZA["ancho"] * 0.4)
+        if cuero and rng.random() < 0.35:
+            CUERO.append((co.copy(), (co - centro).normalized()))
+    for lado in (-1, 1):
+        OJOS.append(Vector((lado * 0.034 * H * 0.55, CABEZA["frente_y"] - 0.005, 0.905 * H)))
+
+
+def cobertura(pelo):
+    bvh = BVHTree.FromObject(pelo, bpy.context.evaluated_depsgraph_get())
+    tapados = 0
+    for p, d in CUERO:
+        loc, _n, _i, dist = bvh.ray_cast(p + d * 0.002, d, 0.16)
+        if loc is not None:
+            tapados += 1
+    ojos = 0
+    for p in OJOS:
+        loc, _n, _i, dist = bvh.ray_cast(p, Vector((0, -1, 0)), 0.12)
+        if loc is not None:
+            ojos += 1
+    return tapados / max(len(CUERO), 1), ojos / max(len(OJOS), 1)
+
+
+def recortar_maniqui(o, nombre, silencioso=False):
     """Quita la cara, el cráneo y el busto del maniquí que Meshy pone debajo del pelo: todo lo que queda dentro del
     cuerpo o pegado a él (cara y hombros), y lo que cae por debajo de la barbilla salvo mechones de atrás/lados."""
     bvh = CUERPO_BVH
@@ -194,7 +264,8 @@ def recortar_maniqui(o, nombre):
     bmesh.ops.delete(bm, geom=sueltos, context="VERTS")
     bm.to_mesh(o.data)
     bm.free()
-    log("peinado %s: recortadas %d de %d vértices del maniquí" % (nombre, len(quitar), len(o.data.vertices) + len(quitar)))
+    if not silencioso:
+        log("peinado %s: recortadas %d de %d vértices del maniquí" % (nombre, len(quitar), len(o.data.vertices) + len(quitar)))
 
 
 # ------------------------------------------------------------------ prendas
@@ -474,6 +545,8 @@ def main():
     cab = P[P[:, 2] > 0.84 * H]
     CABEZA.update({"barbilla": 0.855 * H, "ceja": 0.935 * H, "centro_y": float(np.median(cab[:, 1])),
                    "ancho": float(cab[:, 0].max() - cab[:, 0].min())})
+    preparar_cuero(ob)
+    CUERPO_OB.append(ob)
     pelos = [peinado(p, arm, caja) for p in PEINADOS if os.path.exists(os.path.join(M, "pelo_" + p, "modelo.glb"))]
     pr = prendas(ob, arm)
     parches = [parche(ob, arm, "EMBLEMA_base")] + [parche(o, arm, "EMBLEMA_" + k) for k, o in pr.items()]
@@ -486,7 +559,7 @@ def main():
     tris = {o.name: sum(len(p.vertices) - 2 for p in o.data.polygons) for o in todo}
     g = json.load(open(os.path.join(RAIZ, "data", "graficos.json"), encoding="utf-8"))
     g["ninja_piezas"] = {"_nota": "Generado por tools/blender/ninja_piezas.py: zonas del cuerpo base, medidas de la cabeza y triángulos por pieza.",
-                         "zonas": medias, "triangulos": tris, **med}
+                         "zonas": medias, "triangulos": tris, "cobertura_pelo": COBERTURAS, **med}
     json.dump(g, open(os.path.join(RAIZ, "data", "graficos.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     log("listo →", ruta, tris)
 

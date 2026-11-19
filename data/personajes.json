@@ -85,7 +85,9 @@
       "umbral_huida": 0.25,
       "cambio_lateral": 2.5,
       "pausa_reaccion": 0.35,
-      "aggro": 30.0
+      "aggro": 30.0,
+      "combo_max": 3,
+      "prob_sustitucion": 0.2
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -157,7 +159,10 @@
       "umbral_huida": 0.0,
       "cambio_lateral": 1.8,
       "pausa_reaccion": 0.35,
-      "aggro": 18.0
+      "aggro": 18.0,
+      "combo_max": 5,
+      "prob_shunshin": 0.45,
+      "prob_sustitucion": 0.15
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -219,7 +224,9 @@
       "umbral_huida": 0.3,
       "cambio_lateral": 2.2,
       "pausa_reaccion": 0.4,
-      "aggro": 22.0
+      "aggro": 22.0,
+      "combo_max": 2,
+      "prob_sustitucion": 0.45
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -281,7 +288,10 @@
       "genjutsu_duracion": 3.5,
       "genjutsu_rango": 14.0,
       "humo_recarga": 9.0,
-      "vida_mult": 2.2
+      "vida_mult": 2.2,
+      "combo_max": 3,
+      "prob_shunshin": 0.25,
+      "prob_sustitucion": 0.35
     },
     "aspecto": {
       "piel": "#dcbb98",

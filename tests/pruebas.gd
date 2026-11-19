@@ -23,6 +23,7 @@ func _initialize() -> void:
 	probar_servidor_chidori_cadena()
 	probar_servidor_sharingan()
 	probar_servidor_combo()
+	probar_combate_anime()
 	probar_ia_puede_ganar()
 	probar_jugador_puede_ganar()
 	probar_textos_sin_codigo()
@@ -347,6 +348,97 @@ func probar_servidor_combo() -> void:
 			pasos.append(int(e["paso"]))
 	comprobar(pasos == [0, 1, 2], "combo de taijutsu de 3 golpes (%s)" % str(pasos))
 	comprobar(contar(evs, "impacto") == 3, "los 3 golpes conectan")
+	s.free()
+
+
+func _muneco_frente(s: ServidorJuego, j: EntidadServidor, dist: float) -> EntidadServidor:
+	# Rival quieto (ninja sin IA): los muñecos de práctica no se mueven ni caen.
+	var m := s._crear_entidad("ninja_lluvia", j.pos + Vector3(0, 0, -dist))
+	m.ia = null
+	m.vida = 9999.0
+	m.yaw = 0.0
+	j.yaw = PI
+	j.chakra = 100.0
+	return m
+
+
+func probar_combate_anime() -> void:
+	# Combo completo de 5 golpes con avance: el último derriba y lanza lejos.
+	var s := nuevo_servidor(false)
+	var j := s.entidad_de_peer(1)
+	var m := _muneco_frente(s, j, 3.8)
+	var evs: Array = []
+	for i in 5:
+		s.recibir_comando(1, {"t": "accion", "id": "golpe"})
+		evs.append_array(correr(s, 0.62 if i < 3 else 0.75))
+	var pasos: Array = []
+	for e in evs:
+		if e["tipo"] == "golpe":
+			pasos.append(int(e["paso"]))
+	comprobar(pasos == [0, 1, 2, 3, 4], "combo de 5 golpes encadenado (%s)" % str(pasos))
+	comprobar(contar(evs, "impacto") >= 5, "los 5 golpes conectan aunque empiece a 3,8 m (avance rápido)")
+	comprobar(m.estado == "caido" or m.pos.distance_to(j.pos) > 2.5, "el golpe final lanza lejos al rival")
+	s.free()
+	# Lanzador: tras 3 golpes, «saltar» manda al rival al aire; saltar otra vez persigue; golpes aéreos y remate.
+	s = nuevo_servidor(false)
+	j = s.entidad_de_peer(1)
+	m = _muneco_frente(s, j, 1.5)
+	for i in 3:
+		s.recibir_comando(1, {"t": "accion", "id": "golpe"})
+		correr(s, 0.62)
+	s.recibir_comando(1, {"t": "accion", "id": "saltar"})
+	evs = correr(s, 0.45)
+	comprobar(m.pos.y > 1.5 and m.estado == "lanzado", "el lanzador manda al rival hacia arriba (y=%.1f)" % m.pos.y)
+	s.recibir_comando(1, {"t": "accion", "id": "saltar"})
+	evs = correr(s, 0.3)
+	comprobar(not j.en_suelo, "saltas tras el rival lanzado")
+	var aereos := 0
+	for i in 3:
+		s.recibir_comando(1, {"t": "accion", "id": "golpe"})
+		for e in correr(s, 0.45):
+			if e["tipo"] == "golpe" and int(e["paso"]) >= 11:
+				aereos += 1
+			evs.append(e)
+	comprobar(aereos >= 2, "combo aéreo: golpes en el aire (%d)" % aereos)
+	evs.append_array(correr(s, 1.0))
+	comprobar(contar(evs, "estrellar") > 0, "el remate estrella al rival contra el suelo")
+	s.free()
+	# Shunshin: con objetivo fijado, esquivar te pone detrás del rival.
+	s = nuevo_servidor(false)
+	j = s.entidad_de_peer(1)
+	m = _muneco_frente(s, j, 8.0)
+	s.recibir_comando(1, {"t": "entrada", "mov": Vector2.ZERO, "mira": PI, "objetivo": m.id})
+	s.recibir_comando(1, {"t": "accion", "id": "esquivar", "objetivo": m.id})
+	evs = correr(s, 0.1)
+	comprobar(contar(evs, "shunshin") == 1 and j.pos.distance_to(m.pos) < 2.0, "shunshin: aparece junto al rival fijado (%.1f m)" % j.pos.distance_to(m.pos))
+	s.free()
+	# Sustitución: esquivar justo antes de que llegue el golpe deja un tronco y reapareces detrás del atacante.
+	s = nuevo_servidor(false)
+	j = s.entidad_de_peer(1)
+	s.entidades = s.entidades.filter(func(x): return x.tipo != "muneco")
+	var atac := s._crear_entidad("ninja_lluvia", j.pos + Vector3(0, 0, -1.4))
+	atac.ia = null
+	atac.yaw = 0.0
+	s._iniciar_golpe(atac, 0)
+	var t_imp := float(s.paso_golpe(0)["impacto"])
+	correr(s, t_imp - 0.04)
+	s.recibir_comando(1, {"t": "accion", "id": "esquivar"})
+	var vida0 := j.vida
+	evs = correr(s, 0.3)
+	comprobar(contar(evs, "sustitucion") == 1 and j.vida == vida0, "sustitución con tronco al esquivar justo a tiempo (%d, %.0f→%.0f)" % [contar(evs, "sustitucion"), vida0, j.vida])
+	s.free()
+	# Choque: dos golpes simultáneos de frente se anulan con chispas.
+	s = nuevo_servidor(false)
+	j = s.entidad_de_peer(1)
+	atac = s._crear_entidad("ninja_lluvia", j.pos + Vector3(0, 0, 1.2))
+	atac.ia = null
+	atac.yaw = PI
+	j.yaw = 0.0
+	vida0 = j.vida
+	s._iniciar_golpe(atac, 0)
+	s._iniciar_golpe(j, 0)
+	evs = correr(s, 0.5)
+	comprobar(contar(evs, "choque") == 1 and j.vida == vida0, "choque de golpes simultáneos")
 	s.free()
 
 

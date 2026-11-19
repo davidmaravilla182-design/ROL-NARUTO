@@ -330,6 +330,12 @@ func _accion(e: EntidadServidor, id: String) -> void:
 				e.pared = Vector2.ZERO
 				_evento({"tipo": "salto", "entidad": e.id})
 				return
+			# Tras 3 golpes del combo, «saltar» es el lanzador (uppercut que manda al rival al aire).
+			if _puede_actuar(e) and e.en_suelo and e.combo_ventana > 0.0 and e.combo_paso >= 2 and e.combo_paso < 10:
+				_iniciar_golpe(e, 10)
+				return
+			if (_puede_actuar(e) or (e.estado == "golpe" and e.accion.get("golpeado", false))) and _saltar_tras_lanzado(e):
+				return
 			if _puede_actuar(e) and e.en_suelo:
 				var j := Datos.jutsu("saltar")
 				if e.estamina < float(j["costo_estamina"]):
@@ -346,6 +352,17 @@ func _accion(e: EntidadServidor, id: String) -> void:
 				_accion_jutsu(e, id)
 
 
+## Paso del combo de taijutsu: 0–4 combo en el suelo, 10 lanzador, 11 golpe aéreo, 12 remate contra el suelo.
+func paso_golpe(paso: int) -> Dictionary:
+	var j := Datos.jutsu("golpe")
+	match paso:
+		10: return j["lanzador"]
+		11: return j["aereo"]
+		12: return j["remate"]
+	var pasos: Array = j["pasos"]
+	return pasos[clampi(paso, 0, pasos.size() - 1)]
+
+
 func _accion_golpe(e: EntidadServidor) -> void:
 	var j := Datos.jutsu("golpe")
 	var pasos: Array = j["pasos"]
@@ -354,9 +371,14 @@ func _accion_golpe(e: EntidadServidor) -> void:
 		# Encadenar: se guarda la intención para cuando termine el golpe actual.
 		e.accion["encadenar"] = true
 		return
-	if not _puede_actuar(e) or not e.en_suelo:
+	if not _puede_actuar(e):
 		return
-	if e.combo_ventana > 0.0:
+	if not e.en_suelo:
+		# En el aire tras lanzar a alguien: patadas aéreas y, a la tercera, remate contra el suelo.
+		if (e.lanzado_t <= 0.0 and e.golpes_aereos == 0) or e.golpes_aereos >= 3:
+			return
+		paso = 12 if e.golpes_aereos >= 2 else 11
+	elif e.combo_ventana > 0.0 and e.combo_paso < pasos.size():
 		paso = (e.combo_paso + 1) % pasos.size()
 	if e.estamina < float(j["costo_estamina"]):
 		_mensaje(e, "msg_sin_estamina")
@@ -366,24 +388,97 @@ func _accion_golpe(e: EntidadServidor) -> void:
 
 func _iniciar_golpe(e: EntidadServidor, paso: int) -> void:
 	var j := Datos.jutsu("golpe")
-	var p: Dictionary = j["pasos"][paso]
+	var p := paso_golpe(paso)
 	e.estamina -= float(j["costo_estamina"])
 	e.combo_paso = paso
 	e.combo_ventana = 0.0
+	if paso == 11 or paso == 12:
+		e.golpes_aereos += 1
 	var dir_cmd: Vector2 = e.apuntado.get("dir", Vector2.ZERO)
 	var yaw_base := atan2(dir_cmd.x, dir_cmd.y) if dir_cmd.length() > 0.1 else e.yaw
-	var obj := _objetivo_fijado(e, 3.5)
+	var acercar := float(j.get("acercar", 3.5))
+	var obj := _objetivo_fijado(e, acercar)
 	if obj == null:
-		obj = _buscar_objetivo(e, yaw_base, 70.0, 3.5)
+		obj = _buscar_objetivo(e, yaw_base, 70.0, acercar)
+	if paso >= 11 and e.lanzado_id >= 0:
+		var lz := entidad(e.lanzado_id)
+		if lz != null and lz.vivo():
+			obj = lz
 	e.yaw = _yaw_hacia(e.pos, obj.pos) if obj != null else yaw_base
+	if paso >= 11:
+		# En el aire: el atacante queda suspendido junto al rival mientras golpea.
+		e.flotar_t = float(p["duracion"])
+		if obj != null:
+			e.vel_y = clampf((obj.pos.y - e.pos.y) / maxf(float(p["impacto"]), 0.1), -12.0, 12.0)
+	# Desplazamiento rápido hacia el objetivo: llega justo en el instante del impacto.
+	if obj != null:
+		var v := obj.pos - e.pos
+		v.y = 0.0
+		var falta := v.length() - float(p["alcance"]) * 0.6
+		if falta > 0.1:
+			e.empuje = v.normalized() * minf(falta / maxf(float(p["impacto"]), 0.05), 22.0)
 	e.poner_estado("golpe", float(p["duracion"]), {"jutsu": "golpe", "paso": paso, "golpeado": false, "encadenar": false})
-	_evento({"tipo": "golpe", "entidad": e.id, "paso": paso})
+	_evento({"tipo": "golpe", "entidad": e.id, "paso": paso, "avance": e.empuje.length() > 4.0})
 	if e.tipo == "enemigo":
 		_evento({"tipo": "aviso", "subtipo": "melee", "entidad": e.id, "desde": e.pos, "hacia": e.pos + e.adelante() * float(p["alcance"]), "duracion": float(p["impacto"])})
 
 
+## Saltar tras el lanzador: si acabas de lanzar a alguien al aire, saltas hacia él para seguir el combo.
+func _saltar_tras_lanzado(e: EntidadServidor) -> bool:
+	if e.lanzado_t <= 0.0 or e.lanzado_id < 0 or not e.en_suelo:
+		return false
+	var o := entidad(e.lanzado_id)
+	if o == null or not o.vivo():
+		return false
+	var v := o.pos - e.pos
+	v.y = 0.0
+	# Salto calculado para llegar a la altura máxima del rival (un poco por debajo, para golpearlo).
+	var g := Datos.sim("gravedad")
+	var cima := o.pos.y + maxf(o.vel_y, 0.0) * maxf(o.vel_y, 0.0) / (2.0 * g)
+	e.vel_y = sqrt(2.0 * g * maxf(cima - e.pos.y - 0.4, 1.0))
+	e.en_suelo = false
+	var t_subida := e.vel_y / g
+	e.empuje = v.normalized() * minf(maxf(v.length() - 1.0, 0.0) / maxf(t_subida, 0.2), 14.0)
+	e.golpes_aereos = 0
+	e.yaw = _yaw_hacia(e.pos, o.pos)
+	if e.estado == "golpe":
+		e.poner_estado("libre", 0.0)
+	_evento({"tipo": "salto", "entidad": e.id, "persecucion": true})
+	return true
+
+
+## Shunshin: con un objetivo fijado, «esquivar» te lleva en un parpadeo detrás de él (estela de humo).
+func _shunshin(e: EntidadServidor) -> bool:
+	var conf: Dictionary = Datos.jutsu("golpe").get("shunshin", {})
+	if conf.is_empty() or e.recarga("shunshin") > 0.0:
+		return false
+	var o := _objetivo_fijado(e, float(conf["alcance"]))
+	if o == null or o.pos.distance_to(e.pos) < 2.5:
+		return false
+	if e.estamina < float(conf["costo_estamina"]):
+		return false
+	e.estamina -= float(conf["costo_estamina"])
+	e.recargas["shunshin"] = float(conf["recarga"])
+	var desde := e.pos
+	var dest := o.pos - o.adelante() * float(conf["detras"])
+	var p2 := mapa.resolver_colision(Vector2(dest.x, dest.z), Datos.sim("radio_entidad"), 0.0)
+	e.pos = Vector3(p2.x, mapa.altura_suelo(p2, o.pos.y), p2.y)
+	e.empuje = Vector3.ZERO
+	e.yaw = _yaw_hacia(e.pos, o.pos)
+	e.invulnerable_t = maxf(e.invulnerable_t, 0.2)
+	e.combo_ventana = float(Datos.jutsu("golpe")["ventana_combo"])
+	_evento({"tipo": "shunshin", "entidad": e.id, "desde": desde, "hasta": e.pos})
+	return true
+
+
 func _accion_esquivar(e: EntidadServidor) -> void:
 	var j := Datos.jutsu("esquivar")
+	# Ventana de sustitución: si un golpe te alcanza en este instante, queda un tronco en tu lugar.
+	var sus: Dictionary = Datos.jutsu("golpe").get("sustitucion", {})
+	if not sus.is_empty() and e.recarga("sustitucion") <= 0.0:
+		e.sustitucion_t = float(sus["ventana"])
+	if (_puede_actuar(e) or e.estado == "golpe") and e.en_suelo and _shunshin(e):
+		return
 	if not (_puede_actuar(e) or e.estado == "golpe") or not e.en_suelo:
 		return
 	if e.recarga("esquivar") > 0.0:
@@ -493,6 +588,11 @@ func _actualizar_recursos(e: EntidadServidor, dt: float) -> void:
 		e.recargas[k] = maxf(float(e.recargas[k]) - dt, 0.0)
 	e.invulnerable_t = maxf(e.invulnerable_t - dt, 0.0)
 	e.combo_ventana = maxf(e.combo_ventana - dt, 0.0)
+	e.sustitucion_t = maxf(e.sustitucion_t - dt, 0.0)
+	e.flotar_t = maxf(e.flotar_t - dt, 0.0)
+	e.lanzado_t = maxf(e.lanzado_t - dt, 0.0)
+	if e.en_suelo:
+		e.golpes_aereos = 0
 	if not e.vivo() or e.tipo == "muneco":
 		return
 	# El chakra se regenera si no hay un modo ocular ni un Susanoo consumiéndolo.
@@ -509,14 +609,18 @@ func _actualizar_estado(e: EntidadServidor, dt: float) -> void:
 	e.estado_t -= dt
 	match e.estado:
 		"golpe":
-			var p: Dictionary = Datos.jutsu("golpe")["pasos"][int(e.accion["paso"])]
+			var p: Dictionary = paso_golpe(int(e.accion["paso"]))
 			if not e.accion["golpeado"] and e.estado_total - e.estado_t >= float(p["impacto"]):
 				e.accion["golpeado"] = true
 				_resolver_golpe(e, int(e.accion["paso"]))
 			if e.estado_t <= 0.0:
 				var encadenar: bool = e.accion.get("encadenar", false)
+				var paso_fin := int(e.accion["paso"])
 				e.poner_estado("libre", 0.0)
-				e.combo_ventana = float(Datos.jutsu("golpe")["ventana_combo"])
+				# El remate y la patada final cierran el combo; el resto deja una ventana para seguir.
+				e.combo_ventana = 0.0 if paso_fin in [4, 12] else float(Datos.jutsu("golpe")["ventana_combo"])
+				if paso_fin in [4, 12]:
+					e.combo_paso = -1
 				if encadenar:
 					_accion_golpe(e)
 		"sellos":
@@ -725,21 +829,44 @@ func _cadena_rayo(atacante: EntidadServidor, primero: EntidadServidor, dano: flo
 func _resolver_golpe(e: EntidadServidor, paso: int) -> void:
 	if paso == 2 and Tecnicas.golpe_definitivo(self, e):
 		return
-	var p: Dictionary = Datos.jutsu("golpe")["pasos"][paso]
+	var p := paso_golpe(paso)
 	var alcance := float(p["alcance"])
 	var medio_ang := deg_to_rad(float(p["angulo"]) * 0.5)
 	var f := e.adelante()
+	var choque: Dictionary = Datos.jutsu("golpe").get("choque", {})
 	for o in entidades:
 		if o == e or not o.vivo():
 			continue
 		var d := o.pos - e.pos
+		var dy := absf(d.y)
 		d.y = 0
-		if d.length() > alcance + Datos.sim("radio_entidad"):
+		if d.length() > alcance + Datos.sim("radio_entidad") or dy > 2.5:
 			continue
 		if d.length() > 0.3 and f.angle_to(d.normalized()) > medio_ang:
 			continue
-		var dano := Combate.dano_taijutsu(paso, e.attrs) * Tecnicas.multiplicador_taijutsu(e)
-		_aplicar_dano(o, dano, e, {"jutsu": "golpe", "naturaleza": "", "derriba": bool(p["derriba"]), "dir": f, "empuje": float(p["empuje"]), "paso": paso})
+		# Choque: los dos golpean a la vez y de frente → chispas, ninguno recibe daño, ambos retroceden.
+		if not choque.is_empty() and o.estado == "golpe" and not o.accion.get("golpeado", true) and o.adelante().dot(-f) > 0.3:
+			var po := paso_golpe(int(o.accion["paso"]))
+			var falta_o := float(po["impacto"]) - (o.estado_total - o.estado_t)
+			if absf(falta_o) <= float(choque["ventana"]):
+				o.accion["golpeado"] = true
+				e.empuje = -f * float(choque["empuje"])
+				o.empuje = f * float(choque["empuje"])
+				e.poner_estado("recuperacion", 0.25)
+				o.poner_estado("recuperacion", 0.25)
+				_evento({"tipo": "choque", "entidad": e.id, "otro": o.id, "pos": (e.centro() + o.centro()) * 0.5, "pausa": float(choque["pausa"])})
+				return
+		var dano := float(p["dano"]) * (Combate.dano_taijutsu(0, e.attrs) / maxf(float(Datos.jutsu("golpe")["pasos"][0]["dano"]), 0.01)) * Tecnicas.multiplicador_taijutsu(e)
+		var info := {"jutsu": "golpe", "naturaleza": "", "derriba": bool(p["derriba"]), "dir": f, "empuje": float(p["empuje"]), "paso": paso,
+			"lanza": str(p.get("lanza", "")), "altura": float(p.get("altura", 0.0)), "fuerte": bool(p.get("fuerte", false)), "flotar": bool(p.get("flotar", false))}
+		_aplicar_dano(o, dano, e, info)
+		if str(p.get("lanza", "")) == "arriba" and o.vivo():
+			e.lanzado_id = o.id
+			e.lanzado_t = 1.2
+		if bool(p.get("flotar", false)):
+			e.flotar_t = 0.45
+		if paso == 12:
+			e.vel_y = -14.0   # el atacante baja con el remate
 
 
 func _actualizar_proyectiles(dt: float) -> void:
@@ -833,6 +960,8 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		return
 	if o.invulnerable_t <= 0.0 and Genericas.sustituir(self, o, atacante, info):
 		return
+	if _sustitucion_tronco(o, atacante, info):
+		return
 	if o.invulnerable_t > 0.0 or Genericas.intangible(o):
 		_evento({"tipo": "esquivado", "entidad": o.id})
 		return
@@ -874,9 +1003,29 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 	# El embiste del embiste de rayo no se interrumpe (superarmadura).
 	if o.estado == "chidori_embiste":
 		return
+	var lanza := str(info.get("lanza", ""))
+	if lanza == "arriba":
+		# Al aire: sube y queda indefenso mientras cae (el atacante puede saltar tras él).
+		o.vel_y = sqrt(2.0 * Datos.sim("gravedad") * float(info.get("altura", 8.0)))
+		o.en_suelo = false
+		o.empuje = dir * float(info.get("empuje", 0.5))
+		o.poner_estado("lanzado", 1.4)
+		return
+	if bool(info.get("flotar", false)) and not o.en_suelo:
+		o.flotar_t = 0.45
+		o.vel_y = maxf(o.vel_y, 1.5)
+	if lanza == "suelo":
+		o.vel_y = -28.0
+		o.poner_estado("caido", Datos.reglas["estados"]["caido_duracion"] + 0.4)
+		o.empuje = dir * float(info.get("empuje", 2.0))
+		_evento({"tipo": "estrellar", "entidad": o.id, "pos": Vector3(o.pos.x, mapa.altura_suelo(Vector2(o.pos.x, o.pos.z), 0.0), o.pos.z)})
+		return
 	if info.get("derriba", false):
 		o.poner_estado("caido", Datos.reglas["estados"]["caido_duracion"])
 		o.empuje = dir * float(info.get("empuje", 4.0))
+		if lanza == "lejos":
+			o.vel_y = 4.5
+			o.en_suelo = false
 	else:
 		o.poner_estado("golpeado", Datos.reglas["estados"]["golpeado_duracion"])
 		o.empuje = dir * float(info.get("empuje", 1.0))
@@ -901,7 +1050,10 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	if e.agua == 2:
 		horiz *= Datos.sim("nado_velocidad")   # sin chakra en el agua: nada despacio
 	# Gravedad y salto.
-	e.vel_y -= Datos.sim("gravedad") * dt * (0.3 if Genericas.planea(e) and e.vel_y < 0.0 else 1.0)
+	var g_mult := 0.3 if Genericas.planea(e) and e.vel_y < 0.0 else 1.0
+	if e.flotar_t > 0.0:
+		g_mult = 0.12   # combo aéreo: quedan suspendidos un instante
+	e.vel_y -= Datos.sim("gravedad") * dt * g_mult
 	var nueva := e.pos + horiz * dt
 	nueva.y = e.pos.y + e.vel_y * dt
 	var suelo := mapa.altura_suelo(Vector2(nueva.x, nueva.z), e.pos.y)
@@ -974,6 +1126,33 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 			p2 = o.pos2() + d.normalized() * minimo
 	e.pos = Vector3(p2.x, nueva.y, p2.y)
 	e.en_charco = e.en_suelo and mapa.en_charco(p2)
+
+
+## Sustitución con tronco: si esquivaste justo antes de que el golpe llegue, queda un tronco y reapareces detrás.
+func _sustitucion_tronco(o: EntidadServidor, atacante: EntidadServidor, info: Dictionary) -> bool:
+	# Solo contra golpes cuerpo a cuerpo (la esquiva justa gana a la invulnerabilidad del dash: deja el tronco).
+	if o.sustitucion_t <= 0.0 or atacante == null or atacante == o or str(info.get("jutsu", "")) != "golpe":
+		return false
+	var conf: Dictionary = Datos.jutsu("golpe").get("sustitucion", {})
+	if o.chakra < float(conf.get("costo_chakra", 10.0)):
+		return false
+	o.chakra -= float(conf.get("costo_chakra", 10.0))
+	o.sustitucion_t = 0.0
+	o.recargas["sustitucion"] = float(conf.get("recarga", 4.0))
+	var desde := o.pos
+	var dest := atacante.pos - atacante.adelante() * float(conf.get("detras", 1.4))
+	var p2 := mapa.resolver_colision(Vector2(dest.x, dest.z), Datos.sim("radio_entidad"), 0.0)
+	o.pos = Vector3(p2.x, mapa.altura_suelo(p2, 0.0), p2.y)
+	o.empuje = Vector3.ZERO
+	o.invulnerable_t = maxf(o.invulnerable_t, 0.4)
+	o.yaw = _yaw_hacia(o.pos, atacante.pos)
+	if o.estado != "libre" and o.estado != "muerto":
+		o.poner_estado("libre", 0.0)
+	# El atacante queda desconcertado un instante (golpeó un tronco).
+	if atacante.estado == "golpe":
+		atacante.poner_estado("recuperacion", float(conf.get("aturdir", 0.5)))
+	_evento({"tipo": "sustitucion", "entidad": o.id, "jutsu": "sustitucion", "nivel": 1, "desde": desde, "hasta": o.pos, "explota": 0.0})
+	return true
 
 
 ## Viaje rápido (pruebas): lleva al jugador a un hueco libre del distrito (junto a su primer aldeano).

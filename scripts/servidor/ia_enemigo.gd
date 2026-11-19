@@ -100,6 +100,14 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 		mov = mov.normalized()
 	s.aplicar_comando(e, {"t": "entrada", "mov": Vector2(mov.x, mov.z), "mira": atan2(dir.x, dir.z)})
 
+	# Combos: el NPC encadena golpes hasta su máximo (agresivo: los 5 con la patada final).
+	if e.estado == "golpe" and e.combo_paso < int(conf.get("combo_max", 3)) - 1 and e.combo_paso < 10 and dist < float(conf.get("rango_melee", 2.2)) + 1.5:
+		s.aplicar_comando(e, {"t": "accion", "id": "golpe"})
+	# Sustitución: si el jugador está a punto de golpearlo de frente, a veces deja un tronco.
+	if _golpe_inminente(objetivo) and e.recarga("sustitucion") <= 0.0 and e.sustitucion_t <= 0.0:
+		if rng.randf() < float(conf.get("prob_sustitucion", 0.0)):
+			s.aplicar_comando(e, {"t": "accion", "id": "esquivar"})
+			return
 	if e.estado != "libre" or t_reaccion > 0.0:
 		return
 	# Mirar al objetivo antes de actuar.
@@ -119,6 +127,11 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 		s.aplicar_comando(e, {"t": "accion", "id": "dragon_agua", "objetivo": objetivo.id})
 		t_reaccion = 1.2
 		return
+	# Shunshin: a media distancia aparece de golpe junto al jugador (con estela de humo) y ataca.
+	if dist > 4.0 and dist < 11.0 and not huyendo and e.recarga("shunshin") <= 0.0 and rng.randf() < float(conf.get("prob_shunshin", 0.0)) * dt * 3.0:
+		s.aplicar_comando(e, {"t": "accion", "id": "esquivar", "objetivo": objetivo.id})
+		t_reaccion = 0.25
+		return
 	if dist <= float(conf.get("rango_melee", 2.2)) and not huyendo:
 		s.aplicar_comando(e, {"t": "accion", "id": "golpe"})
 		t_reaccion = 0.15
@@ -126,6 +139,15 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 		if not huyendo or rng.randf() < 0.5:
 			s.aplicar_comando(e, {"t": "accion", "id": "bala_agua"})
 			t_reaccion = float(conf.get("pausa_reaccion", 0.35)) + rng.randf() * 0.4
+
+
+## ¿El jugador está a punto de conectar un golpe contra mí? (para la sustitución con tronco)
+func _golpe_inminente(o: EntidadServidor) -> bool:
+	if o == null or o.estado != "golpe" or o.accion.get("golpeado", true):
+		return false
+	if o.pos.distance_to(e.pos) > 3.2 or o.adelante().dot((e.pos - o.pos).normalized()) < 0.5:
+		return false
+	return o.estado_total - o.estado_t > 0.03
 
 
 func _amenaza(s: ServidorJuego) -> bool:

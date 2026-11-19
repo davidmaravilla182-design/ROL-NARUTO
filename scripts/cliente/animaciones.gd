@@ -124,3 +124,80 @@ static func crear_libreria(ruta_esqueleto: String, huesos: Array, rest_caderas: 
 			anim.position_track_insert_key(pista_pos, float(c[0]), rest_caderas + (c[2] as Vector3))
 		lib.add_animation(nombre, anim)
 	return lib
+
+
+# ------------------------------------------------------------------ animaciones de Meshy (retarget)
+
+const PADRES := {"Columna": "Caderas", "Pecho": "Columna", "Cuello": "Pecho", "Cabeza": "Cuello",
+	"BrazoI": "Pecho", "AntebrazoI": "BrazoI", "ManoI": "AntebrazoI", "BrazoD": "Pecho", "AntebrazoD": "BrazoD", "ManoD": "AntebrazoD",
+	"PiernaI": "Caderas", "RodillaI": "PiernaI", "PieI": "RodillaI", "PiernaD": "Caderas", "RodillaD": "PiernaD", "PieD": "RodillaD"}
+const HIJOS := {"BrazoI": "AntebrazoI", "AntebrazoI": "ManoI", "BrazoD": "AntebrazoD", "AntebrazoD": "ManoD",
+	"PiernaI": "RodillaI", "RodillaI": "PieI", "PiernaD": "RodillaD", "RodillaD": "PieD"}
+static var _cache_meshy: Dictionary = {}
+static var _datos_meshy: Dictionary = {}
+
+
+## Animaciones de la biblioteca de Meshy (data/animaciones_meshy.json, de tools/blender/retarget_meshy.py) para un
+## esqueleto de 17 huesos. Columna, pecho, cuello, cabeza y cadera copian la orientación; brazos y piernas se
+## alinean por dirección (el reposo de Meshy es pose A y el nuestro brazos abajo). Se cachea por esqueleto.
+## rest_global: Callable(nombre) -> Transform3D del reposo del hueso en el espacio del esqueleto.
+static func libreria_meshy(clave: String, ruta_esqueleto: String, rest_global: Callable, rest_caderas: Vector3) -> AnimationLibrary:
+	if _cache_meshy.has(clave):
+		return _cache_meshy[clave]
+	if _datos_meshy.is_empty():
+		_datos_meshy = Datos.leer_json("animaciones_meshy.json").get("animaciones", {})
+	var lib := AnimationLibrary.new()
+	var huesos: Array = ["Caderas"] + PADRES.keys()
+	var reposo := {}
+	for h in huesos:
+		reposo[h] = rest_global.call(h)
+	# Dirección de reposo de cada hueso de las extremidades (hacia su hijo, o su eje Y si no tiene).
+	var dir_reposo := {}
+	for h in huesos:
+		var t: Transform3D = reposo[h]
+		if HIJOS.has(h):
+			dir_reposo[h] = ((reposo[HIJOS[h]] as Transform3D).origin - t.origin).normalized()
+		else:
+			dir_reposo[h] = t.basis.y.normalized()
+	for nombre in _datos_meshy.keys():
+		var a: Dictionary = _datos_meshy[nombre]
+		var cuadros: Array = a["cuadros"]
+		var paso := 1.0 / float(a["fps"])
+		var anim := Animation.new()
+		anim.length = maxf(float(cuadros.size() - 1) * paso, paso)
+		anim.loop_mode = Animation.LOOP_LINEAR if a["bucle"] else Animation.LOOP_NONE
+		var pistas := {}
+		for h in huesos:
+			var p := anim.add_track(Animation.TYPE_ROTATION_3D)
+			anim.track_set_path(p, "%s:%s" % [ruta_esqueleto, h])
+			pistas[h] = p
+		var pista_pos := anim.add_track(Animation.TYPE_POSITION_3D)
+		anim.track_set_path(pista_pos, "%s:Caderas" % ruta_esqueleto)
+		for i in cuadros.size():
+			var c: Dictionary = cuadros[i]
+			var t := float(i) * paso
+			var dglob := {}
+			for h in huesos:
+				if c["q"].has(h):
+					var q: Array = c["q"][h]
+					dglob[h] = Quaternion(float(q[0]), float(q[1]), float(q[2]), float(q[3])).normalized()
+				elif c["d"].has(h):
+					var d: Array = c["d"][h]
+					var destino := Vector3(float(d[0]), float(d[1]), float(d[2])).normalized()
+					dglob[h] = Quaternion(dir_reposo[h], destino) if (dir_reposo[h] as Vector3).dot(destino) > -0.999 else Quaternion(Vector3.FORWARD, PI)
+				else:
+					dglob[h] = dglob.get(PADRES.get(h, ""), Quaternion.IDENTITY)
+			for h in huesos:
+				var rb: Quaternion = (reposo[h] as Transform3D).basis.get_rotation_quaternion()
+				var local: Quaternion
+				if h == "Caderas":
+					local = (dglob[h] as Quaternion) * rb
+				else:
+					var padre: String = PADRES[h]
+					var rp: Quaternion = (reposo[padre] as Transform3D).basis.get_rotation_quaternion()
+					local = rp.inverse() * (dglob[padre] as Quaternion).inverse() * (dglob[h] as Quaternion) * rb
+				anim.rotation_track_insert_key(pistas[h], t, local.normalized())
+			anim.position_track_insert_key(pista_pos, t, rest_caderas + Vector3(0, float(c["y"]), 0))
+		lib.add_animation(nombre, anim)
+	_cache_meshy[clave] = lib
+	return lib

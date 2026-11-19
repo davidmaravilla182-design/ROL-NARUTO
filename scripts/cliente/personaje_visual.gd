@@ -123,6 +123,10 @@ func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "",
 			}
 		var pos_cad := esqueleto.get_bone_rest(esqueleto.find_bone("Caderas")).origin
 		anim.add_animation_library("", Animaciones.crear_libreria(ruta_esq, nombres, pos_cad, rests))
+		# Animaciones de Meshy (combate, reacciones, caminar/correr) retargeteadas a este esqueleto.
+		if por_piezas:
+			var rg := func(n: String) -> Transform3D: return _rest_global(esqueleto.find_bone(n))
+			anim.add_animation_library("m", Animaciones.libreria_meshy("piezas|" + ruta_esq, ruta_esq, rg, pos_cad))
 	else:
 		anim.add_animation_library("", Animaciones.crear_libreria(ruta_esq, nombres, HUESOS[0][2]))
 	reproducir("quieto")

@@ -147,10 +147,10 @@
     },
     "triangulos": {
       "CUERPO": 16780,
-      "PELO_puntas": 2500,
-      "PELO_corto": 2494,
-      "PELO_largo": 2498,
-      "PELO_coleta": 2500,
+      "PELO_puntas": 2493,
+      "PELO_corto": 2487,
+      "PELO_largo": 2495,
+      "PELO_coleta": 2491,
       "PRENDA_chaleco": 3500,
       "PRENDA_impermeable": 3484,
       "PRENDA_ligera": 3480,
@@ -160,6 +160,12 @@
       "EMBLEMA_impermeable": 200,
       "EMBLEMA_ligera": 200,
       "EMBLEMA_capa": 200
+    },
+    "cobertura_pelo": {
+      "puntas": 0.961,
+      "corto": 0.994,
+      "largo": 0.997,
+      "coleta": 1.0
     },
     "nudo": [
       0.0,

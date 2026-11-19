@@ -1,3 +1,24 @@
+# PROGRESO — Ronda de calidad premium (v0.8)
+
+> Meshy: saldo inicial 749, tope 250 (preguntar si una operación pasa de 40 o si el saldo bajaría de 150).
+
+- [ ] 1. Peinados que cubran todo el cuero cabelludo (coleta y revisión de los demás); Kirin con nubes que se
+        arremolinan, dragón de relámpagos con cabeza visible, destello blanco, trueno, cráter y chispas.
+- [ ] 2. Poderes con movimiento: dragones con cadena de huesos que ondulan; golem con esqueleto y animaciones
+        (levantarse, caminar, golpear, desmoronarse); Susanoo que se forma por capas con espada y arco animados;
+        anticipación, impacto y desvanecimiento en todos.
+- [ ] 3. Combate como en la serie: combos de 4–5 golpes con desplazamientos, patada giratoria y remate que lanza;
+        combos aéreos; shunshin tras el enemigo; sustitución con tronco; choques; pausa de impacto, sacudida, líneas
+        de velocidad, estelas y retroceso. Animaciones de la biblioteca de Meshy retargeteadas al esqueleto de 17 huesos.
+        Enemigos con estos movimientos según su tipo.
+- [ ] 4. Plaza con modelos de Meshy (casa de la plaza + 2–3 edificios nuevos del mismo estilo).
+- [ ] 5. Pruebas de calidad con secuencias de cuadros (caminar, correr, saltar, pared, agua, combos, jutsus ×3,
+        NPCs), revisión cuadro a cuadro, correcciones, antes/después en la bitácora; 60 FPS estimados con 3 enemigos
+        y un jutsu N3.
+- [ ] Cierre: APK, workflow, reporte.
+
+---
+
 # PROGRESO — Personaje por piezas, 5 NPCs y jutsus con modelo 3D (v0.7, noche)
 
 > Meshy: presupuesto 450 créditos; preguntar solo si una operación pasa de 40. Commit y push tras cada avance verificado.
