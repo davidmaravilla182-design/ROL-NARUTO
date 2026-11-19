@@ -178,6 +178,14 @@ func _process(_d: float) -> bool:
 				comprobar(_desc_b.partidas.has("127.0.0.1"), "descubrimiento: el cliente encuentra la partida anunciada por UDP")
 				var r2: TransporteENet = bots[1]["red"]
 				comprobar(r2.ping_ms > 0.0, "ping medido con el simulador de latencia (%.0f ms)" % r2.ping_ms)
+				# Viaje rápido: cada bot va a un distrito distinto del mapa completo.
+				(bots[0]["red"] as TransporteENet).enviar({"t": Protocolo.C_VIAJAR, "distrito": "industrial"})
+				(bots[1]["red"] as TransporteENet).enviar({"t": Protocolo.C_VIAJAR, "distrito": "mercado"})
+				_fase = 6
+				_t0 = Time.get_ticks_msec()
+		6:
+			if t > 1.5:
+				_comprobar_distritos()
 				# Llenar la partida: anfitrión + 2 bots + 1 más = 4; el quinto se rechaza.
 				_extra.append(_crear_bot("Bot3", false))
 				_fase = 5
@@ -215,6 +223,22 @@ func _comprobar_jutsus() -> void:
 			if ev["tipo"] == "control" and int(ev["entidad"]) == id1:
 				vio_control = true
 		comprobar(vio_impacto and vio_control, "%s ve el impacto y la prisión de agua (eventos fiables)" % b["nombre"])
+
+
+## En distritos distintos (a más de 100 m) los bots se siguen viendo con la posición exacta del servidor.
+func _comprobar_distritos() -> void:
+	var j1 := servidor.entidad(int(bots[0]["id"]))
+	var j2 := servidor.entidad(int(bots[1]["id"]))
+	var d1 := servidor.mapa.distrito_en(j1.pos2())
+	var d2 := servidor.mapa.distrito_en(j2.pos2())
+	comprobar(d1 == "industrial" and d2 == "mercado", "viaje rápido: Bot1 en %s y Bot2 en %s (%.0f m entre ellos)" % [d1, d2, j1.pos.distance_to(j2.pos)])
+	for b in bots:
+		var otro := j2 if b == bots[0] else j1
+		var visto := false
+		for e in (b["ultimo"] as Dictionary).get("entidades", []):
+			if int(e["id"]) == otro.id and (e["pos"] as Vector3).distance_to(otro.pos) < 0.05:
+				visto = true
+		comprobar(visto, "%s ve al otro jugador en su distrito (%s)" % [b["nombre"], servidor.mapa.distrito_en(otro.pos2())])
 
 
 func _comprobar_mismo_estado() -> void:

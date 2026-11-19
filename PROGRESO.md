@@ -9,8 +9,8 @@
 - [x] 0. Base: mapa grande (lago, isla, muralla), sectores con carga por distancia, suelos elevados/rampas, techos caminables,
         caminar por paredes con chakra, minimapa, mapa completo, viaje rápido, puntos de misión y aldeanos.
 - [x] 0b. Lote Meshy (18 modelos, ~270 créditos) en segundo plano + procesado en Blender (1024/512 px, LOD lejano).
-- [ ] 1. Plaza y campo de entrenamiento (ampliado y lleno de objetos).
-- [ ] 2. Distrito del canal (más puentes, cascadas de desagües).            → APK
+- [x] 1. Plaza y campo de entrenamiento (ampliado y lleno de objetos).
+- [x] 2. Distrito del canal (más puentes, cascadas de desagües).            → APK
 - [ ] 3. Mercado (calle techada, puestos, luz cálida).
 - [ ] 4. Zona residencial (torres apiladas, pasarelas).                      → APK
 - [ ] 5. Distrito industrial (tuberías, chimeneas con vapor, tanques).
@@ -27,6 +27,10 @@
   Techos caminables + escaleras/rampas + **caminar por paredes con chakra** (4 chakra/s, 6,5 m/s; prueba automática).
   Cliente: MultiMesh por tipo y celda de 48 m con LOD cercano/lejano, oclusores de caja, sectores por distrito
   (luces, partículas, cascadas, goteo, aldeanos) que se activan por distancia; minimapa, mapa completo y viaje rápido.
+- **Distritos 1 y 2**: plaza con 6 faroles, 6 bancas, ~25 objetos más, mirador con escalera a 5 m; canal de 192 m
+  hasta la muralla con 8 puentes, cascadas cada dos módulos en ambos muros, pasarela elevada de 80 m con escaleras.
+  Texturas CC0 de Poly Haven (suelo, concreto, lámina, techo). Niebla 0,0055 y cámara con plano lejano a 700 m
+  para que la torre se vea desde todo el mapa. Prueba de red: bots en distritos distintos se ven (182 m).
 - **Meshy**: 18 modelos (Text to 3D, Smart Topology meshy-t2.5, 15 créditos c/u = 270). Saldo 1135 → 865.
 
 ---

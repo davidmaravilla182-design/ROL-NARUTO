@@ -18,7 +18,7 @@ var _t := 0.0
 func _ready() -> void:
 	fov = 68.0
 	near = 0.1
-	far = 220.0
+	far = 700.0   # aldea completa: la torre del centro se ve desde todo el mapa (y el lago hasta la orilla)
 	current = true
 
 

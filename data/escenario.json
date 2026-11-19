@@ -11347,8 +11347,8 @@
   "sol_energia": 0.32,
   "sol_color": "#b8b8e0",
   "ambiente": 0.42,
-  "niebla_densidad": 0.008,
-  "niebla_altura_densidad": 0.05,
+  "niebla_densidad": 0.0055,
+  "niebla_altura_densidad": 0.06,
   "exposicion": 1.05,
   "glow_umbral": 0.8
  },
