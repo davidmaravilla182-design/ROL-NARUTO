@@ -1,3 +1,16 @@
+# PROGRESO — Ciclo de juego premium (v0.9)
+
+> Diseño completo en DISENO.md. Regla de arte: modelos nuevos solo desde imágenes de GPT (referencias/gpt/PEDIDOS.md).
+
+- [ ] 1. Atributos con efectos reales (ficha con efecto actual), progresión 14 → 26 por rango, XP, entrenamiento por uso.
+- [ ] 2. Filtro Ninjutsu/Taijutsu/Genjutsu; 8 taijutsu + 5 genjutsu con 3 niveles; Ocho Puertas espectacular.
+- [ ] 3. Misiones: motor por fases, 6 capítulos, 4 eventos dinámicos, recompensas (XP, ryō, pergaminos, cosméticos).
+- [ ] 4. Jefe Tres Colas: 4 fases, sellado (Sellos 3+), música y cámara de jefe; marcador hasta tener su imagen.
+- [ ] 5. Guardado completo, interfaz premium (ficha, misiones, pergaminos, recompensas), QA por cuadros.
+- [ ] Cierre: APK en demo-latest, workflow, reporte con la lista de imágenes para GPT.
+
+---
+
 # PROGRESO — Ronda de calidad premium (v0.8)
 
 > Meshy: saldo inicial 749, tope 250 (preguntar si una operación pasa de 40 o si el saldo bajaría de 150).
