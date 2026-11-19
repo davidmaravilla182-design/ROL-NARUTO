@@ -33,6 +33,7 @@ const C_NIVEL := "nivel"
 const C_REAPARECER := "reaparecer"
 const C_REPERTORIO := "repertorio"
 const C_PERSONAJE := "personaje"
+const C_MISION := "mision"       # {"t": "mision", "accion": "empezar"|"abandonar"|"evento"|"sellar", "id": capitulo o evento, "sellos": [...]}
 const C_VIAJAR := "viajar"       # {"t": "viajar", "distrito": id} — viaje rápido de pruebas a un distrito
 
 ## Acciones siempre disponibles; el resto son ids de jutsus de /data/jutsus.json.
@@ -83,6 +84,14 @@ static func sanear_comando(cmd: Variant) -> Dictionary:
 			var dist := str(c.get("distrito", ""))
 			if dist.length() > 0 and dist.length() <= 32 and dist.is_valid_ascii_identifier():
 				return {"t": C_VIAJAR, "distrito": dist}
+		C_MISION:
+			var acc := str(c.get("accion", ""))
+			if acc in ["empezar", "abandonar", "evento", "sellar"]:
+				var sel: Array = []
+				if typeof(c.get("sellos")) == TYPE_ARRAY:
+					for x in (c["sellos"] as Array).slice(0, 12):
+						sel.append(int(x))
+				return {"t": C_MISION, "accion": acc, "id": str(c.get("id", "")).left(32), "sellos": sel}
 		C_REPERTORIO:
 			var activos: Array = []
 			var va: Variant = c.get("activos", [])

@@ -52,7 +52,8 @@ static func tope_puntos(pj: Dictionary) -> int:
 	var base := int(conf_p.get("tope_por_rango", {}).get(rango, tope_total))
 	var ganados := 0
 	if base < tope_total:
-		ganados = mini(int(conf_p.get("por_xp_max", 2)), int(floor(float(pj.get("xp_rango", 0.0)) / maxf(float(conf_p.get("xp_por_punto", 400)), 1.0))))
+		# Con experiencia (uno cada 400 XP) o ganando duelos al instructor, hasta 2 antes de ascender.
+		ganados = mini(int(conf_p.get("por_xp_max", 2)), int(floor(float(pj.get("xp_rango", 0.0)) / maxf(float(conf_p.get("xp_por_punto", 400)), 1.0))) + int(pj.get("puntos_bonus_rango", 0)))
 	var extra := int(clan(str(pj.get("clan", ""))).get("puntos_extra", 0))
 	return maxi(mini(base + ganados, tope_total) + extra, int(pj.get("puntos_legado", 0)))
 
@@ -77,6 +78,7 @@ static func ascender(pj: Dictionary) -> bool:
 		return false
 	pj["rango"] = a["siguiente"]
 	pj["xp_rango"] = 0.0
+	pj["puntos_bonus_rango"] = 0
 	return true
 
 
@@ -125,7 +127,7 @@ static func linajes(pj: Dictionary) -> Array:
 ## Ficha para las reglas del repertorio (requisitos, validación).
 static func ficha(pj: Dictionary, maestria: Dictionary = {}) -> Dictionary:
 	return {"attrs": pj.get("atributos", {}), "naturalezas": naturalezas(pj), "linajes": linajes(pj), "contratos": [],
-		"rango": str(pj.get("rango", "genin")), "maestria": maestria}
+		"rango": str(pj.get("rango", "genin")), "maestria": maestria, "pergaminos": pj.get("pergaminos", [])}
 
 
 ## Estadísticas con los modificadores del clan.
@@ -152,6 +154,8 @@ static func aspecto_visual(pj: Dictionary) -> Dictionary:
 	# Colores por pieza (opcionales): prenda e interior; si no, los de la plantilla de la ropa.
 	if _color_valido(a.get("color_prenda")):
 		r["color_prenda"] = str(a["color_prenda"])
+	if _color_valido(a.get("banda")):
+		r["banda"] = str(a["banda"])
 	if _color_valido(a.get("color_interior")):
 		r["camisa"] = str(a["color_interior"])
 		r["pantalon"] = Color.html(str(a["color_interior"])).darkened(0.12).to_html(false)
@@ -220,13 +224,36 @@ static func validar(datos: Variant) -> Dictionary:
 			if str(k) in Datos.reglas["atributos"]["lista"] or str(k) == "control":
 				ent[str(k)] = clampf(float(d["entreno"][k]), 0.0, 1.0)
 	pj["entreno"] = ent
+	pj["puntos_bonus_rango"] = clampi(int(d.get("puntos_bonus_rango", 0)), 0, 2)
+	# Progreso de misiones, ryō, pergaminos (jutsus aprendidos) y cosméticos.
+	var mis := {"capitulo": 0, "completadas": [], "pruebas": {}}
+	if typeof(d.get("misiones")) == TYPE_DICTIONARY:
+		var dm: Dictionary = d["misiones"]
+		mis["capitulo"] = clampi(int(dm.get("capitulo", 0)), 0, 99)
+		for x in (dm.get("completadas", []) if typeof(dm.get("completadas")) == TYPE_ARRAY else []):
+			mis["completadas"].append(str(x).left(32))
+		if typeof(dm.get("pruebas")) == TYPE_DICTIONARY:
+			for k in (dm["pruebas"] as Dictionary).keys():
+				mis["pruebas"][str(k).left(32)] = bool(dm["pruebas"][k])
+		mis["todo"] = bool(dm.get("todo", false))
+	pj["misiones"] = mis
+	pj["ryo"] = clampi(int(d.get("ryo", 0)), 0, 9999999)
+	var perg: Array = []
+	for x in (d.get("pergaminos", []) if typeof(d.get("pergaminos")) == TYPE_ARRAY else []):
+		if Datos.jutsus.has(str(x)) and not (str(x) in perg):
+			perg.append(str(x))
+	pj["pergaminos"] = perg
+	var cos: Array = []
+	for x in (d.get("cosmeticos", []) if typeof(d.get("cosmeticos")) == TYPE_ARRAY else []):
+		cos.append(str(x).left(32))
+	pj["cosmeticos"] = cos
 	if total_puntos(attrs) > tope_puntos(pj):
 		errores.append("Atributos: %d de %d puntos" % [total_puntos(attrs), tope_puntos(pj)])
 	var a_in: Dictionary = d.get("aspecto", {}) if typeof(d.get("aspecto")) == TYPE_DICTIONARY else {}
 	var asp: Dictionary = pj["aspecto"]
 	if c["peinados"].has(str(a_in.get("peinado", ""))):
 		asp["peinado"] = str(a_in["peinado"])
-	for k in ["pelo", "ojos", "piel", "color_prenda", "color_interior"]:
+	for k in ["pelo", "ojos", "piel", "color_prenda", "color_interior", "banda"]:
 		if _color_valido(a_in.get(k)):
 			asp[k] = str(a_in[k])
 	if c["complexiones"].has(str(a_in.get("complexion", ""))):

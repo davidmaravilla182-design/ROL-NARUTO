@@ -732,6 +732,40 @@ func destello_pantalla(segundos: float, intensidad := 0.95) -> void:
 	tw.tween_callback(r.queue_free)
 
 
+## Genjutsu sobre el jugador: «oscuridad» (pantalla casi negra) o «miedo» (rojo que late). Se quitan con quitar_genjutsu().
+var _velo_gen: ColorRect
+
+
+func velo_genjutsu(tipo: String, segundos: float) -> void:
+	quitar_genjutsu()
+	_velo_gen = ColorRect.new()
+	_velo_gen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_velo_gen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_velo_gen)
+	move_child(_velo_gen, 0)
+	var tw := _velo_gen.create_tween()
+	if tipo == "ciego":
+		_velo_gen.color = Color(0.0, 0.0, 0.02, 0.0)
+		tw.tween_property(_velo_gen, "color:a", 0.88, 0.3)
+		tw.tween_interval(maxf(segundos - 0.8, 0.1))
+		tw.tween_property(_velo_gen, "color:a", 0.0, 0.5)
+	else:
+		_velo_gen.color = Color(0.5, 0.0, 0.03, 0.0)
+		var n := int(segundos / 0.6)
+		for i in n:
+			tw.tween_property(_velo_gen, "color:a", 0.45, 0.3)
+			tw.tween_property(_velo_gen, "color:a", 0.15, 0.3)
+		tw.tween_property(_velo_gen, "color:a", 0.0, 0.3)
+	tw.tween_callback(quitar_genjutsu)
+
+
+func quitar_genjutsu() -> void:
+	if _velo_gen != null and is_instance_valid(_velo_gen):
+		_velo_gen.queue_free()
+	_velo_gen = null
+	_genjutsu_t = 0.0
+
+
 ## Líneas de velocidad de anime (golpes fuertes): rayas radiales desde los bordes hacia el centro.
 func lineas_velocidad(segundos: float) -> void:
 	if _lineas == null:

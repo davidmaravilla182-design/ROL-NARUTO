@@ -10,6 +10,8 @@ const TAM_TARJETA := Vector2(214, 140)
 var _categoria := ""   # "" = todas
 var _solo_disponibles := false
 var _rol := ""          # "" = todos; ataque, defensa, control, apoyo
+var _clase := ""        # "" = todas; ninjutsu, taijutsu, genjutsu
+var _clases_fila: HBoxContainer
 var _roles_fila: HBoxContainer
 var _grid: GridContainer
 var _tabs: HBoxContainer
@@ -89,10 +91,31 @@ func _ready() -> void:
 	for k in cats.keys():
 		_crear_tab(k, str(cats[k]["nombre"]), Datos.color(str(cats[k]["color"])))
 
-	# --- filtro por uso: ataque, defensa, control, apoyo
+	# --- filtro por tipo (ninjutsu / taijutsu / genjutsu) y por uso, en la misma fila
+	var fila_filtros := HBoxContainer.new()
+	fila_filtros.add_theme_constant_override("separation", 18)
+	col.add_child(fila_filtros)
+	_clases_fila = HBoxContainer.new()
+	_clases_fila.add_theme_constant_override("separation", 6)
+	fila_filtros.add_child(_clases_fila)
+	for cl in [["", Datos.texto("rep_clase_todas"), Estilo.ACERO_BORDE], ["ninjutsu", Datos.texto("clase_ninjutsu"), Color(0.45, 0.7, 1.0)],
+			["taijutsu", Datos.texto("clase_taijutsu"), Color(0.45, 0.95, 0.5)], ["genjutsu", Datos.texto("clase_genjutsu"), Color(0.8, 0.5, 1.0)]]:
+		var bc := Button.new()
+		bc.text = str(cl[1])
+		bc.toggle_mode = true
+		bc.focus_mode = Control.FOCUS_NONE
+		bc.custom_minimum_size = Vector2(110, 40)
+		bc.add_theme_font_size_override("font_size", 17)
+		bc.add_theme_color_override("font_color", (cl[2] as Color).lightened(0.25))
+		bc.set_meta("clase", cl[0])
+		var id_cl: String = cl[0]
+		bc.pressed.connect(func():
+			_clase = id_cl
+			_refrescar())
+		_clases_fila.add_child(bc)
 	_roles_fila = HBoxContainer.new()
 	_roles_fila.add_theme_constant_override("separation", 6)
-	col.add_child(_roles_fila)
+	fila_filtros.add_child(_roles_fila)
 	var roles := Repertorio.roles()
 	_crear_rol("", Datos.texto("rep_rol_todos"), Estilo.ACERO_BORDE)
 	for k in roles.keys():
@@ -229,12 +252,16 @@ func _refrescar() -> void:
 		(b as Button).set_pressed_no_signal(str(b.get_meta("cat")) == _categoria)
 	for b in _roles_fila.get_children():
 		(b as Button).set_pressed_no_signal(str(b.get_meta("rol")) == _rol)
+	for b in _clases_fila.get_children():
+		(b as Button).set_pressed_no_signal(str(b.get_meta("clase")) == _clase)
 	for h in _grid.get_children():
 		h.queue_free()
 	for id in Repertorio.catalogo():
 		if _categoria != "" and str(Datos.jutsu(id).get("categoria", "")) != _categoria:
 			continue
 		if _rol != "" and str(Datos.jutsu(id).get("rol", "")) != _rol:
+			continue
+		if _clase != "" and str(Datos.jutsu(id).get("clase", "")) != _clase:
 			continue
 		var est := estado(id)
 		if _solo_disponibles and not est["disponible"]:

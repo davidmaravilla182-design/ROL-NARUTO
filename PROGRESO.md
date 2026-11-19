@@ -7,7 +7,11 @@
   Fuerza 3+ rompe, choques que gana la Fuerza, genjutsu escalado por los dos Genjutsu, Inteligencia en el HUD (vida,
   debilidad), XP por derrotas, entrenamiento por uso (control, taijutsu, fuerza, sellos, velocidad, genjutsu, estamina),
   tope 14/18/22/26 + 2 por XP, rango Élite, pantalla Ficha.
-- [ ] 2. Filtro Ninjutsu/Taijutsu/Genjutsu; 8 taijutsu + 5 genjutsu con 3 niveles; Ocho Puertas espectacular.
+- [x] 2. Filtro Ninjutsu/Taijutsu/Genjutsu; 8 taijutsu + 5 genjutsu con 3 niveles; Ocho Puertas espectacular.
+  Hecho: campo `clase` en los 53 jutsus y filtro en el menú; `scripts/servidor/taijutsu.gd` (Lotos, Liger Bomb, Lariat,
+  Entrada Dinámica que interrumpe); Remolino, Pavo Real y Tigre Diurno con mecánicas genéricas; genjutsu que duermen,
+  ciegan (la IA pierde al jugador), dan miedo (huye) y Romper genjutsu (inmunidad, N3 lo devuelve); requisitos de
+  puertas abiertas / Manto de Rayo; taijutsu cuesta estamina. Puertas: piel roja, grietas al abrir y al moverse, estelas.
 - [ ] 3. Misiones: motor por fases, 6 capítulos, 4 eventos dinámicos, recompensas (XP, ryō, pergaminos, cosméticos).
 - [ ] 4. Jefe Tres Colas: 4 fases, sellado (Sellos 3+), música y cámara de jefe; marcador hasta tener su imagen.
 - [ ] 5. Guardado completo, interfaz premium (ficha, misiones, pergaminos, recompensas), QA por cuadros.

@@ -148,6 +148,8 @@ func crear_proyectil(datos: Dictionary) -> Node3D:
 			_luz(nodo, c, 1.5, radio * 6.0)
 		"dragon":
 			_dragon(nodo, radio, c, int(nd.get("segmentos", 8)), fuego)
+		"tigre":
+			_tigre(nodo, radio)
 		"aguja", "hielo":
 			var largo := radio * (9.0 if forma == "aguja" else 6.0)
 			var a := Materiales.cilindro(radio * 0.15, radio * 0.6, largo, _brillo(c, 2.5 if forma == "aguja" else 1.2), 4)
@@ -419,6 +421,11 @@ func explosion(ev: Dictionary) -> void:
 			else:
 				_rocas(pos, r, c, 10 + nivel * 6)
 				efectos.polvo(pos, 16 + nivel * 8)
+		"tigre":
+			_onda_aire(pos, r, Color(1.0, 0.95, 0.8), true)
+			_anillo_suelo(pos, r, Color(1.0, 0.9, 0.7), 0.5)
+			efectos.polvo(pos, 50)
+			_sonar("explosion", 0.0, 0.8)
 		"bala", "rasenshuriken":
 			_onda_aire(pos, r, Color(0.85, 1.0, 1.0), forma == "rasenshuriken")
 			if forma == "rasenshuriken":
@@ -794,6 +801,40 @@ func area_inicio(ev: Dictionary, _pos_entidad: Callable) -> void:
 			tw8.tween_callback(arena.queue_free)
 			efectos.rafaga(pos + Vector3(0, 0.5, 0), {"cantidad": 60, "vida": 1.2, "radio": r, "direccion": Vector3.UP, "dispersion": 30.0,
 				"vel_min": 1.0, "vel_max": 4.0, "tam_min": 0.2, "tam_max": 0.5, "color": Color(0.85, 0.7, 0.45, 0.7), "aditivo": false})
+		"remolino":
+			# Patada giratoria: anillo de viento y hojas que giran a ras del suelo.
+			var giro := Giro.new()
+			giro.velocidad = Vector3(0, 14, 0)
+			add_child(giro)
+			giro.global_position = Vector3(pos.x, 0.5, pos.z)
+			var tor := MeshInstance3D.new()
+			var tm := TorusMesh.new()
+			tm.inner_radius = r * 0.85
+			tm.outer_radius = r
+			tm.rings = 28
+			tm.ring_segments = 4
+			tor.mesh = tm
+			tor.material_override = Materiales.transparente(Color(0.85, 1.0, 0.85, 0.45), true)
+			giro.add_child(tor)
+			var hojas := efectos.particulas({"cantidad": 30, "vida": 0.6, "radio": r * 0.9, "vel_min": 2.0, "vel_max": 4.0, "tam_min": 0.08,
+				"tam_max": 0.16, "color": Color(0.45, 0.85, 0.35), "aditivo": false, "local": true})
+			giro.add_child(hojas)
+			hojas.emitting = true
+			_temporal(giro, maxf(dur, 0.5) + 0.3, 0.25)
+			efectos.polvo(pos, 20 + nivel * 8)
+		"pavo_real":
+			# Abanico de golpes en llamas frente al usuario.
+			var f := Vector3(sin(yaw), 0, cos(yaw))
+			for k in 5:
+				var a := yaw + deg_to_rad(lerpf(-50.0, 50.0, k / 4.0))
+				var dir := Vector3(sin(a), 0.15, cos(a))
+				efectos.rafaga(origen + Vector3(0, 1.2, 0) + f * 0.8, {"cantidad": 18 + nivel * 6, "vida": maxf(dur, 0.6), "radio": 0.2,
+					"direccion": dir, "dispersion": 6.0, "vel_min": 6.0, "vel_max": 12.0, "tam_min": 0.25, "tam_max": 0.5, "frenado": 4.0,
+					"color": Color(1.0, 0.55, 0.15, 0.9), "color_fin": Color(1.0, 0.2, 0.05, 0.0), "estirado": true, "tam_quad": Vector2(0.18, 1.2), "explosividad": 0.1})
+			efectos.luz_temporal(origen + Vector3(0, 1.5, 0) + f * 2.0, Color(1.0, 0.55, 0.2), 5.0, 12.0, maxf(dur, 0.6))
+			_sonar("fuego", -4.0, 1.2)
+		"atadura", "plumas", "oscuridad", "infierno":
+			_genjutsu_inicio(forma, pos, r, nivel)
 		"genjutsu":
 			var anillo := Giro.new()
 			anillo.velocidad = Vector3(0, 0, 6)
@@ -920,8 +961,22 @@ func area_golpe(ev: Dictionary) -> void:
 		"ataud", "funeral":
 			_rocas(pos, r * 0.5, Color(0.82, 0.68, 0.42), 10)
 			_sonar("golpe", 0.0, 0.5)
-		"genjutsu":
+		"genjutsu", "atadura", "plumas", "oscuridad", "infierno":
 			pass
+		"remolino":
+			efectos.golpe_fisico(pos + Vector3(0, 0.8, 0), true)
+			_anillo_suelo(pos, r, Color(0.85, 1.0, 0.85), 0.3)
+		"pavo_real":
+			var yaw_g := float(ev.get("yaw", 0.0)) + randf_range(-0.8, 0.8)
+			var origen_g: Vector3 = ev.get("origen", pos)
+			var pg := origen_g + Vector3(sin(yaw_g), 0, cos(yaw_g)) * randf_range(1.5, r + 1.5) + Vector3(0, randf_range(0.6, 1.8), 0)
+			var bola := efectos.esfera_fuego(0.35, 1.6)
+			add_child(bola)
+			bola.global_position = pg
+			_temporal(bola, 0.12, 0.08)
+			efectos.golpe_fisico(pg, bool(ev.get("ultimo", false)))
+			if bool(ev.get("ultimo", false)):
+				_bola_expansiva(pos + Vector3(0, 1.0, 0), r * 0.6, Color(1.0, 0.5, 0.15), false)
 		"chibaku":
 			_rocas(pos, r * 0.3, Color(0.4, 0.36, 0.32), 4)
 		"palmas":
@@ -941,6 +996,53 @@ func area_golpe(ev: Dictionary) -> void:
 		_extras_nivel(ev, pos, r, c, nd)
 	else:
 		efectos.sacudir_desde(pos, float(nd.get("sacudida", 0.1)) * 0.3)
+
+
+## Genjutsu del repertorio: lo que se ve al lanzarlo sobre el objetivo.
+func _genjutsu_inicio(forma: String, pos: Vector3, r: float, nivel: int) -> void:
+	match forma:
+		"atadura":
+			_anillo_suelo(pos, r, Color(0.65, 0.4, 1.0), 0.6)
+			efectos.rafaga(pos + Vector3(0, 0.3, 0), {"cantidad": 24, "vida": 0.8, "radio": r * 0.5, "direccion": Vector3.UP, "dispersion": 25.0,
+				"vel_min": 1.0, "vel_max": 3.0, "tam_min": 0.1, "tam_max": 0.25, "color": Color(0.7, 0.45, 1.0, 0.8)})
+		"plumas":
+			efectos.rafaga(pos + Vector3(0, 4.0, 0), {"cantidad": 30 + nivel * 15, "vida": 2.2, "radio": r, "direccion": Vector3.DOWN, "dispersion": 30.0,
+				"vel_min": 0.5, "vel_max": 1.2, "gravedad": Vector3(0, -0.6, 0), "tam_min": 0.12, "tam_max": 0.22, "color": Color(1, 1, 1, 0.95),
+				"aditivo": false, "explosividad": 0.2})
+		"oscuridad":
+			var esfera := Materiales.esfera(0.4, Materiales.transparente(Color(0.04, 0.0, 0.08, 0.8), false), 16)
+			add_child(esfera)
+			esfera.global_position = pos + Vector3(0, 1.4, 0)
+			var tw := esfera.create_tween()
+			tw.tween_property(esfera, "scale", Vector3.ONE * (r * 1.6), 0.35).set_ease(Tween.EASE_OUT)
+			tw.tween_property(esfera, "transparency", 1.0, 0.6)
+			tw.tween_callback(esfera.queue_free)
+		"infierno":
+			efectos.rafaga(pos + Vector3(0, 0.5, 0), {"cantidad": 50, "vida": 0.9, "radio": r * 0.6, "direccion": Vector3.UP, "dispersion": 25.0,
+				"vel_min": 2.0, "vel_max": 5.0, "tam_min": 0.25, "tam_max": 0.6, "color": Color(0.9, 0.08, 0.1, 0.85), "color_fin": Color(0.1, 0.0, 0.0, 0.0)})
+			efectos.luz_temporal(pos + Vector3(0, 1.5, 0), Color(1.0, 0.1, 0.1), 5.0, 8.0, 0.6)
+	_sonar("trueno", -16.0, 1.8)
+
+
+## Tigre de aire comprimido: cabeza translúcida con orejas, rodeada de viento.
+func _tigre(nodo: Node3D, radio: float) -> void:
+	var mat := Materiales.transparente(Color(1.0, 0.92, 0.7, 0.45), true)
+	var cab := Materiales.esfera(radio, mat, 14)
+	cab.scale = Vector3(1.0, 0.85, 1.25)
+	nodo.add_child(cab)
+	for lado in [-1.0, 1.0]:
+		var oreja := Materiales.cilindro(0.0, radio * 0.3, radio * 0.55, mat, 5)
+		oreja.position = Vector3(lado * radio * 0.55, radio * 0.75, radio * 0.1)
+		nodo.add_child(oreja)
+		var ojo := Materiales.esfera(radio * 0.1, _brillo(Color(1.0, 0.85, 0.3), 3.0), 6)
+		ojo.position = Vector3(lado * radio * 0.35, radio * 0.2, -radio * 1.0)
+		nodo.add_child(ojo)
+	var fauces := Materiales.caja(Vector3(radio * 1.1, radio * 0.2, radio * 0.5), mat)
+	fauces.position = Vector3(0, -radio * 0.35, -radio * 1.0)
+	nodo.add_child(fauces)
+	_estela(nodo, radio, Color(1.0, 0.95, 0.8), 40, true, true)
+	_luz(nodo, Color(1.0, 0.85, 0.5), 2.5, radio * 6.0)
+	_sonar("explosion", -10.0, 2.0)
 
 
 # ============================================================================ control (atrapado / aturdido)
@@ -965,6 +1067,39 @@ func control(ev: Dictionary, visual_de: Callable) -> void:
 				raiz.position = Vector3(cos(TAU * i / 5.0) * 0.4, 0.7, sin(TAU * i / 5.0) * 0.4)
 				raiz.rotation = Vector3(0.3 * cos(TAU * i / 5.0), 0, -0.3 * sin(TAU * i / 5.0))
 				n.add_child(raiz)
+		"atadura":
+			# Raíces ilusorias: moradas y translúcidas, suben enroscándose.
+			for i in 6:
+				var rz := Materiales.cilindro(0.04, 0.12, 1.9, Materiales.transparente(Color(0.6, 0.35, 0.9, 0.75), true), 5)
+				rz.position = Vector3(cos(TAU * i / 6.0) * 0.38, 0.8, sin(TAU * i / 6.0) * 0.38)
+				rz.rotation = Vector3(0.35 * cos(TAU * i / 6.0), 0, -0.35 * sin(TAU * i / 6.0))
+				rz.scale = Vector3(1, 0.05, 1)
+				n.add_child(rz)
+				var trz := rz.create_tween()
+				trz.tween_property(rz, "scale", Vector3.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		"plumas":
+			# Dormido: «Z» que suben.
+			var z := Label3D.new()
+			z.text = "Z z z"
+			z.font_size = 64
+			z.outline_size = 10
+			z.modulate = Color(0.85, 0.85, 1.0)
+			z.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			z.position = Vector3(0.3, 2.2, 0)
+			n.add_child(z)
+			var tz := z.create_tween().set_loops()
+			tz.tween_property(z, "position:y", 2.6, 1.0)
+			tz.tween_property(z, "position:y", 2.2, 0.0)
+		"oscuridad":
+			var nube := Materiales.esfera(0.55, Materiales.transparente(Color(0.03, 0.0, 0.06, 0.85), false), 12)
+			nube.position = Vector3(0, 1.65, 0)
+			n.add_child(nube)
+		"infierno":
+			var aura_r := efectos.particulas({"cantidad": 30, "vida": 0.7, "radio": 0.5, "direccion": Vector3.UP, "dispersion": 20.0,
+				"vel_min": 1.0, "vel_max": 2.5, "tam_min": 0.2, "tam_max": 0.45, "color": Color(0.85, 0.05, 0.1, 0.7), "local": true})
+			aura_r.position.y = 1.0
+			n.add_child(aura_r)
+			aura_r.emitting = true
 		"domo_hielo":
 			var h := Materiales.cilindro(0.6, 0.7, 2.0, Materiales.transparente(Color(0.8, 0.95, 1.0, 0.45), true), 6)
 			h.position.y = 1.0

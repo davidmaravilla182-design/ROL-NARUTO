@@ -32,6 +32,10 @@ static func ejecutar(s: ServidorJuego, e: EntidadServidor, id: String, nivel: in
 			e.poner_estado("lanzar", 0.4, {"jutsu": id, "nivel": nivel})
 		"teleport":
 			teletransporte(s, e, id, nivel, nd)
+		"tai":
+			Taijutsu.ejecutar(s, e, id, nivel, nd)
+		"romper":
+			Taijutsu.romper(s, e, id, nivel, nd)
 		_:
 			e.poner_estado("libre", 0.0)
 
@@ -188,6 +192,9 @@ static func golpear(s: ServidorJuego, atacante: EntidadServidor, o: EntidadServi
 		factor := 1.0, dir := Vector3.ZERO) -> void:
 	var attrs: Dictionary = atacante.attrs if atacante != null else {}
 	var dano := Combate.dano_jutsu(id, nivel, attrs, o.naturaleza_principal(), s.clima) * factor
+	if str(Datos.jutsu(id).get("clase", "")) == "taijutsu" and atacante != null:
+		# Taijutsu: el daño escala con Taijutsu y Fuerza (y las puertas), no con Ninjutsu.
+		dano = float(nd.get("dano", 0.0)) * Atributos.mult_dano_taijutsu(attrs) * Tecnicas.multiplicador_taijutsu(atacante) * factor
 	var nat := str(Datos.jutsu(id).get("naturaleza", ""))
 	if dano > 0.0:
 		s._aplicar_dano(o, dano, atacante, {"jutsu": id, "naturaleza": nat, "derriba": bool(nd.get("derriba", false)), "dir": dir,
@@ -200,13 +207,28 @@ static func golpear(s: ServidorJuego, atacante: EntidadServidor, o: EntidadServi
 		o.chakra = maxf(o.chakra - float(o.stats["chakra_max"]) * float(nd["sin_chakra"]), 0.0)
 	# Genjutsu: dura más con el Genjutsu del lanzador y menos con el del objetivo.
 	var f_gen := 1.0
-	if str(Datos.jutsu(id).get("tipo", "")) == "genjutsu" or str(nd.get("forma", "")) == "genjutsu":
+	if str(Datos.jutsu(id).get("clase", "")) == "genjutsu" or str(nd.get("forma", "")) == "genjutsu":
+		if o.efectos.has("inmune_genjutsu"):
+			s._evento({"tipo": "resistido", "entidad": o.id, "pos": o.centro()})
+			return
 		f_gen = Atributos.mult_duracion_genjutsu(attrs, o.attrs)
 		s.entrenar(o, "genjutsu", "genjutsu_resistido")
+	var fuente := atacante.id if atacante != null else -1
+	if float(nd.get("duerme", 0.0)) > 0.0:
+		_controlar(s, o, "dormido", float(nd["duerme"]) * f_gen, id, nivel)
+		o.efectos["control"]["fuente"] = fuente
+	if float(nd.get("ciega", 0.0)) > 0.0:
+		o.efectos["ciego"] = {"t": float(nd["ciega"]) * f_gen, "nivel": nivel, "fuente": fuente, "jutsu": id}
+		s._evento({"tipo": "control", "entidad": o.id, "estado": "ciego", "duracion": float(nd["ciega"]) * f_gen, "jutsu": id, "nivel": nivel, "forma": "oscuridad"})
+	if float(nd.get("miedo", 0.0)) > 0.0:
+		o.efectos["miedo"] = {"t": float(nd["miedo"]) * f_gen, "nivel": nivel, "fuente": fuente, "jutsu": id}
+		s._evento({"tipo": "control", "entidad": o.id, "estado": "miedo", "duracion": float(nd["miedo"]) * f_gen, "jutsu": id, "nivel": nivel, "forma": "infierno"})
 	if float(nd.get("atrapa", 0.0)) > 0.0:
 		_controlar(s, o, "atrapado", float(nd["atrapa"]) * f_gen, id, nivel)
+		o.efectos["control"]["fuente"] = fuente
 	elif float(nd.get("aturde", 0.0)) > 0.0:
 		_controlar(s, o, "aturdido", float(nd["aturde"]) * f_gen, id, nivel)
+		o.efectos["control"]["fuente"] = fuente
 
 
 static func _controlar(s: ServidorJuego, o: EntidadServidor, estado: String, t: float, id: String, nivel: int) -> void:

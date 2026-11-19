@@ -42,6 +42,8 @@ static func dibujar_icono(ci: CanvasItem, icono: String, c: Vector2, r: float, a
 		"hoja": hoja(ci, c, r)
 		"cristal": cristal(ci, c, r)
 		"ave": ave(ci, c, r)
+		"patada": patada(ci, c, r)
+		"oscuridad": oscuridad(ci, c, r)
 		_:
 			var f := Estilo.fuente_titulo()
 			var nombre := str(Datos.jutsu(id).get("nombre", "?"))
@@ -366,3 +368,23 @@ static func cristal(ci: CanvasItem, c: Vector2, r: float) -> void:
 static func ave(ci: CanvasItem, c: Vector2, r: float) -> void:
 	var pts := PackedVector2Array([c + Vector2(-0.9, -0.2) * r, c + Vector2(-0.2, 0.0) * r, c + Vector2(0, 0.5) * r, c + Vector2(0.2, 0.0) * r, c + Vector2(0.9, -0.2) * r, c + Vector2(0, 0.15) * r])
 	_poligono(ci, pts, Color(0.95, 0.92, 0.85), Color(0.3, 0.25, 0.2), 2.0)
+
+
+## Patada voladora: pierna estirada con estela.
+static func patada(ci: CanvasItem, c: Vector2, r: float) -> void:
+	var pierna := PackedVector2Array([c + Vector2(-r * 0.8, r * 0.5), c + Vector2(-r * 0.55, r * 0.75), c + Vector2(r * 0.55, -r * 0.35),
+		c + Vector2(r * 0.85, -r * 0.55), c + Vector2(r * 0.7, -r * 0.8), c + Vector2(r * 0.3, -r * 0.45)])
+	_poligono(ci, pierna, Color(1.0, 0.9, 0.6))
+	for i in 3:
+		var y := -r * 0.1 + i * r * 0.28
+		ci.draw_line(c + Vector2(-r * 0.95, y + r * 0.2), c + Vector2(-r * 0.35, y - r * 0.15), Color(1, 1, 1, 0.7), 3.0)
+
+
+## Oscuridad: círculo negro con un ojo cerrado.
+static func oscuridad(ci: CanvasItem, c: Vector2, r: float) -> void:
+	ci.draw_circle(c, r * 0.85, Color(0.08, 0.05, 0.14))
+	ci.draw_arc(c, r * 0.85, 0, TAU, 32, Color(0.55, 0.35, 0.9), 3.0)
+	ci.draw_arc(c + Vector2(0, -r * 0.1), r * 0.45, 0.2, PI - 0.2, 16, Color(0.85, 0.75, 1.0), 4.0)
+	for i in 3:
+		var x := -r * 0.3 + i * r * 0.3
+		ci.draw_line(c + Vector2(x, r * 0.32), c + Vector2(x * 1.2, r * 0.5), Color(0.85, 0.75, 1.0), 3.0)

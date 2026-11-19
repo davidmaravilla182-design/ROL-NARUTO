@@ -257,6 +257,18 @@ func _cargar_piezas(a: Dictionary, clan_id: String) -> void:
 	vestir_piezas(a, clan_id)
 
 
+var _piel_base := Color(-1, 0, 0)
+
+
+## Piel enrojecida (Ocho Puertas): 0 = normal, 1 = muy roja.
+func enrojecer(f: float) -> void:
+	if _mat_ninja == null:
+		return
+	if _piel_base.r < 0.0:
+		_piel_base = _mat_ninja.get_shader_parameter("c_piel")
+	_mat_ninja.set_shader_parameter("c_piel", _piel_base.lerp(Color(0.95, 0.32, 0.26), clampf(f, 0.0, 1.0)))
+
+
 ## Elige peinado y prenda y les pone color (se puede volver a llamar para la vista previa).
 func vestir_piezas(a: Dictionary, clan_id: String) -> void:
 	var peinado := str(a.get("peinado", "puntas"))

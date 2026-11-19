@@ -38,8 +38,12 @@ func _notification(what: int) -> void:
 			e.ia = null
 
 
+var misiones: Misiones
+
+
 func iniciar(p_mapa: Mapa = null) -> void:
 	mapa = p_mapa if p_mapa != null else Mapa.generar()
+	misiones = Misiones.new(self)
 	var aldea := Datos.aldea("lluvia")
 	clima = str(aldea.get("clima", "lluvia"))
 
@@ -63,6 +67,8 @@ var _rebelde_t := 0.0
 
 ## Enemigos de las zonas de combate (fuera de la plaza) y el remanente rebelde, que aparece de vez en cuando.
 func poblar_aldea() -> void:
+	if misiones != null:
+		misiones.eventos_activos = true   # en la aldea aparecen eventos dinámicos
 	var npcs: Dictionary = Datos.escenario.get("aldea", {}).get("npcs", {})
 	if npcs.is_empty() or mapa.radio_caminable <= 0.0:
 		return
@@ -118,7 +124,11 @@ func _reapariciones(dt: float) -> void:
 func npc_genjutsu(e: EntidadServidor, o: EntidadServidor, duracion: float) -> void:
 	# Genjutsu del objetivo: lo rompe antes (y lo entrena).
 	duracion *= Atributos.mult_duracion_genjutsu(e.attrs, o.attrs)
+	if o.efectos.has("inmune_genjutsu"):
+		_evento({"tipo": "resistido", "entidad": o.id, "pos": o.centro()})
+		return
 	entrenar(o, "genjutsu", "genjutsu_resistido")
+	o.efectos["genjutsu_npc"] = {"t": duracion, "nivel": 1, "fuente": e.id}
 	_evento({"tipo": "genjutsu", "entidad": e.id, "objetivo": o.id, "duracion": duracion})
 
 
@@ -231,6 +241,17 @@ func aplicar_comando(e: EntidadServidor, cmd: Dictionary) -> void:
 			aplicar_repertorio(e, cmd)
 		Protocolo.C_PERSONAJE:
 			aplicar_personaje(e, cmd)
+		Protocolo.C_MISION:
+			match str(cmd["accion"]):
+				"empezar":
+					misiones.empezar_capitulo(e, str(cmd["id"]))
+				"evento":
+					if str(cmd["id"]) == "duelo_instructor":
+						misiones.empezar_evento("duelo_instructor", e)
+				"abandonar":
+					misiones.abandonar()
+				"sellar":
+					Jefes.intento_sellado(self, e, cmd["sellos"])
 		Protocolo.C_ACCION:
 			# Dirección y objetivo del disparo viajan en el comando (igual offline y en red).
 			e.apuntado = {
@@ -407,6 +428,9 @@ func _accion_golpe(e: EntidadServidor) -> void:
 		return
 	if not _puede_actuar(e):
 		return
+	if e.efectos.has("miedo"):
+		_mensaje(e, "msg_con_miedo")
+		return
 	if not e.en_suelo:
 		# En el aire tras lanzar a alguien: patadas aéreas y, a la tercera, remate contra el suelo.
 		if (e.lanzado_t <= 0.0 and e.golpes_aereos == 0) or e.golpes_aereos >= 3:
@@ -551,10 +575,23 @@ func _accion_jutsu(e: EntidadServidor, id: String) -> void:
 		e.efectos.erase("susanoo")
 		_evento({"tipo": "susanoo", "entidad": e.id, "activo": false})
 		return
-	if not _puede_actuar(e):
+	# Romper genjutsu se puede usar estando atrapado por un genjutsu.
+	var controlado_gen := e.estado in ["atrapado", "aturdido", "dormido"] and bool(j.get("usable_controlado", false))
+	if not _puede_actuar(e) and not controlado_gen:
 		return
 	if e.efectos.has("vulnerable"):
 		_mensaje(e, "msg_bloqueado_jutsu")
+		return
+	if e.efectos.has("miedo") and id != "romper_genjutsu":
+		_mensaje(e, "msg_con_miedo")
+		return
+	if int(j.get("requiere_puertas", 0)) > 0:
+		var abiertas: int = [0, 3, 6, 8][clampi(int(e.efectos.get("puertas", {}).get("nivel", 0)), 0, 3)] if e.efectos.has("puertas") else 0
+		if abiertas < int(j["requiere_puertas"]):
+			_evento({"tipo": "mensaje", "entidad": e.id, "clave": "msg_requiere_puertas", "args": [int(j["requiere_puertas"])]})
+			return
+	if str(j.get("requiere_aura", "")) != "" and str(e.efectos.get("aura", {}).get("jutsu", "")) != str(j["requiere_aura"]):
+		_evento({"tipo": "mensaje", "entidad": e.id, "clave": "msg_requiere_modo", "args": [Datos.jutsu(str(j["requiere_aura"])).get("nombre", "")]})
 		return
 	if e.recarga(id) > 0.0:
 		_mensaje(e, "msg_recarga")
@@ -571,10 +608,18 @@ func _accion_jutsu(e: EntidadServidor, id: String) -> void:
 		return
 	var nivel := nivel_de(e, id)
 	var costo := Combate.costo_chakra(id, nivel, e.attrs)
-	if e.chakra < costo:
+	if bool(j.get("usa_estamina", false)):
+		# Taijutsu: cuesta estamina, no chakra.
+		costo = float(Datos.nivel_jutsu(id, nivel).get("costo", 10.0))
+		if e.estamina < costo:
+			_mensaje(e, "msg_sin_estamina")
+			return
+		e.estamina -= costo
+	elif e.chakra < costo:
 		_mensaje(e, "msg_sin_chakra")
 		return
-	e.chakra -= costo
+	else:
+		e.chakra -= costo
 	e.recargas[id] = float(j["recarga"]) * Atributos.mult_recarga(e.attrs)   # Inteligencia: recarga más corta
 	if float(j.get("tiempo_sellos", 0.0)) > 0.0:
 		entrenar(e, "sellos", "sellos_jutsu")
@@ -623,6 +668,9 @@ func paso(dt: float) -> void:
 		if e.ia != null and e.vivo():
 			e.ia.pensar(self, dt)
 	_reapariciones(dt)
+	if misiones != null:
+		misiones.actualizar(dt)
+	Jefes.actualizar(self, dt)
 	for e in entidades:
 		_actualizar_estado(e, dt)
 		_mover(e, dt)
@@ -656,6 +704,8 @@ func _actualizar_estado(e: EntidadServidor, dt: float) -> void:
 		return
 	e.estado_t -= dt
 	match e.estado:
+		"tai":
+			Taijutsu.actualizar(self, e, dt)
 		"golpe":
 			var p: Dictionary = paso_golpe(int(e.accion["paso"]))
 			if not e.accion["golpeado"] and e.estado_total - e.estado_t >= float(p["impacto"]) * float(e.accion.get("f", 1.0)):
@@ -1116,6 +1166,11 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 
 
 func _mover(e: EntidadServidor, dt: float) -> void:
+	# Técnicas con cinemática propia (Loto, Liger Bomb, Lariat...): la posición la fija Taijutsu.
+	if e.estado == "tai" or e.estado == "atrapado_tai":
+		e.empuje = Vector3.ZERO
+		e.vel_y = 0.0
+		return
 	if e.tipo == "muneco":
 		e.en_charco = mapa.en_charco(e.pos2())
 		return

@@ -749,6 +749,13 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 			pv.reproducir("esquivar", 0.05)
 		"bloqueo":
 			pv.reproducir("guardia", 0.06)
+		"tai":
+			var sec := str(v.get("tai_sec", ""))
+			pv.reproducir_primera(["m/m_patada_voladora"] if sec == "entrada" else (["chidori_embiste"] if sec == "lariat" else ["m/m_patada_espiral", "saltar"]), 0.05)
+		"atrapado_tai":
+			pv.reproducir_primera(["lanzado", "caer"], 0.05)
+		"dormido":
+			pv.reproducir_primera(["derribado", "caer"], 0.1)
 		_:
 			if bool(e.get("escalando", false)):
 				pv.reproducir("correr", 0.1, 1.5)   # corre por la pared más rápido que en el suelo
@@ -884,6 +891,26 @@ func _procesar_evento(ev: Dictionary) -> void:
 			efectos.shunshin(ev["desde"], ev["hasta"])
 			if id == mi_id:
 				camara.sacudir(0.12)
+		"tai":
+			_evento_tai(ev)
+		"interrumpido":
+			efectos.choque(ev["pos"])
+			efectos.onda_golpe(ev["pos"], Vector3.ZERO)
+			if int(ev.get("atacante", -1)) == mi_id or id == mi_id:
+				hud.mensaje(Datos.texto("msg_interrumpido"), 1.2)
+		"genjutsu_roto":
+			efectos.rafaga(ev["pos"], {"cantidad": 40, "vida": 0.6, "radio": 0.6, "vel_min": 3.0, "vel_max": 7.0, "tam_min": 0.1, "tam_max": 0.25,
+				"color": Color(0.85, 0.7, 1.0)})
+			if id == mi_id:
+				hud.quitar_genjutsu()
+				hud.mensaje(Datos.texto("msg_genjutsu_roto"), 1.2)
+				sonidos.tocar("trueno", -14.0, 2.2)
+		"resistido":
+			if id == mi_id:
+				hud.mensaje(Datos.texto("msg_resistido"), 0.8)
+		"control":
+			if id == mi_id and str(ev.get("estado", "")) in ["ciego", "miedo"]:
+				hud.velo_genjutsu(str(ev["estado"]), float(ev.get("duracion", 3.0)))
 		"bloqueado":
 			efectos.choque(ev["pos"])
 			sonidos.tocar("golpe", -6.0, 2.4)
@@ -991,6 +1018,35 @@ func _evento_impacto(ev: Dictionary) -> void:
 		Ajustes.vibrar(40)
 	if int(ev["atacante"]) == mi_id and mult > 1.01:
 		hud.mensaje(Datos.texto("msg_ventaja"), 1.0)
+
+
+## Técnicas de taijutsu con secuencia: polvo y líneas al empezar, golpes en el aire, impacto enorme.
+func _evento_tai(ev: Dictionary) -> void:
+	var id := int(ev.get("entidad", -1))
+	var propio := id == mi_id or int(ev.get("objetivo", -1)) == mi_id
+	var sec := str(ev.get("sec", ""))
+	match str(ev.get("fase", "")):
+		"inicio":
+			if _visuales.has(id):
+				_visuales[id]["tai_sec"] = sec
+			efectos.polvo(_pos_entidad(id), 20)
+			if propio:
+				hud.lineas_velocidad(0.5)
+			if sec == "lariat":
+				efectos.impacto_rayo(_pos_entidad(id) + Vector3(0, 1.2, 0), 1)
+		"aire":
+			efectos.golpe_fisico(ev["pos"], false)
+			sonidos.tocar("golpe", -6.0, 1.3)
+		"impacto":
+			efectos.golpe_fisico(ev["pos"], true)
+			efectos.onda_golpe(ev["pos"], Vector3.ZERO)
+			sonidos.tocar("golpe", 0.0, 0.7)
+			efectos.sacudir_desde(ev["pos"], float(Datos.nivel_jutsu(str(ev["jutsu"]), int(ev["nivel"])).get("sacudida", 0.6)))
+			if propio:
+				pausa_impacto(0.12)
+				hud.lineas_velocidad(0.45)
+			if sec in ["loto", "loto_oculto", "liger"]:
+				efectos.estrellar(Vector3(ev["pos"].x, 0.0, ev["pos"].z))
 
 
 func _sharingan_local() -> bool:

@@ -112,7 +112,8 @@
     "muro": true
    }
   ],
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "fenix": {
   "nombre": "Fénix de Fuego",
@@ -182,7 +183,8 @@
    }
   ],
   "color": "#ff7a1a",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "dragon_fuego": {
   "nombre": "Dragón de Fuego",
@@ -265,7 +267,8 @@
    }
   ],
   "color": "#ff5a10",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "chidori": {
   "nombre": "Chidori",
@@ -342,7 +345,8 @@
     "area_radio": 5.5
    }
   ],
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "lanza_chidori": {
   "nombre": "Lanza Chidori",
@@ -416,7 +420,8 @@
    }
   ],
   "color": "#8fd8ff",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "kirin": {
   "nombre": "Kirin",
@@ -502,7 +507,8 @@
   ],
   "clima": "tormenta",
   "rol": "ataque",
-  "_nota_carga": "carga: segundos de tormenta en remolino sobre el objetivo antes de que caiga el dragón de rayo."
+  "_nota_carga": "carga: segundos de tormenta en remolino sobre el objetivo antes de que caiga el dragón de rayo.",
+  "clase": "ninjutsu"
  },
  "manto_rayo": {
   "nombre": "Manto de Rayo",
@@ -566,7 +572,8 @@
    }
   ],
   "color": "#9fe4ff",
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "dragon_agua": {
   "nombre": "Gran Dragón de Agua",
@@ -647,7 +654,8 @@
    }
   ],
   "color": "#3f8cff",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "prision_agua": {
   "nombre": "Prisión de Agua",
@@ -705,7 +713,8 @@
    }
   ],
   "color": "#4aa8ff",
-  "rol": "control"
+  "rol": "control",
+  "clase": "ninjutsu"
  },
  "cascada": {
   "nombre": "Gran Cascada",
@@ -775,7 +784,8 @@
    }
   ],
   "color": "#3a7dff",
-  "rol": "control"
+  "rol": "control",
+  "clase": "ninjutsu"
  },
  "tiburones": {
   "nombre": "Tiburones de Agua",
@@ -847,7 +857,8 @@
    }
   ],
   "color": "#2f7fe8",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "muro_tierra": {
   "nombre": "Muro de Tierra",
@@ -910,7 +921,8 @@
    }
   ],
   "color": "#a7794a",
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "ninjutsu"
  },
  "dragon_tierra": {
   "nombre": "Dragón de Tierra",
@@ -982,7 +994,8 @@
    }
   ],
   "color": "#8a5a32",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "golem_tierra": {
   "nombre": "Golem de Tierra",
@@ -1053,7 +1066,8 @@
    }
   ],
   "color": "#9a6b3e",
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "gran_rafaga": {
   "nombre": "Gran Ráfaga",
@@ -1120,7 +1134,8 @@
    }
   ],
   "color": "#9be8c0",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "balas_vacio": {
   "nombre": "Balas de Vacío",
@@ -1189,7 +1204,8 @@
    }
   ],
   "color": "#c8f5e0",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "rasenshuriken": {
   "nombre": "Rasenshuriken",
@@ -1281,7 +1297,8 @@
    }
   ],
   "color": "#bff0ff",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "rasengan": {
   "nombre": "Rasengan",
@@ -1356,7 +1373,8 @@
     "particulas": 220
    }
   ],
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "clones_sombra": {
   "nombre": "Clones de Sombra",
@@ -1421,7 +1439,8 @@
    }
   ],
   "color": "#f2b33a",
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "invocacion": {
   "nombre": "Invocación",
@@ -1492,7 +1511,8 @@
    }
   ],
   "color": "#e0a050",
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "hiraishin": {
   "nombre": "Dios del Trueno Volador",
@@ -1553,7 +1573,8 @@
    }
   ],
   "color": "#ffd84a",
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "sellos_explosivos": {
   "nombre": "Sellos Explosivos",
@@ -1626,7 +1647,8 @@
    }
   ],
   "color": "#e8d7a8",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "danza_papel": {
   "nombre": "Danza de Papel",
@@ -1690,7 +1712,8 @@
    }
   ],
   "color": "#f4f0e6",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "fuerza_sobrehumana": {
   "nombre": "Fuerza Sobrehumana",
@@ -1766,7 +1789,8 @@
    }
   ],
   "color": "#ff6f8a",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "taijutsu"
  },
  "curacion": {
   "nombre": "Curación Médica",
@@ -1820,7 +1844,8 @@
    }
   ],
   "color": "#6dff9a",
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "madera": {
   "nombre": "Madera",
@@ -1889,7 +1914,8 @@
    }
   ],
   "color": "#5f8f3a",
-  "rol": "control"
+  "rol": "control",
+  "clase": "ninjutsu"
  },
  "hielo": {
   "nombre": "Hielo",
@@ -1955,7 +1981,8 @@
    }
   ],
   "color": "#bfeaff",
-  "rol": "control"
+  "rol": "control",
+  "clase": "ninjutsu"
  },
  "lava": {
   "nombre": "Lava",
@@ -2035,7 +2062,8 @@
    }
   ],
   "color": "#ff5a1e",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "arcilla": {
   "nombre": "Arcilla Explosiva",
@@ -2112,7 +2140,8 @@
    }
   ],
   "color": "#f0e4c8",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "arena": {
   "nombre": "Arena",
@@ -2172,7 +2201,8 @@
    }
   ],
   "color": "#d9b56a",
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "ninjutsu"
  },
  "sharingan": {
   "nombre": "Sharingan",
@@ -2217,7 +2247,8 @@
    }
   ],
   "patron": 1,
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "mangekyo": {
   "nombre": "Mangekyō Sharingan",
@@ -2262,7 +2293,8 @@
    }
   ],
   "patron": 2,
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "rinnegan": {
   "nombre": "Rinnegan",
@@ -2307,7 +2339,8 @@
    }
   ],
   "patron": 3,
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "byakugan": {
   "nombre": "Byakugan",
@@ -2352,7 +2385,8 @@
    }
   ],
   "patron": 4,
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "tsukuyomi": {
   "nombre": "Tsukuyomi",
@@ -2413,7 +2447,8 @@
    "mangekyo"
   ],
   "color": "#c0102a",
-  "rol": "control"
+  "rol": "control",
+  "clase": "genjutsu"
  },
  "amaterasu": {
   "nombre": "Amaterasu",
@@ -2481,7 +2516,8 @@
   "requiere_modo_activo": [
    "mangekyo"
   ],
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "ninjutsu"
  },
  "susanoo": {
   "nombre": "Susanoo",
@@ -2546,7 +2582,8 @@
   "requiere_modo_activo": [
    "mangekyo"
   ],
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "ninjutsu"
  },
  "kamui": {
   "nombre": "Kamui",
@@ -2607,7 +2644,8 @@
    "mangekyo"
   ],
   "color": "#8b5cff",
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "ninjutsu"
  },
  "shinra_tensei": {
   "nombre": "Shinra Tensei",
@@ -2669,7 +2707,8 @@
    "rinnegan"
   ],
   "vulnerable": 5.0,
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "ninjutsu"
  },
  "chibaku_tensei": {
   "nombre": "Chibaku Tensei",
@@ -2746,7 +2785,8 @@
    "rinnegan"
   ],
   "color": "#8c7cff",
-  "rol": "control"
+  "rol": "control",
+  "clase": "ninjutsu"
  },
  "palmas_64": {
   "nombre": "64 Palmas",
@@ -2825,7 +2865,8 @@
    "byakugan"
   ],
   "color": "#eef0ff",
-  "rol": "ataque"
+  "rol": "ataque",
+  "clase": "taijutsu"
  },
  "rotacion": {
   "nombre": "Rotación",
@@ -2894,7 +2935,8 @@
    "byakugan"
   ],
   "color": "#e2f2ff",
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "taijutsu"
  },
  "ocho_puertas": {
   "nombre": "Ocho Puertas Internas",
@@ -2956,7 +2998,8 @@
     "marca": 8.0
    }
   ],
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "taijutsu"
  },
  "modo_sabio": {
   "nombre": "Modo Sabio",
@@ -3010,7 +3053,8 @@
    }
   ],
   "color": "#ff9a3a",
-  "rol": "apoyo"
+  "rol": "apoyo",
+  "clase": "ninjutsu"
  },
  "golpe": {
   "nombre": "Golpe",
@@ -3357,7 +3401,8 @@
    }
   ],
   "color": "#d9c9a6",
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "ninjutsu"
  },
  "muro_agua": {
   "nombre": "Muro de Agua",
@@ -3417,7 +3462,8 @@
    }
   ],
   "color": "#4fb0ff",
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "ninjutsu"
  },
  "barrera_viento": {
   "nombre": "Barrera de Viento",
@@ -3478,6 +3524,853 @@
    }
   ],
   "color": "#a8f0c8",
-  "rol": "defensa"
+  "rol": "defensa",
+  "clase": "ninjutsu"
+ },
+ "remolino_hoja": {
+  "nombre": "Remolino de la Hoja",
+  "categoria": "cuerpo",
+  "clase": "taijutsu",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "viento",
+  "apuntable": true,
+  "recarga": 5.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 4.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 2
+   }
+  },
+  "ventaja": "Barre a todos los que te rodean y los derriba.",
+  "desventaja": "Corto alcance; te deja quieto un instante.",
+  "color": "#7fe08a",
+  "rol": "ataque",
+  "usa_estamina": true,
+  "niveles": [
+   {
+    "descripcion": "Patada giratoria barrida.",
+    "costo": 14,
+    "dano": 14,
+    "mecanica": "area",
+    "forma": "remolino",
+    "centro": "objetivo",
+    "radio": 2.4,
+    "empuje": 6,
+    "derriba": true,
+    "sacudida": 0.25,
+    "acerca": true
+   },
+   {
+    "descripcion": "Dos vueltas, más alcance.",
+    "costo": 16,
+    "dano": 20,
+    "mecanica": "area",
+    "forma": "remolino",
+    "centro": "objetivo",
+    "radio": 2.9,
+    "golpes": 2,
+    "intervalo": 0.22,
+    "empuje": 7,
+    "derriba": true,
+    "sacudida": 0.3,
+    "acerca": true
+   },
+   {
+    "descripcion": "Tornado de patadas que levanta polvo.",
+    "costo": 20,
+    "dano": 28,
+    "mecanica": "area",
+    "forma": "remolino",
+    "centro": "objetivo",
+    "radio": 3.5,
+    "golpes": 3,
+    "intervalo": 0.2,
+    "empuje": 9,
+    "derriba": true,
+    "sacudida": 0.45,
+    "acerca": true
+   }
+  ]
+ },
+ "loto_primario": {
+  "nombre": "Loto Primario",
+  "categoria": "cuerpo",
+  "clase": "taijutsu",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "espiral",
+  "apuntable": true,
+  "recarga": 12.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 4.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 4
+   },
+   "modo": [
+    "ocho_puertas"
+   ]
+  },
+  "ventaja": "Lanza al rival, lo atrapa en el aire y caen en barrena.",
+  "desventaja": "Exige abrir la primera puerta; te cuesta vida.",
+  "color": "#7fe08a",
+  "rol": "ataque",
+  "usa_estamina": true,
+  "niveles": [
+   {
+    "descripcion": "Barrena contra el suelo.",
+    "costo": 20,
+    "dano": 45,
+    "mecanica": "tai",
+    "secuencia": "loto",
+    "altura": 7.0,
+    "costo_vida_pct": 0.04,
+    "radio_impacto": 2.5,
+    "sacudida": 0.6
+   },
+   {
+    "descripcion": "Más alto y más fuerte.",
+    "costo": 22,
+    "dano": 62,
+    "mecanica": "tai",
+    "secuencia": "loto",
+    "altura": 9.0,
+    "costo_vida_pct": 0.05,
+    "radio_impacto": 3.0,
+    "sacudida": 0.8
+   },
+   {
+    "descripcion": "La barrena abre un cráter.",
+    "costo": 24,
+    "dano": 85,
+    "mecanica": "tai",
+    "secuencia": "loto",
+    "altura": 11.0,
+    "costo_vida_pct": 0.06,
+    "radio_impacto": 3.8,
+    "sacudida": 1.0
+   }
+  ],
+  "requiere_puertas": 1
+ },
+ "loto_oculto": {
+  "nombre": "Loto Oculto",
+  "categoria": "cuerpo",
+  "clase": "taijutsu",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "espiral",
+  "apuntable": true,
+  "recarga": 14.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 4.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 4
+   },
+   "modo": [
+    "ocho_puertas"
+   ]
+  },
+  "ventaja": "Ráfaga de golpes en el aire y golpe final.",
+  "desventaja": "Exige 3 puertas abiertas; desgaste enorme.",
+  "color": "#7fe08a",
+  "rol": "ataque",
+  "usa_estamina": true,
+  "niveles": [
+   {
+    "descripcion": "4 golpes aéreos y remate.",
+    "costo": 24,
+    "dano": 14,
+    "mecanica": "tai",
+    "secuencia": "loto_oculto",
+    "golpes": 4,
+    "altura": 7.0,
+    "remate": 40,
+    "costo_vida_pct": 0.06,
+    "sacudida": 0.7
+   },
+   {
+    "descripcion": "6 golpes aéreos y remate.",
+    "costo": 26,
+    "dano": 16,
+    "mecanica": "tai",
+    "secuencia": "loto_oculto",
+    "golpes": 6,
+    "altura": 8.0,
+    "remate": 55,
+    "costo_vida_pct": 0.07,
+    "sacudida": 0.9
+   },
+   {
+    "descripcion": "8 golpes aéreos y remate demoledor.",
+    "costo": 28,
+    "dano": 18,
+    "mecanica": "tai",
+    "secuencia": "loto_oculto",
+    "golpes": 8,
+    "altura": 9.0,
+    "remate": 75,
+    "costo_vida_pct": 0.08,
+    "sacudida": 1.1
+   }
+  ],
+  "requiere_puertas": 3
+ },
+ "pavo_real": {
+  "nombre": "Pavo Real Matutino",
+  "categoria": "cuerpo",
+  "clase": "taijutsu",
+  "ranura": "activo",
+  "puntos": 5,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "llama",
+  "apuntable": true,
+  "recarga": 16.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 6.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 5
+   },
+   "modo": [
+    "ocho_puertas"
+   ]
+  },
+  "ventaja": "Lluvia de golpes en llamas en abanico.",
+  "desventaja": "Exige 6 puertas; deja los brazos destrozados.",
+  "color": "#ff7a2a",
+  "rol": "ataque",
+  "usa_estamina": true,
+  "niveles": [
+   {
+    "descripcion": "Abanico de golpes en llamas.",
+    "costo": 28,
+    "dano": 6,
+    "mecanica": "area",
+    "forma": "pavo_real",
+    "centro": "frente",
+    "distancia": 3.0,
+    "radio": 3.5,
+    "cono": 80,
+    "golpes": 10,
+    "intervalo": 0.06,
+    "empuje": 2,
+    "sacudida": 0.5,
+    "acerca": true
+   },
+   {
+    "descripcion": "Más golpes, más ancho.",
+    "costo": 30,
+    "dano": 7,
+    "mecanica": "area",
+    "forma": "pavo_real",
+    "centro": "frente",
+    "distancia": 3.5,
+    "radio": 4.2,
+    "cono": 100,
+    "golpes": 14,
+    "intervalo": 0.05,
+    "empuje": 3,
+    "sacudida": 0.7,
+    "acerca": true
+   },
+   {
+    "descripcion": "El abanico estalla al final.",
+    "costo": 34,
+    "dano": 8,
+    "mecanica": "area",
+    "forma": "pavo_real",
+    "centro": "frente",
+    "distancia": 4.0,
+    "radio": 5.0,
+    "cono": 120,
+    "golpes": 18,
+    "intervalo": 0.045,
+    "empuje": 6,
+    "derriba": true,
+    "sacudida": 1.0,
+    "acerca": true
+   }
+  ],
+  "requiere_puertas": 6
+ },
+ "tigre_diurno": {
+  "nombre": "Tigre Diurno",
+  "categoria": "cuerpo",
+  "clase": "taijutsu",
+  "ranura": "activo",
+  "puntos": 5,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "ondas",
+  "apuntable": true,
+  "recarga": 20.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 28.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 5
+   },
+   "modo": [
+    "ocho_puertas"
+   ]
+  },
+  "ventaja": "Un puñetazo crea un tigre de aire comprimido.",
+  "desventaja": "Exige 7 puertas; un solo golpe por pelea.",
+  "color": "#ffd36a",
+  "rol": "ataque",
+  "usa_estamina": true,
+  "niveles": [
+   {
+    "descripcion": "Tigre de aire que explota.",
+    "costo": 34,
+    "dano": 70,
+    "mecanica": "salva",
+    "forma": "tigre",
+    "cantidad": 1,
+    "velocidad": 24,
+    "radio": 1.6,
+    "radio_explosion": 5.0,
+    "empuje": 14,
+    "derriba": true,
+    "perfora": true,
+    "sacudida": 1.0,
+    "marca": 3.0
+   },
+   {
+    "descripcion": "Tigre más grande.",
+    "costo": 36,
+    "dano": 90,
+    "mecanica": "salva",
+    "forma": "tigre",
+    "cantidad": 1,
+    "velocidad": 26,
+    "radio": 2.1,
+    "radio_explosion": 6.5,
+    "empuje": 17,
+    "derriba": true,
+    "perfora": true,
+    "sacudida": 1.2,
+    "marca": 4.0
+   },
+   {
+    "descripcion": "Tigre colosal: arrasa la calle.",
+    "costo": 40,
+    "dano": 115,
+    "mecanica": "salva",
+    "forma": "tigre",
+    "cantidad": 1,
+    "velocidad": 28,
+    "radio": 2.8,
+    "radio_explosion": 8.0,
+    "empuje": 22,
+    "derriba": true,
+    "perfora": true,
+    "sacudida": 1.5,
+    "marca": 5.0
+   }
+  ],
+  "requiere_puertas": 7
+ },
+ "lariat": {
+  "nombre": "Lariat",
+  "categoria": "cuerpo",
+  "clase": "taijutsu",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "rayo",
+  "apuntable": true,
+  "recarga": 9.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 15.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 3
+   }
+  },
+  "ventaja": "Embestida con el brazo cubierto de rayo.",
+  "desventaja": "Exige el Manto de Rayo activo.",
+  "color": "#9fdcff",
+  "rol": "ataque",
+  "usa_estamina": true,
+  "niveles": [
+   {
+    "descripcion": "Embestida de 9 m.",
+    "costo": 16,
+    "dano": 32,
+    "mecanica": "tai",
+    "secuencia": "lariat",
+    "distancia": 9.0,
+    "velocidad": 30,
+    "empuje": 14,
+    "sacudida": 0.6
+   },
+   {
+    "descripcion": "Embestida de 12 m.",
+    "costo": 18,
+    "dano": 44,
+    "mecanica": "tai",
+    "secuencia": "lariat",
+    "distancia": 12.0,
+    "velocidad": 34,
+    "empuje": 17,
+    "sacudida": 0.8
+   },
+   {
+    "descripcion": "Doble lariat (dos usuarios en el original): golpea a todos en la línea.",
+    "costo": 20,
+    "dano": 58,
+    "mecanica": "tai",
+    "secuencia": "lariat",
+    "distancia": 15.0,
+    "velocidad": 38,
+    "empuje": 20,
+    "perfora": true,
+    "sacudida": 1.0
+   }
+  ],
+  "requiere_aura": "manto_rayo"
+ },
+ "liger_bomb": {
+  "nombre": "Liger Bomb",
+  "categoria": "cuerpo",
+  "clase": "taijutsu",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "puno",
+  "apuntable": true,
+  "recarga": 10.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 4.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 3,
+    "fuerza": 3
+   }
+  },
+  "ventaja": "Atrapa, salta y estrella al rival contra el suelo.",
+  "desventaja": "Hay que estar cuerpo a cuerpo.",
+  "color": "#ffb070",
+  "rol": "ataque",
+  "usa_estamina": true,
+  "niveles": [
+   {
+    "descripcion": "Estrella al rival.",
+    "costo": 16,
+    "dano": 36,
+    "mecanica": "tai",
+    "secuencia": "liger",
+    "altura": 4.0,
+    "radio_impacto": 2.0,
+    "sacudida": 0.6
+   },
+   {
+    "descripcion": "Más alto: más daño.",
+    "costo": 18,
+    "dano": 48,
+    "mecanica": "tai",
+    "secuencia": "liger",
+    "altura": 5.5,
+    "radio_impacto": 2.6,
+    "sacudida": 0.8
+   },
+   {
+    "descripcion": "El impacto derriba a los de alrededor.",
+    "costo": 20,
+    "dano": 62,
+    "mecanica": "tai",
+    "secuencia": "liger",
+    "altura": 7.0,
+    "radio_impacto": 3.5,
+    "sacudida": 1.0
+   }
+  ]
+ },
+ "entrada_dinamica": {
+  "nombre": "Entrada Dinámica",
+  "categoria": "cuerpo",
+  "clase": "taijutsu",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "patada",
+  "apuntable": true,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.0,
+  "sellos": [],
+  "alcance": 12.0,
+  "requisitos": {
+   "atributos_min": {
+    "taijutsu": 2,
+    "velocidad": 2
+   }
+  },
+  "ventaja": "Patada voladora desde lejos que interrumpe al rival.",
+  "desventaja": "Si fallas, quedas expuesto.",
+  "color": "#ffe9a0",
+  "rol": "ataque",
+  "usa_estamina": true,
+  "niveles": [
+   {
+    "descripcion": "Patada voladora de 8 m.",
+    "costo": 12,
+    "dano": 18,
+    "mecanica": "tai",
+    "secuencia": "entrada",
+    "distancia": 8.0,
+    "interrumpe": 0.6,
+    "empuje": 8,
+    "sacudida": 0.35
+   },
+   {
+    "descripcion": "10 m e interrupción más larga.",
+    "costo": 13,
+    "dano": 24,
+    "mecanica": "tai",
+    "secuencia": "entrada",
+    "distancia": 10.0,
+    "interrumpe": 0.9,
+    "empuje": 10,
+    "sacudida": 0.45
+   },
+   {
+    "descripcion": "12 m; derriba.",
+    "costo": 14,
+    "dano": 30,
+    "mecanica": "tai",
+    "secuencia": "entrada",
+    "distancia": 12.0,
+    "interrumpe": 1.2,
+    "empuje": 12,
+    "derriba": true,
+    "sacudida": 0.55
+   }
+  ]
+ },
+ "atadura_arbol": {
+  "nombre": "Atadura del Árbol",
+  "categoria": "neutro",
+  "clase": "genjutsu",
+  "ranura": "activo",
+  "puntos": 2,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "hoja",
+  "apuntable": true,
+  "recarga": 12.0,
+  "tiempo_sellos": 0.5,
+  "sellos": [
+   "tigre",
+   "perro",
+   "carnero"
+  ],
+  "alcance": 14.0,
+  "requisitos": {
+   "atributos_min": {
+    "genjutsu": 2
+   }
+  },
+  "ventaja": "Raíces ilusorias inmovilizan al rival.",
+  "desventaja": "Un genjutsu alto lo rompe antes.",
+  "color": "#b07cff",
+  "rol": "control",
+  "niveles": [
+   {
+    "descripcion": "Inmoviliza 2 s.",
+    "costo": 14,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "atadura",
+    "centro": "objetivo",
+    "radio": 1.6,
+    "atrapa": 2.0
+   },
+   {
+    "descripcion": "Inmoviliza 3 s.",
+    "costo": 16,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "atadura",
+    "centro": "objetivo",
+    "radio": 2.0,
+    "atrapa": 3.0
+   },
+   {
+    "descripcion": "Inmoviliza 4 s y atrapa a los de alrededor.",
+    "costo": 20,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "atadura",
+    "centro": "objetivo",
+    "radio": 3.2,
+    "atrapa": 4.0
+   }
+  ]
+ },
+ "ilusion_plumas": {
+  "nombre": "Ilusión de Plumas",
+  "categoria": "neutro",
+  "clase": "genjutsu",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "ave",
+  "apuntable": true,
+  "recarga": 12.0,
+  "tiempo_sellos": 0.5,
+  "sellos": [
+   "tigre",
+   "perro",
+   "carnero"
+  ],
+  "alcance": 14.0,
+  "requisitos": {
+   "atributos_min": {
+    "genjutsu": 3
+   }
+  },
+  "ventaja": "Caen plumas y el rival se duerme.",
+  "desventaja": "Un golpe lo despierta.",
+  "color": "#e8e2ff",
+  "rol": "control",
+  "niveles": [
+   {
+    "descripcion": "Duerme 3 s.",
+    "costo": 18,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "plumas",
+    "centro": "objetivo",
+    "radio": 3.0,
+    "duerme": 3.0
+   },
+   {
+    "descripcion": "Duerme 4 s.",
+    "costo": 20,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "plumas",
+    "centro": "objetivo",
+    "radio": 3.5,
+    "duerme": 4.0
+   },
+   {
+    "descripcion": "Duerme 5 s en un área grande.",
+    "costo": 24,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "plumas",
+    "centro": "objetivo",
+    "radio": 5.0,
+    "duerme": 5.0
+   }
+  ]
+ },
+ "oscuridad": {
+  "nombre": "Oscuridad",
+  "categoria": "neutro",
+  "clase": "genjutsu",
+  "ranura": "activo",
+  "puntos": 3,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "oscuridad",
+  "apuntable": true,
+  "recarga": 12.0,
+  "tiempo_sellos": 0.5,
+  "sellos": [
+   "tigre",
+   "perro",
+   "carnero"
+  ],
+  "alcance": 14.0,
+  "requisitos": {
+   "atributos_min": {
+    "genjutsu": 3
+   }
+  },
+  "ventaja": "Ciega al rival: no te ve.",
+  "desventaja": "No hace daño.",
+  "color": "#3a2a5a",
+  "rol": "control",
+  "niveles": [
+   {
+    "descripcion": "Ciega 3 s.",
+    "costo": 16,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "oscuridad",
+    "centro": "objetivo",
+    "radio": 1.8,
+    "ciega": 3.0
+   },
+   {
+    "descripcion": "Ciega 4,5 s.",
+    "costo": 18,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "oscuridad",
+    "centro": "objetivo",
+    "radio": 2.2,
+    "ciega": 4.5
+   },
+   {
+    "descripcion": "Ciega 6 s.",
+    "costo": 22,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "oscuridad",
+    "centro": "objetivo",
+    "radio": 3.0,
+    "ciega": 6.0
+   }
+  ]
+ },
+ "vision_infierno": {
+  "nombre": "Visión del Infierno",
+  "categoria": "neutro",
+  "clase": "genjutsu",
+  "ranura": "activo",
+  "puntos": 4,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "llama_negra",
+  "apuntable": true,
+  "recarga": 12.0,
+  "tiempo_sellos": 0.5,
+  "sellos": [
+   "tigre",
+   "perro",
+   "carnero"
+  ],
+  "alcance": 14.0,
+  "requisitos": {
+   "atributos_min": {
+    "genjutsu": 4
+   }
+  },
+  "ventaja": "El rival ve su peor miedo y huye.",
+  "desventaja": "Si te ataca de todos modos, se rompe.",
+  "color": "#c0203a",
+  "rol": "control",
+  "niveles": [
+   {
+    "descripcion": "Huye 3 s.",
+    "costo": 20,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "infierno",
+    "centro": "objetivo",
+    "radio": 1.8,
+    "miedo": 3.0
+   },
+   {
+    "descripcion": "Huye 4 s.",
+    "costo": 22,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "infierno",
+    "centro": "objetivo",
+    "radio": 2.4,
+    "miedo": 4.0
+   },
+   {
+    "descripcion": "Huye 5 s; los de alrededor también.",
+    "costo": 26,
+    "dano": 0,
+    "mecanica": "area",
+    "forma": "infierno",
+    "centro": "objetivo",
+    "radio": 4.0,
+    "miedo": 5.0
+   }
+  ]
+ },
+ "romper_genjutsu": {
+  "nombre": "Romper Genjutsu",
+  "categoria": "neutro",
+  "clase": "genjutsu",
+  "ranura": "activo",
+  "puntos": 1,
+  "implementado": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "icono": "cruz",
+  "apuntable": false,
+  "recarga": 6.0,
+  "tiempo_sellos": 0.1,
+  "sellos": [
+   "carnero"
+  ],
+  "alcance": 0.0,
+  "requisitos": {
+   "atributos_min": {
+    "genjutsu": 1
+   }
+  },
+  "ventaja": "Te libera de cualquier genjutsu.",
+  "desventaja": "No sirve contra técnicas físicas.",
+  "color": "#b07cff",
+  "rol": "apoyo",
+  "niveles": [
+   {
+    "descripcion": "Te libera y 2 s de inmunidad.",
+    "costo": 10,
+    "dano": 0,
+    "mecanica": "romper",
+    "inmune": 2.0
+   },
+   {
+    "descripcion": "Te libera y 3 s de inmunidad.",
+    "costo": 11,
+    "dano": 0,
+    "mecanica": "romper",
+    "inmune": 3.0
+   },
+   {
+    "descripcion": "Te libera y devuelve el genjutsu a quien lo lanzó.",
+    "costo": 12,
+    "dano": 0,
+    "mecanica": "romper",
+    "inmune": 3.0,
+    "devuelve": 2.5
+   }
+  ],
+  "usable_controlado": true
  }
 }

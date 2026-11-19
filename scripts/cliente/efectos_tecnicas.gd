@@ -705,7 +705,27 @@ func crear_aura_puertas(nivel: int) -> Node3D:
 		var envoltura := Materiales.capsula(0.55, 2.1, mat)
 		envoltura.position = Vector3(0, 1.0, 0)
 		raiz.add_child(envoltura)
+	# Estelas de velocidad (imágenes residuales) y suelo que se agrieta al moverse.
+	var rastro := RastroPuertas.new()
+	rastro.color = col
+	rastro.nivel = nivel
+	rastro.efectos = efectos
+	raiz.add_child(rastro)
 	return raiz
+
+
+## Al abrir puertas: el suelo se agrieta bajo los pies, onda del color de la puerta y sacudida.
+func _abrir_puerta(nodo: Node3D, nivel: int) -> void:
+	var col: Color = COLOR_PUERTAS[clampi(nivel, 1, 3) - 1]
+	var p := nodo.global_position
+	efectos.marca_suelo(p, 1.5 + nivel * 0.8, Color(0.05, 0.05, 0.06, 0.9), true)
+	efectos.rafaga(p + Vector3(0, 0.8, 0), {"cantidad": 60 + nivel * 30, "vida": 0.7, "radio": 0.4, "vel_min": 4.0, "vel_max": 9.0 + nivel * 2.0,
+		"frenado": 5.0, "tam_min": 0.2, "tam_max": 0.45, "color": Color(col.r, col.g, col.b, 0.8)})
+	efectos.polvo(p, 30 + nivel * 10)
+	efectos.luz_temporal(p + Vector3(0, 1.2, 0), col, 6.0 + nivel * 2.0, 10.0, 0.5)
+	efectos.sacudir_desde(p, 0.3 + nivel * 0.2)
+	if sonidos != null:
+		sonidos.tocar("explosion", -10.0 + nivel * 2.0, 1.6)
 
 
 func golpe_definitivo(pos: Vector3, radio: float) -> void:
@@ -746,7 +766,12 @@ func sincronizar(eid: int, nodo: Node3D, e: Dictionary) -> void:
 			_sync(eid, "puertas%d" % n, nodo, false, Callable())
 	if puertas:
 		var nv := int(efs["puertas"]["nivel"])
+		var nueva := not (_adjuntos.has("%d:%s" % [eid, clave]) and is_instance_valid(_adjuntos["%d:%s" % [eid, clave]]))
 		_sync(eid, clave, nodo, true, func(): return crear_aura_puertas(nv))
+		if nueva:
+			_abrir_puerta(nodo, nv)
+	if nodo is PersonajeVisual:
+		(nodo as PersonajeVisual).enrojecer([0.0, 0.35, 0.6, 0.9][int(efs["puertas"]["nivel"]) if puertas else 0])
 
 
 ## El Susanoo se apaga: el chakra pierde brillo y se deshace en partículas moradas.
@@ -841,3 +866,37 @@ func sincronizar_zonas(lista: Array) -> void:
 			tw.tween_interval(1.0)
 			tw.tween_callback(n.queue_free)
 			_zonas.erase(id)
+
+
+
+## Rastro de las Ocho Puertas: siluetas del color de la puerta que quedan atrás al moverse rápido y grietas en el suelo.
+class RastroPuertas extends Node3D:
+	var color := Color.WHITE
+	var nivel := 1
+	var efectos: Efectos
+	var _antes := Vector3.INF
+	var _t := 0.0
+	var _t_grieta := 0.0
+	func _process(d: float) -> void:
+		var p := global_position
+		if _antes == Vector3.INF:
+			_antes = p
+			return
+		var vel := p.distance_to(_antes) / maxf(d, 0.001)
+		_antes = p
+		_t -= d
+		_t_grieta -= d
+		if vel > 4.0 and _t <= 0.0:
+			_t = 0.07
+			var sil := Materiales.capsula(0.32, 1.7, Materiales.transparente(Color(color.r, color.g, color.b, 0.45), true))
+			var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+			destino.add_child(sil)
+			sil.global_position = p + Vector3(0, 0.9, 0)
+			var tw := sil.create_tween()
+			tw.set_parallel(true)
+			tw.tween_property(sil, "transparency", 1.0, 0.3)
+			tw.tween_property(sil, "scale", Vector3(0.8, 1.0, 0.8), 0.3)
+			tw.chain().tween_callback(sil.queue_free)
+		if vel > 4.0 and nivel >= 2 and _t_grieta <= 0.0 and efectos != null:
+			_t_grieta = 0.45
+			efectos.marca_suelo(p, 0.7 + nivel * 0.2, Color(0.06, 0.06, 0.07, 0.8), true)

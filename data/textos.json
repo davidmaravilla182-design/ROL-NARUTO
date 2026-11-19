@@ -42,7 +42,7 @@
   "msg_cancelado": "Cancelado",
   "msg_fijado": "Objetivo fijado: {0}",
   "msg_sin_fijar": "Objetivo liberado",
-  "msg_sin_objetivo": "No hay objetivos cerca",
+  "msg_sin_objetivo": "Nadie al alcance",
   "ajustes_titulo": "Ajustes",
   "ajustes_tamano": "Tamaño de botones",
   "ajustes_opacidad": "Opacidad de botones",
@@ -253,5 +253,14 @@
   "prueba_examen_chunin": "Examen Chūnin",
   "prueba_duelo_jonin": "duelo contra el instructor",
   "prueba_duelo_elite": "duelo de élite",
-  "prueba_": "—"
+  "prueba_": "—",
+  "msg_con_miedo": "¡El miedo no te deja atacar!",
+  "msg_requiere_puertas": "Necesitas {0} puertas abiertas",
+  "msg_interrumpido": "¡Interrumpido!",
+  "msg_genjutsu_roto": "¡Genjutsu roto!",
+  "msg_resistido": "Resistido",
+  "rep_clase_todas": "Todo",
+  "clase_ninjutsu": "Ninjutsu",
+  "clase_taijutsu": "Taijutsu",
+  "clase_genjutsu": "Genjutsu"
 }

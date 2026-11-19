@@ -21,6 +21,8 @@ var anuncio_huida := false
 var perfil := ""
 var t_genjutsu := 0.0
 var t_humo := 0.0
+var ruta: Array = []    # perfil "huir": puntos que recorre (techos); al llegar al último, escapa
+var ruta_i := 0
 
 
 func _init(entidad: EntidadServidor) -> void:
@@ -50,6 +52,33 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 	t_genjutsu -= dt
 	t_humo -= dt
 	var objetivo := s._jugador_mas_cercano(e.pos)
+	# Intruso: corre por su ruta (sube por las paredes al toparse con ellas); si lo alcanzan, se defiende.
+	if perfil == "huir" and not ruta.is_empty():
+		if ruta_i < ruta.size():
+			var meta: Vector3 = ruta[ruta_i]
+			var v := meta - e.pos
+			v.y = 0.0
+			if v.length() < 3.0:
+				ruta_i += 1
+			var mv := Vector2(v.x, v.z).normalized()
+			s.aplicar_comando(e, {"t": "entrada", "mov": mv, "mira": atan2(mv.x, mv.y)})
+			if objetivo != null and objetivo.pos.distance_to(e.pos) < 2.5 and e.estado == "libre" and rng.randf() < 0.05:
+				s.aplicar_comando(e, {"t": "accion", "id": "esquivar"})
+		return
+	# Oscuridad: ciego, pierde de vista al jugador y tantea a ciegas.
+	if e.efectos.has("ciego"):
+		var giro := Vector2(sin(t_lado * 3.0), cos(t_lado * 2.0)) * 0.25
+		s.aplicar_comando(e, {"t": "entrada", "mov": giro, "mira": e.yaw + 0.05})
+		return
+	# Visión del Infierno: huye de quien se lo lanzó.
+	if e.efectos.has("miedo"):
+		var fuente := s.entidad(int(e.efectos["miedo"].get("fuente", -1)))
+		var de: Vector3 = fuente.pos if fuente != null else (objetivo.pos if objetivo != null else e.pos)
+		var lejos := e.pos - de
+		lejos.y = 0.0
+		var m2 := Vector2(lejos.x, lejos.z).normalized() if lejos.length() > 0.1 else Vector2(1, 0)
+		s.aplicar_comando(e, {"t": "entrada", "mov": m2, "mira": atan2(m2.x, m2.y)})
+		return
 	# Radio de detección: fuera de él, el NPC vuelve a su puesto y espera.
 	if objetivo != null and conf.has("aggro") and objetivo.pos.distance_to(e.pos) > float(conf["aggro"]):
 		objetivo = null

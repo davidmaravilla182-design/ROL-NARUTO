@@ -110,7 +110,9 @@ static func requisitos(id: String, ficha_pj: Dictionary, modo: String = "") -> D
 		motivos.append(Datos.texto("req_linaje", [Datos.texto("linaje_" + str(req["linaje"]))]))
 	if req.get("contrato", false) and (ficha_pj.get("contratos", []) as Array).is_empty():
 		motivos.append(Datos.texto("req_contrato"))
-	if req.has("rango") and _rango_indice(str(ficha_pj.get("rango", "genin"))) < _rango_indice(str(req["rango"])):
+	# Un pergamino enseña el jutsu: ya no hace falta el rango (los atributos y naturalezas siguen valiendo).
+	var aprendido := id in (ficha_pj.get("pergaminos", []) as Array)
+	if req.has("rango") and not aprendido and _rango_indice(str(ficha_pj.get("rango", "genin"))) < _rango_indice(str(req["rango"])):
 		motivos.append(Datos.texto("req_rango", [Datos.texto("rango_" + str(req["rango"]))]))
 	var attrs: Dictionary = ficha_pj.get("attrs", {})
 	for a in req.get("atributos_min", {}).keys():

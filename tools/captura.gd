@@ -444,6 +444,8 @@ func _guion_todos(filtro: String) -> void:
 					espera = 1.6
 				"teleport":
 					espera = 0.25
+				"tai":
+					espera = 0.55
 				"salva":
 					espera = 0.35 + float(nd.get("intervalo", 0.0)) * float(nd.get("cantidad", 1)) * 0.6
 			var activos := ["", "", "", ""] if es_modo else [id, "", "", ""]
@@ -451,7 +453,14 @@ func _guion_todos(filtro: String) -> void:
 				juego.transporte.enviar({"t": Protocolo.C_REPERTORIO, "activos": activos, "modo": modo, "prueba": true})
 				juego.hud.construir({"activos": activos, "modo": modo, "niveles_max": {}})
 				_nivel(n)])
-			guion.append([t0 + 0.1, func(): _listo(Vector3(0, 0, 10)); _rival(Vector3(0, 0, 4.0)); _seguir(); _cam(0.75, 9.5, -0.3, 1.6)])
+			guion.append([t0 + 0.1, func():
+				_listo(Vector3(0, 0, 10)); _rival1(Vector3(0, 0, 4.0)); _seguir(); _cam(0.75, 9.5, -0.3, 1.6)
+				var jj = juego.servidor.entidad_de_peer(1)
+				jj.estamina = 999.0
+				if int(j.get("requiere_puertas", 0)) > 0:
+					jj.efectos["puertas"] = {"t": 99.0, "nivel": 3}
+				if str(j.get("requiere_aura", "")) != "":
+					jj.efectos["aura"] = {"t": 99.0, "jutsu": str(j["requiere_aura"]), "nivel": 1}])
 			if modo != "":
 				guion.append([t0 + 0.2, func(): _accion("modo")])
 			if not es_modo:

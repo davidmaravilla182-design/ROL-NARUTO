@@ -24,6 +24,7 @@ func _initialize() -> void:
 	probar_shinra()
 	probar_ocho_puertas()
 	probar_bola_fuego_suelo()
+	probar_tecnicas_nuevas()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -45,7 +46,15 @@ func probar_datos() -> void:
 	for id in cat:
 		if not (id in ["sharingan", "mangekyo", "rinnegan", "byakugan", "sustitucion", "muro_agua", "barrera_viento"]):
 			lista40.append(id)
-	comprobar(lista40.size() == 40, "hay exactamente 40 jutsus en el repertorio (%d)" % lista40.size())
+	# v0.9: los 40 originales + 8 de taijutsu + 5 de genjutsu.
+	comprobar(lista40.size() == 53, "hay 53 jutsus en el repertorio (%d)" % lista40.size())
+	var clases := {"ninjutsu": 0, "taijutsu": 0, "genjutsu": 0}
+	for id in cat:
+		var cl := str(Datos.jutsu(id).get("clase", ""))
+		if clases.has(cl):
+			clases[cl] += 1
+	comprobar(clases["taijutsu"] >= 12 and clases["genjutsu"] >= 6 and clases["ninjutsu"] + clases["taijutsu"] + clases["genjutsu"] == cat.size(),
+		"cada jutsu tiene su clase (ninjutsu/taijutsu/genjutsu): %s" % str(clases))
 	var cats := Repertorio.categorias()
 	var bien_niveles := true
 	var bien_costos := true
@@ -438,6 +447,12 @@ func probar_genericos() -> void:
 			jg.pos = m.pos + Vector3(0, 0, 5)
 			jg.yaw = PI
 			jg.vida = 60.0
+			# Requisitos en combate de las técnicas nuevas: puertas abiertas o Manto de Rayo activo.
+			if int(j.get("requiere_puertas", 0)) > 0:
+				jg.efectos["puertas"] = {"t": 99.0, "nivel": 3}
+			if str(j.get("requiere_aura", "")) != "":
+				jg.efectos["aura"] = {"t": 99.0, "jutsu": str(j["requiere_aura"]), "nivel": 1}
+			jg.estamina = 999.0
 			s.recibir_comando(1, {"t": "nivel", "valor": nivel})
 			s.recibir_comando(1, {"t": "accion", "id": id, "objetivo": m.id, "dir": Vector2(0, -1)})
 			var evs := correr(s, 4.0)
@@ -452,6 +467,8 @@ func probar_genericos() -> void:
 					ok = contar(evs, "invocar") > 0 and contar(evs, "criatura_golpe") > 0
 				"teleport":
 					ok = contar(evs, "teletransporte") >= int(nd.get("cadena", 1)) and jg.pos.distance_to(m.pos + Vector3(0, 0, 5)) > 2.0
+				"romper":
+					ok = contar(evs, "genjutsu_roto") > 0
 				_:
 					ok = contar(evs, "impacto") > 0 or contar(evs, "control") > 0
 			var usado := false
@@ -555,4 +572,82 @@ func probar_defensas() -> void:
 	var evs := correr(s, 2.0)
 	comprobar(j.pos.distance_to(m.pos) < 3.0 and contar(evs, "impacto") > 0 and j.efectos.has("aura") and j.vida > 60.0,
 		"fuerza sobrehumana N3: salto, puño gigante y regeneración")
+	s.free()
+
+
+## Técnicas nuevas de v0.9: efectos concretos.
+func probar_tecnicas_nuevas() -> void:
+	# Ilusión de plumas duerme a un enemigo; un golpe lo despierta.
+	var s := servidor(["ilusion_plumas", "oscuridad", "vision_infierno", "romper_genjutsu"], "", true)
+	var j := s.entidad_de_peer(1)
+	var en: EntidadServidor = null
+	for e in s.entidades:
+		if e.tipo == "enemigo":
+			en = e
+	en.ia = IaEnemigo.new(en)
+	en.pos = j.pos + Vector3(0, 0, -6)
+	j.yaw = PI
+	j.chakra = 999.0
+	s.recibir_comando(1, {"t": "accion", "id": "ilusion_plumas", "objetivo": en.id})
+	correr(s, 1.2)
+	comprobar(en.estado == "dormido", "Ilusión de Plumas duerme al rival (%s)" % en.estado)
+	s._aplicar_dano(en, 5.0, j, {"jutsu": "golpe", "dir": Vector3(0, 0, -1)})
+	comprobar(en.estado != "dormido", "un golpe lo despierta")
+	# Oscuridad: la IA pierde al jugador; Visión del Infierno: huye.
+	en.poner_estado("libre", 0.0)
+	j.recargas.clear()
+	s.recibir_comando(1, {"t": "accion", "id": "oscuridad", "objetivo": en.id})
+	correr(s, 1.0)
+	comprobar(en.efectos.has("ciego"), "Oscuridad ciega al rival")
+	en.efectos.erase("ciego")
+	en.efectos.erase("control")
+	en.poner_estado("libre", 0.0)
+	j.recargas.clear()
+	s.recibir_comando(1, {"t": "accion", "id": "vision_infierno", "objetivo": en.id})
+	correr(s, 0.8)
+	var d0 := en.pos.distance_to(j.pos)
+	correr(s, 1.0)
+	comprobar(en.efectos.has("miedo") and en.pos.distance_to(j.pos) > d0 + 1.0, "Visión del Infierno: el rival huye (%.1f → %.1f m)" % [d0, en.pos.distance_to(j.pos)])
+	# Romper genjutsu: libera al jugador atrapado por un genjutsu y da inmunidad.
+	Genericas._controlar(s, j, "atrapado", 5.0, "atadura_arbol", 1)
+	j.recargas.clear()
+	s.recibir_comando(1, {"t": "accion", "id": "romper_genjutsu"})
+	correr(s, 0.5)
+	comprobar(j.estado != "atrapado" and j.efectos.has("inmune_genjutsu"), "Romper genjutsu libera y da inmunidad")
+	s.free()
+	# Entrada Dinámica interrumpe los sellos del rival; Loto Primario lo sube y lo estrella.
+	s = servidor(["entrada_dinamica", "loto_primario", "", ""], "ocho_puertas", true)
+	j = s.entidad_de_peer(1)
+	for e in s.entidades:
+		if e.tipo == "enemigo":
+			en = e
+	en.ia = null
+	en.pos = j.pos + Vector3(0, 0, -9)
+	en.poner_estado("sellos", 2.0, {"jutsu": "bala_agua", "nivel": 1})
+	j.estamina = 999.0
+	s.recibir_comando(1, {"t": "accion", "id": "entrada_dinamica", "objetivo": en.id})
+	var evs := correr(s, 0.8)
+	comprobar(contar(evs, "interrumpido") == 1, "Entrada Dinámica interrumpe los sellos del rival")
+	en.poner_estado("libre", 0.0)
+	en.vida = 999.0
+	j.efectos["puertas"] = {"t": 99.0, "nivel": 1}
+	j.recargas.clear()
+	j.pos = en.pos + Vector3(0, 0, 1.5)
+	s.recibir_comando(1, {"t": "accion", "id": "loto_primario", "objetivo": en.id})
+	var alto := 0.0
+	evs = []
+	for i in 45:
+		s.paso(s.dt_tick)
+		evs.append_array(s.eventos)
+		s.eventos = []
+		alto = maxf(alto, en.pos.y)
+	comprobar(alto > 5.0 and contar(evs, "estrellar") == 1 and en.vida < 999.0, "Loto Primario: sube al rival %.1f m y lo estrella" % alto)
+	# Sin puertas abiertas no se puede.
+	j.efectos.erase("puertas")
+	j.recargas.clear()
+	j.poner_estado("libre", 0.0)
+	s.eventos = []
+	s.recibir_comando(1, {"t": "accion", "id": "loto_primario", "objetivo": en.id})
+	evs = correr(s, 0.3)
+	comprobar(contar(evs, "tai") == 0, "sin abrir la primera puerta, no hay Loto")
 	s.free()

@@ -57,7 +57,9 @@ var xp_modo_acum := 0.0
 var combo_paso := 0
 var combo_pos := -1
 var entreno: Dictionary = {}   # barras de entrenamiento 0-1 por atributo (y "control")
-var xp_total := 0.0        # posición dentro de la secuencia del combo (Atributos.secuencia_combo)
+var xp_total := 0.0
+var de_mision := false   # creado por una misión (se quita al terminarla)
+var minijefe := false        # posición dentro de la secuencia del combo (Atributos.secuencia_combo)
 var combo_ventana := 0.0
 var invulnerable_t := 0.0
 
