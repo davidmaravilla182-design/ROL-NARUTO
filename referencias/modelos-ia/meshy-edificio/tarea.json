@@ -1,0 +1,19 @@
+{
+ "id": "01a1f1e0-dc7a-7692-a35a-ef998a3108cc",
+ "type": "image-to-3d",
+ "name": "",
+ "art_style": "",
+ "object_prompt": "",
+ "style_prompt": "",
+ "negative_prompt": "",
+ "texture_prompt": "",
+ "text_style_prompt": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795059409390,
+ "progress": 100,
+ "started_at": 1795059409403,
+ "finished_at": 1795059450133,
+ "expires_at": 1795318650133,
+ "task_error": null,
+ "consumed_credits": 15
+}

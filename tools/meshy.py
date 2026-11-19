@@ -91,7 +91,7 @@ def esperar(tarea, carpeta, cada=10, limite=1800):
     for nombre, url in archivos.items():
         tam = descargar(url, os.path.join(carpeta, nombre))
         print("descargado %-28s %8d bytes  (%s)" % (nombre, tam, urllib.parse.urlparse(url).netloc), flush=True)
-    json.dump({k: v for k, v in e.items() if k not in ("model_urls", "texture_urls", "thumbnail_url")},
+    json.dump({k: v for k, v in e.items() if "url" not in k},
               open(os.path.join(carpeta, "tarea.json"), "w"), indent=1)
     return e
 

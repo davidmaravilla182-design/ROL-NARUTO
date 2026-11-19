@@ -15,6 +15,9 @@ static func construir(e: Escenario, m: Mapa) -> void:
 		var c: Vector2 = p["centro"]
 		var t := Transform3D(Basis(Vector3.UP, deg_to_rad(float(p["giro"]))), Vector3(c.x, 0, c.y))
 		var tipo := str(p["tipo"])
+		if tipo == "edificio_ia" and ResourceLoader.exists("res://assets/modelos/edificio_ia.glb"):
+			_edificio_ia(e, t)
+			continue
 		if tipo == "torre_ia":
 			if TorreIA.disponible():
 				e.add_child(TorreIA.crear(c, float(p["giro"])))
@@ -76,6 +79,22 @@ static func _hito(e: Escenario, m: Mapa) -> void:
 		cara.omni_range = 40.0
 		cara.position = base + f * -26.0 + Vector3(0, 64, 0)
 		e.add_child(cara)
+
+
+## Edificio especial generado con Meshy: malla completa de cerca y versión liviana de lejos, farol en la puerta.
+static func _edificio_ia(e: Escenario, t: Transform3D) -> void:
+	var cerca := Kit.instancia("edificio_ia", t, true)
+	cerca.visibility_range_end = 70.0
+	e.add_child(cerca)
+	var lejos := Kit.instancia("edificio_ia_lejos", t, false)
+	lejos.visibility_range_begin = 70.0
+	e.add_child(lejos)
+	var luz := OmniLight3D.new()
+	luz.light_color = Color(1.0, 0.68, 0.35)
+	luz.light_energy = 1.6
+	luz.omni_range = 6.0
+	e.add_child(luz)
+	luz.global_position = t * Vector3(0.6, 2.6, 4.2)
 
 
 ## Frente de una pieza (hacia donde mira su fachada) en el plano XZ.
