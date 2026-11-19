@@ -547,6 +547,73 @@ void fragment() {
 }
 """
 
+## Ninja de los modelos IA: textura de Meshy recoloreada por zonas (COLOR: R piel, G pelo, B chaleco,
+## A ropa 0,5 camisa / 1 pantalón). Cada zona toma el color elegido conservando el sombreado de la textura.
+const NINJA_IA := """
+shader_type spatial;
+render_mode cull_back;
+uniform sampler2D tex : source_color, filter_linear_mipmap_anisotropic;
+uniform vec4 c_piel : source_color = vec4(1.0);
+uniform vec4 c_pelo : source_color = vec4(1.0);
+uniform vec4 c_chaleco : source_color = vec4(1.0);
+uniform vec4 c_camisa : source_color = vec4(1.0);
+uniform vec4 c_pantalon : source_color = vec4(1.0);
+uniform vec4 o_piel : source_color = vec4(1.0);
+uniform vec4 o_pelo : source_color = vec4(1.0);
+uniform vec4 o_chaleco : source_color = vec4(1.0);
+uniform vec4 o_camisa : source_color = vec4(1.0);
+uniform vec4 o_pantalon : source_color = vec4(1.0);
+uniform float zona_pelo_forzada = 0.0;   // 1 en la malla del cabello
+uniform vec4 color_sombra : source_color = vec4(0.38, 0.42, 0.6, 1.0);
+uniform float rim_fuerza = 0.45;
+uniform vec4 rim_color : source_color = vec4(0.7, 0.82, 1.0, 1.0);
+varying vec4 zona;
+
+void vertex() {
+	zona = COLOR;
+}
+
+float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
+
+// Recolor: el color elegido más la variación de la textura respecto al color medio de la zona
+// (conserva pliegues y brillos; con el color original devuelve la textura tal cual).
+vec3 recolor(vec3 t, vec3 orig, vec3 nuevo) {
+	return clamp(nuevo + (t - orig) * mix(1.0, 1.6, step(lum(orig), 0.05)), 0.0, 1.0);
+}
+
+void fragment() {
+	vec3 t = texture(tex, UV).rgb;
+	vec4 z = zona;
+	if (zona_pelo_forzada > 0.5) z = vec4(0.0, 1.0, 0.0, 0.0);
+	float w_pant = clamp((z.a - 0.5) * 2.0, 0.0, 1.0);
+	float w_cam = clamp(z.a * 2.0, 0.0, 1.0) - w_pant;
+	vec3 c = t;
+	c = mix(c, recolor(t, o_piel.rgb, c_piel.rgb), z.r);
+	c = mix(c, recolor(t, o_pelo.rgb, c_pelo.rgb), z.g);
+	c = mix(c, recolor(t, o_chaleco.rgb, c_chaleco.rgb), z.b);
+	c = mix(c, recolor(t, o_camisa.rgb, c_camisa.rgb), w_cam);
+	c = mix(c, recolor(t, o_pantalon.rgb, c_pantalon.rgb), w_pant);
+	ALBEDO = c;
+	ROUGHNESS = 0.75;
+}
+
+void light() {
+	float ndl = dot(NORMAL, LIGHT);
+	float l = clamp(ndl * 0.5 + 0.5, 0.0, 1.0);
+	if (LIGHT_IS_DIRECTIONAL) {
+		l *= mix(0.35, 1.0, ATTENUATION);
+		float b = smoothstep(0.45, 0.52, l) * 0.6 + smoothstep(0.7, 0.76, l) * 0.4;
+		DIFFUSE_LIGHT += mix(color_sombra.rgb, vec3(1.0), b) * LIGHT_COLOR / PI;
+	} else {
+		float a = l * ATTENUATION;
+		DIFFUSE_LIGHT += (smoothstep(0.08, 0.16, a) * 0.6 + smoothstep(0.3, 0.42, a) * 0.6) * LIGHT_COLOR / PI;
+	}
+	float rim = 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0);
+	rim = smoothstep(0.62, 0.72, rim) * clamp(ndl + 0.5, 0.0, 1.0);
+	SPECULAR_LIGHT += rim * rim_fuerza * rim_color.rgb * LIGHT_COLOR / PI * (LIGHT_IS_DIRECTIONAL ? 1.0 : ATTENUATION);
+}
+"""
+
 const INDICADOR := """
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never, blend_add, fog_disabled;
@@ -593,6 +660,7 @@ static func shader(clave: String) -> Shader:
 		"indicador": return _shader(clave, INDICADOR)
 		"torre_ia": return _shader(clave, TORRE_IA)
 		"ojo_torre": return _shader(clave, OJO_TORRE)
+		"ninja_ia": return _shader(clave, NINJA_IA)
 	push_error("Shader desconocido " + clave)
 	return null
 

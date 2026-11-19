@@ -11,6 +11,11 @@
       eventos fiables, instantáneas comprimidas, nombre y vida sobre cada jugador, simulador de mala conexión, permisos Android.
 - [x] Pruebas: personaje (36), red local con servidor y 2 bots por localhost (18), humo con partida anfitrión + invitado reales.
 
+## Prueba de arte con modelos IA
+- [x] Torre IA (Meshy + color de TRELLIS, 30k + LOD 9,7k y 3k, ojos con anillos, ventanas ámbar, lengua plataforma).
+- [x] Ninja IA con esqueleto del juego, zonas de color, emblema por clan y nudo de banda.
+- [x] Comparación antes/después y medidas: `referencias/modelos-ia/INFORME.md`.
+
 ## Siguiente (ideas)
 - Misiones para subir de rango (la regla ya está en `reglas.json → progresion`).
 - Servidor dedicado / en línea: maestría guardada en el servidor y clanes por probabilidad (`Creacion.sortear_clan`).

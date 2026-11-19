@@ -120,6 +120,22 @@ static func vestir(pv: PersonajeVisual, aspecto: Dictionary, aldea: Dictionary, 
 			cabeza.add_child(filtro)
 
 
+## Con el ninja del modelo IA la ropa ya viene en la malla: solo se añade la máscara (ropa de sigilo).
+## El impermeable se resuelve recoloreando chaleco y camisa (PersonajeVisual.recolorear).
+static func vestir_ia(pv: PersonajeVisual, aspecto: Dictionary) -> void:
+	if aspecto.get("mascara", false):
+		var cabeza := pv.hueso("Cabeza")
+		var mascara := Materiales.caja(Vector3(0.15, 0.07, 0.05), Materiales.solido(Color(0.25, 0.27, 0.3), 0.5, 0.4))
+		mascara.position = Vector3(0, 0.03, 0.085)
+		cabeza.add_child(mascara)
+		var metal := Materiales.solido(Color(0.78, 0.8, 0.84), 0.25, 0.9)
+		for lado in [-1.0, 1.0]:
+			var filtro := Materiales.cilindro(0.02, 0.02, 0.035, metal, 8)
+			filtro.position = Vector3(0.045 * lado, 0.025, 0.112)
+			filtro.rotation_degrees = Vector3(90, 0, 0)
+			cabeza.add_child(filtro)
+
+
 ## Abanico del clan: parte superior roja redondeada, franja inferior blanca y mango.
 static func crear_abanico(rojo: Color, blanco: Color) -> MeshInstance3D:
 	var st := SurfaceTool.new()

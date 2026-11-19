@@ -73,5 +73,47 @@
     "ventana": 0.6,
     "trauma_max": 0.9,
     "lenta_minimo_entre": 1.2
+  },
+  "ninja_ia": {
+    "_nota": "Generado por tools/blender/ninja_ia.py: colores originales de cada zona (sRGB) y medidas de la cabeza (m, relativas al hueso Cabeza).",
+    "zonas": {
+      "piel": [
+        0.829,
+        0.649,
+        0.546
+      ],
+      "pelo": [
+        0.024,
+        0.026,
+        0.03
+      ],
+      "chaleco": [
+        0.31,
+        0.29,
+        0.326
+      ],
+      "camisa": [
+        0.078,
+        0.074,
+        0.086
+      ],
+      "pantalon": [
+        0.076,
+        0.073,
+        0.086
+      ]
+    },
+    "triangulos": 15621,
+    "nudo": [
+      0.0,
+      0.1183,
+      -0.0914
+    ],
+    "ojo": [
+      0.034,
+      0.0819,
+      0.0844
+    ],
+    "profundidad_cabeza": 0.1495
   }
 }

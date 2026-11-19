@@ -11,6 +11,8 @@ Este demo solo incluye como recursos externos **dos tipografías con licencia OF
 | Sector de la aldea, lluvia y efectos | Generado por código (`escenario.gd`, `lluvia.gd`, `efectos.gd`) | Igual que el proyecto |
 | Kit de la aldea, torre monumental y cuerpo del personaje (`assets/modelos/*.glb`) | Generados por scripts de Blender (`tools/blender/`) | Igual que el proyecto |
 | Texturas (`assets/texturas/*.png`) | Horneadas en Blender a partir de nodos procedurales (`tools/blender/texturas.py`) | Igual que el proyecto |
+| Torre y ninja de modelos IA (`assets/modelos/torre_ia.glb`, `ninja_ia.glb`) | Derivados (reducción, color transferido, esqueleto, zonas) por `tools/blender/torre_ia.py` y `ninja_ia.py` a partir de modelos generados con TRELLIS y Meshy que aportó el usuario (`referencias/modelos-ia/`) | Según los términos de las herramientas con que se generaron (Meshy: depende del plan de la cuenta); verificar antes de una publicación fuera del uso no comercial |
+| Emblemas de clan (`assets/texturas/emblema_*.png`) | Dibujados por código (`tools/emblemas.py`) | Igual que el proyecto |
 | Imágenes de referencia (`referencias/amegakure/`) | Aportadas por el usuario como guía visual; no se incluyen en el APK | Uso interno de referencia |
 | Icono de la app (`icon.svg`) | Dibujado a mano en SVG para este proyecto | Igual que el proyecto |
 | Efectos de sonido (rayo, fuego, explosión, golpe, trueno, chapoteo, lluvia) | **Sintetizados por código** en `scripts/cliente/sonidos.gd` | Creación propia, dedicada al dominio público (CC0) |

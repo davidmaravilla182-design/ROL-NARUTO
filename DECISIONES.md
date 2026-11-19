@@ -151,3 +151,11 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
 - Cada jugador está en su propio equipo (todos contra todos) además de la IA; el botón «Reaparecer» del anfitrión reinicia todo y el de un invitado solo lo reanima a él.
 - La maestría y el «modo prueba» los manda el cliente también en red (es una prueba local entre amigos); en línea los guardaría el servidor.
 - Descubrimiento por difusión UDP: en algunos Android el filtro de multidifusión puede impedir recibir anuncios; por eso siempre está la opción de escribir la IP.
+
+
+## Prueba de arte con modelos IA (torre y ninja)
+- Torre: geometría de Meshy (forma más limpia) con el color de TRELLIS transferido por vértice; el horneado a textura UV se descartó porque la malla reducida de Meshy se despliega en miles de islas diminutas. Detalle triplanar en el shader. Informe y medidas en `referencias/modelos-ia/INFORME.md`.
+- La torre se movió de z −62 a z −76 porque el modelo IA es más ancho (42 m) y no debe tapar los edificios del canal; sigue fuera del área jugable.
+- Ninja: reemplaza al personaje de los jugadores (también la vista previa de la creación y los clones). El enemigo de la IA conserva el personaje anterior con impermeable y máscara, para distinguirlo.
+- La textura del ninja se reduce a 1024 px: +6,6 MB de memoria de video en lugar de +18,6 MB.
+- Impermeable con el ninja IA: recoloreo de chaleco y camisa (la capa del cuerpo anterior no encaja en el nuevo esqueleto).

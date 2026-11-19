@@ -34,16 +34,20 @@ var _luz_ojos: OmniLight3D
 var anim_actual := ""
 var cuerpo_continuo := false   # true si se usa la malla deformable de Blender (assets/modelos/cuerpo.glb)
 const RUTA_CUERPO := "res://assets/modelos/cuerpo.glb"
+const RUTA_NINJA := "res://assets/modelos/ninja_ia.glb"
 var sharingan := false
+var modelo_ia := false          # true: ninja del modelo generado por IA (tools/blender/ninja_ia.py)
+var _mat_ninja: ShaderMaterial
+var _malla_pelo: MeshInstance3D
 
 
 func construir(plantilla_id: String) -> void:
 	var d := Datos.personaje(plantilla_id)
-	construir_aspecto(d.get("aspecto", {}), str(d.get("aldea", "")), str(d.get("clan", "")))
+	construir_aspecto(d.get("aspecto", {}), str(d.get("aldea", "")), str(d.get("clan", "")), str(d.get("tipo", "")) == "jugador")
 
 
 ## Construye el personaje a partir de un aspecto (plantilla o personaje creado: Creacion.aspecto_visual).
-func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "") -> void:
+func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "", usar_ia := true) -> void:
 	var aldea := Datos.aldea(aldea_id)
 	var clan: Dictionary = Datos.mundo.get("clanes", {}).get(clan_id, {})
 	# Complexión: ancho y alto del cuerpo entero.
@@ -52,8 +56,11 @@ func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "")
 
 	var contorno_previo := Materiales.grosor_contorno
 	Materiales.grosor_contorno = 0.011 if Ajustes.g("contorno_personajes", true) else 0.0
-	cuerpo_continuo = ResourceLoader.exists(RUTA_CUERPO)
-	if cuerpo_continuo:
+	modelo_ia = usar_ia and ResourceLoader.exists(RUTA_NINJA) and Datos.graficos.has("ninja_ia")
+	cuerpo_continuo = modelo_ia or ResourceLoader.exists(RUTA_CUERPO)
+	if modelo_ia:
+		_cargar_ninja(aspecto, clan_id)
+	elif cuerpo_continuo:
 		_cargar_cuerpo(aspecto)
 	else:
 		esqueleto = Skeleton3D.new()
@@ -79,8 +86,12 @@ func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "")
 		ba.add_child(marco)
 		_adjuntos[h[0]] = marco
 
-	_construir_cuerpo(aspecto)
-	Vestimenta.vestir(self, aspecto, aldea, clan)
+	if modelo_ia:
+		_detalles_ninja(aspecto)
+		Vestimenta.vestir_ia(self, aspecto)
+	else:
+		_construir_cuerpo(aspecto)
+		Vestimenta.vestir(self, aspecto, aldea, clan)
 	Materiales.grosor_contorno = contorno_previo
 	# Une las piezas de cada hueso (los ojos quedan aparte: su material cambia con el modo ocular, pero es compartido).
 	for n in _adjuntos.keys():
@@ -147,6 +158,118 @@ func _cargar_cuerpo(a: Dictionary) -> void:
 				(mi as MeshInstance3D).visible = false
 			var col: Color = colores.get(base_n, Color(0.5, 0.5, 0.5))
 			(mi as MeshInstance3D).set_surface_override_material(i, Materiales.solido(col, 0.75 if nombre == "piel" else 0.9))
+
+
+## Ninja de los modelos IA: malla con textura recoloreada por zonas, cabello aparte y calcomanía del clan.
+func _cargar_ninja(a: Dictionary, clan_id: String) -> void:
+	var escena: Node3D = (load(RUTA_NINJA) as PackedScene).instantiate()
+	escena.name = "Cuerpo"
+	add_child(escena)
+	esqueleto = _buscar(escena, "Skeleton3D")
+	var conf: Dictionary = Datos.graficos["ninja_ia"]
+	var z: Dictionary = conf["zonas"]
+	var mallas: Array = []
+	_buscar_todos(escena, mallas)
+	var tex: Texture2D = null
+	for mi in mallas:
+		var m: Material = (mi as MeshInstance3D).mesh.surface_get_material(0)
+		if m is BaseMaterial3D and (m as BaseMaterial3D).albedo_texture != null:
+			tex = (m as BaseMaterial3D).albedo_texture
+	_mat_ninja = ShaderMaterial.new()
+	_mat_ninja.shader = Shaders.shader("ninja_ia")
+	_mat_ninja.set_shader_parameter("tex", tex)
+	for k in ["piel", "pelo", "chaleco", "camisa", "pantalon"]:
+		var o: Array = z[k]
+		_mat_ninja.set_shader_parameter("o_" + k, Color(o[0], o[1], o[2]))
+	recolorear(a)
+	if Materiales.grosor_contorno > 0.0:
+		_mat_ninja.next_pass = Shaders.material_contorno(Materiales.grosor_contorno * 0.8)
+	for mi in mallas:
+		var n := String((mi as MeshInstance3D).name)
+		if n.begins_with("EMBLEMA"):
+			var ruta := "res://assets/texturas/emblema_%s.png" % clan_id
+			if not ResourceLoader.exists(ruta):
+				(mi as MeshInstance3D).visible = false
+				continue
+			var me := StandardMaterial3D.new()
+			me.albedo_texture = load(ruta)
+			me.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+			me.alpha_scissor_threshold = 0.4
+			me.roughness = 0.8
+			me.cull_mode = BaseMaterial3D.CULL_DISABLED
+			(mi as MeshInstance3D).material_override = me
+			(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		elif n.begins_with("PELO"):
+			_malla_pelo = mi
+			var mp: ShaderMaterial = _mat_ninja.duplicate()
+			mp.set_shader_parameter("zona_pelo_forzada", 1.0)
+			(mi as MeshInstance3D).material_override = mp
+			# El cabello del modelo es el peinado "puntas"; los demás peinados son piezas del juego.
+			mi.visible = str(a.get("peinado", "puntas")) == "puntas"
+		else:
+			(mi as MeshInstance3D).material_override = _mat_ninja
+
+
+## Colores de la personalización sobre las zonas de la textura del modelo IA.
+func recolorear(a: Dictionary) -> void:
+	if _mat_ninja == null:
+		return
+	var z: Dictionary = Datos.graficos["ninja_ia"]["zonas"]
+	var origen := func(k): return Color(z[k][0], z[k][1], z[k][2])
+	_mat_ninja.set_shader_parameter("c_piel", Datos.color(str(a["piel"])) if a.has("piel") else origen.call("piel"))
+	_mat_ninja.set_shader_parameter("c_pelo", Datos.color(str(a["pelo"])) if a.has("pelo") else origen.call("pelo"))
+	_mat_ninja.set_shader_parameter("c_chaleco", Datos.color(str(a["chaleco"])) if a.has("chaleco") else origen.call("chaleco"))
+	_mat_ninja.set_shader_parameter("c_camisa", Datos.color(str(a["camisa"])) if a.has("camisa") else origen.call("camisa"))
+	if bool(a.get("capa", false)):
+		# Impermeable: el modelo IA no tiene capa propia; chaleco y camisa toman el color del impermeable.
+		var cc := Datos.color(str(a.get("capa_color", "#4a5164")))
+		_mat_ninja.set_shader_parameter("c_chaleco", cc)
+		_mat_ninja.set_shader_parameter("c_camisa", cc.darkened(0.15))
+	_mat_ninja.set_shader_parameter("c_pantalon", Datos.color(str(a["pantalon"])) if a.has("pantalon") else origen.call("pantalon"))
+	if _malla_pelo != null:
+		var mp: ShaderMaterial = _malla_pelo.material_override
+		for k in ["c_piel", "c_pelo", "c_chaleco", "c_camisa", "c_pantalon"]:
+			mp.set_shader_parameter(k, _mat_ninja.get_shader_parameter(k))
+
+
+## Ojos (solo visibles en modo ocular: la textura ya trae los ojos), peinado alternativo y nudo de la banda.
+func _detalles_ninja(a: Dictionary) -> void:
+	var conf: Dictionary = Datos.graficos["ninja_ia"]
+	_mat_ojos_normal = Shaders.material("ojo")
+	_mat_ojos_normal.set_shader_parameter("iris_normal", Datos.color(str(a.get("ojos", "#1a1a1a"))))
+	var o: Array = conf["ojo"]
+	for lado in [-1.0, 1.0]:
+		var ojo := MeshInstance3D.new()
+		var q := QuadMesh.new()
+		q.size = Vector2(0.034, 0.022)
+		ojo.mesh = q
+		ojo.material_override = _mat_ojos_normal
+		ojo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ojo.rotation_degrees = Vector3(0, 12 * lado, 0)
+		ojo.visible = false
+		_pieza("Cabeza", ojo, Vector3(float(o[0]) * lado, float(o[1]), float(o[2]) + 0.004))
+		_ojos.append(ojo)
+	_luz_ojos = OmniLight3D.new()
+	_luz_ojos.light_color = Color(1, 0.1, 0.1)
+	_luz_ojos.omni_range = 0.35
+	_luz_ojos.light_energy = 0.0
+	_luz_ojos.position = Vector3(0, float(o[1]), float(o[2]) + 0.1)
+	hueso("Cabeza").add_child(_luz_ojos)
+	if str(a.get("peinado", "puntas")) != "puntas":
+		# Peinado del juego, ajustado al tamaño de la cabeza del modelo IA.
+		var cont := Node3D.new()
+		cont.position = Vector3(0, -0.03, 0.015)
+		cont.scale = Vector3.ONE * 0.72
+		hueso("Cabeza").add_child(cont)
+		var antes: Node3D = _adjuntos["Cabeza"]
+		_adjuntos["Cabeza"] = cont
+		_pelo(a, Materiales.solido(Datos.color(str(a.get("pelo", "#141418"))), 0.45))
+		_adjuntos["Cabeza"] = antes
+	var nudo := NudoBanda.new()
+	var n: Array = conf["nudo"]
+	nudo.position = Vector3(float(n[0]), float(n[1]), float(n[2]))
+	hueso("Cabeza").add_child(nudo)
+	nudo.construir(Datos.color(str(a.get("banda", "#3a3f52"))).lightened(0.05))
 
 
 func _buscar_todos(n: Node, lista: Array) -> void:
@@ -325,6 +448,9 @@ func poner_sharingan(activo: bool) -> void:
 		return
 	sharingan = activo
 	(_mat_ojos_normal as ShaderMaterial).set_shader_parameter("activo", 1.0 if activo else 0.0)
+	if modelo_ia:
+		for o in _ojos:
+			o.visible = activo
 	_luz_ojos.light_energy = 0.8 if activo else 0.0
 
 
