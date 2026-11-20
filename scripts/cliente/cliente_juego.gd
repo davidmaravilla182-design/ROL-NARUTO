@@ -427,7 +427,7 @@ func _notification(what: int) -> void:
 func _process(delta: float) -> void:
 	_t_latido -= delta
 	if _t_latido <= 0.0:
-		_t_latido = 5.0
+		_t_latido = 2.0 if _jefe_activo else 5.0
 		var yo := _pos_entidad(mi_id) if mi_id >= 0 else Vector3.ZERO
 		Registro.latido("· jugador %s · visuales %d" % [str(yo.snapped(Vector3.ONE * 0.1)), _visuales.size()])
 	_actualizar_tiempo()
@@ -885,6 +885,9 @@ func _procesar_evento(ev: Dictionary) -> void:
 	var id := int(ev.get("entidad", -1))
 	if str(ev["tipo"]) in EVENTOS_REGISTRO and not str(ev.get("accion", "")) in ["objetivo", "rugido"]:
 		Registro.nota("evento %s %s %s" % [ev["tipo"], str(ev.get("accion", "")), str(ev.get("titulo", ev.get("id", "")))])
+	elif _jefe_activo and not str(ev["tipo"]) in ["mision", "mensaje"]:
+		# Con el jefe en pantalla se anota cada efecto (para encontrar cuál cierra la app en algunos celulares).
+		Registro.nota("ev %s %s %s" % [ev["tipo"], str(ev.get("jutsu", ev.get("accion", ""))), str(ev.get("forma", ""))])
 	tecnicas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
 	genericas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
 	match str(ev["tipo"]):

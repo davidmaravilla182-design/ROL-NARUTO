@@ -28,7 +28,7 @@ static func iniciar() -> void:
 				if ultima.contains("] " + c):
 					limpia = true
 			if not limpia:
-				cierre_anterior = lineas.slice(maxi(lineas.size() - 14, 0))
+				cierre_anterior = lineas.slice(maxi(lineas.size() - 22, 0))
 		var g := FileAccess.open(RUTA_ANTERIOR, FileAccess.WRITE)
 		if g != null:
 			g.store_string(txt)

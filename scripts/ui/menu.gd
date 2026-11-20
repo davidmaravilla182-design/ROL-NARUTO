@@ -241,7 +241,7 @@ func _aviso_cierre() -> void:
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(900, 0)
-	panel.position -= Vector2(450, 260)
+	panel.position -= Vector2(450, 330)
 	var caja := VBoxContainer.new()
 	caja.add_theme_constant_override("separation", 10)
 	panel.add_child(caja)
@@ -249,7 +249,7 @@ func _aviso_cierre() -> void:
 	caja.add_child(_label(Datos.texto("registro_pide"), 20, Color(0.85, 0.88, 0.95)))
 	var txt := Label.new()
 	txt.text = "\n".join(Registro.cierre_anterior)
-	txt.add_theme_font_size_override("font_size", 15)
+	txt.add_theme_font_size_override("font_size", 12)
 	txt.add_theme_color_override("font_color", Color(0.8, 0.95, 0.8))
 	txt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	caja.add_child(txt)
