@@ -17,6 +17,7 @@ func _initialize() -> void:
 	probar_eventos()
 	probar_jefe()
 	probar_orilla_lago()
+	probar_jutsus_tras_mision()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -40,6 +41,33 @@ func probar_orilla_lago() -> void:
 		y_min = minf(y_min, j.pos.y)
 	comprobar(s.mapa.en_lago(j.pos2()) and j.agua == 1 and y_min > s.mapa.nivel_agua() - 0.2,
 		"de la explanada al lago se camina sobre el agua (y mínima %.2f, agua %d)" % [y_min, j.agua])
+	s.free()
+
+
+## Al terminar una misión el cliente reenvía el personaje (premios); el servidor reinicia el repertorio con él, así
+## que el cliente reenvía también los jutsus equipados. Sin eso los poderes dejaban de funcionar tras cada misión.
+func probar_jutsus_tras_mision() -> void:
+	var s := servidor(0)
+	var j := s.entidad_de_peer(1)
+	var pj := Creacion.nuevo()
+	pj["nombre"] = "Prueba"
+	s.recibir_comando(1, {"t": Protocolo.C_PERSONAJE, "datos": pj})
+	var inicial: Array = (j.repertorio.get("activos", []) as Array).filter(func(x): return str(x) != "")
+	# El jugador equipa sus jutsus en otro orden (los de su elección).
+	var elegidos := inicial.duplicate()
+	elegidos.reverse()
+	while elegidos.size() < 4:
+		elegidos.append("")
+	s.recibir_comando(1, {"t": Protocolo.C_REPERTORIO, "activos": elegidos, "modo": "", "niveles_max": {}, "maestria": {}})
+	var antes: Array = (j.repertorio.get("activos", []) as Array).duplicate()
+	# Fin de misión: personaje y repertorio, en ese orden (cliente_juego.gd → mision fin).
+	pj["ryo"] = 500
+	s.recibir_comando(1, {"t": Protocolo.C_PERSONAJE, "datos": pj})
+	s.recibir_comando(1, {"t": Protocolo.C_REPERTORIO, "activos": elegidos, "modo": "", "niveles_max": {}, "maestria": {}})
+	comprobar(j.repertorio.get("activos", []) == antes and not inicial.is_empty(), "tras una misión se conservan los jutsus equipados (%s)" % str(j.repertorio.get("activos", [])))
+	var cliente := FileAccess.get_file_as_string("res://scripts/cliente/cliente_juego.gd")
+	var i := cliente.find("transporte.enviar(Perfil.comando_personaje())\n\t\t\ttransporte.enviar(Perfil.comando())")
+	comprobar(i >= 0, "el cliente reenvía el repertorio después del personaje al terminar una misión")
 	s.free()
 
 

@@ -1240,8 +1240,11 @@ func _evento_mision(ev: Dictionary) -> void:
 			mapa.arena_lago = Vector3.ZERO
 			var asc := Perfil.aplicar_mision(ev)
 			Perfil.guardar()
-			# El servidor ve el progreso nuevo (capítulo, pergaminos) en el personaje.
+			# El servidor ve el progreso nuevo (capítulo, pergaminos) en el personaje. Al recibirlo reinicia el
+			# repertorio, así que se reenvían también los jutsus equipados (si no, los poderes dejaban de funcionar
+			# después de cada misión).
 			transporte.enviar(Perfil.comando_personaje())
+			transporte.enviar(Perfil.comando())
 			var extra := ""
 			if asc != "":
 				extra = Datos.texto("msg_ascenso", [Datos.texto("rango_" + asc)])
