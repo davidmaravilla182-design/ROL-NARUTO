@@ -951,5 +951,52 @@
     "rango": "jonin",
     "linajes": [],
     "contratos": []
+  },
+  "tres_colas": {
+    "nombre": "Tres Colas",
+    "tipo": "jefe",
+    "clan": "sin_clan",
+    "aldea": "",
+    "naturalezas": [
+      "agua"
+    ],
+    "atributos": {
+      "ninjutsu": 5,
+      "taijutsu": 3,
+      "genjutsu": 4,
+      "inteligencia": 2,
+      "fuerza": 5,
+      "velocidad": 1,
+      "estamina": 5,
+      "sellos": 1
+    },
+    "jutsus": [],
+    "ia": {
+      "vida_mult": 28.0
+    },
+    "aspecto": {},
+    "rango": "kage",
+    "linajes": [],
+    "contratos": [],
+    "jefe": {
+      "radio_golpe": 7.0,
+      "altura": 9.0,
+      "fases": [
+        0.7,
+        0.45,
+        0.2
+      ],
+      "cada_balas": 2.4,
+      "cada_ola": 7.0,
+      "cada_rodar": 8.0,
+      "rodar_velocidad": 26.0,
+      "aturdido_tras_rodar": 3.0,
+      "copias": 3,
+      "cada_bomba": 9.0,
+      "carga_bomba": 3.0,
+      "ventana_sellado": 14.0,
+      "sellos_secuencia": 5,
+      "sellos_min": 3
+    }
   }
 }

@@ -35,7 +35,7 @@ static func ejecutar(s: ServidorJuego, e: EntidadServidor, id: String, nivel: in
 			e.poner_estado("tai", 0.38, {"jutsu": id, "nivel": nivel, "sec": sec, "objetivo": obj.id, "desde": e.pos, "golpeado": false})
 		_:
 			# Lotos y Liger Bomb: hay que tener al rival a mano (avance rápido de hasta el alcance).
-			if obj == null or obj.pos.distance_to(e.pos) > alcance + 3.0:
+			if obj == null or obj.pos.distance_to(e.pos) > alcance + 3.0 or obj.tipo == "jefe":
 				e.poner_estado("libre", 0.0)
 				s._mensaje(e, "msg_sin_objetivo")
 				return
@@ -71,7 +71,7 @@ static func actualizar(s: ServidorJuego, e: EntidadServidor, dt: float) -> void:
 			for o in s.entidades:
 				if o == e or not o.vivo() or o.equipo == e.equipo or o.id in golpeados:
 					continue
-				if o.pos.distance_to(e.pos) <= 1.6:
+				if o.pos.distance_to(e.pos) <= 1.6 + o.radio_golpe:
 					golpeados.append(o.id)
 					_golpear(s, e, o, id, nivel, nd, float(nd["dano"]), dir, true)
 					s._evento({"tipo": "tai", "fase": "impacto", "entidad": e.id, "jutsu": id, "nivel": nivel, "sec": sec, "pos": o.centro()})
@@ -180,6 +180,7 @@ static func romper(s: ServidorJuego, e: EntidadServidor, id: String, nivel: int,
 	if e.estado in ["atrapado", "aturdido", "dormido"] and str(Datos.jutsu(str(e.accion.get("jutsu", ""))).get("clase", "")) == "genjutsu":
 		habia = true
 	e.poner_estado("libre", 0.0)
+	Jefes.romper_niebla(s, e)   # también disipa la niebla de alucinaciones del Tres Colas
 	e.efectos["inmune_genjutsu"] = {"t": float(nd.get("inmune", 2.0)), "nivel": nivel}
 	if float(nd.get("devuelve", 0.0)) > 0.0 and fuente >= 0:
 		var f := s.entidad(fuente)

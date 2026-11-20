@@ -289,5 +289,13 @@
   "mis_recompensa": "+{0} XP · +{1} ryō",
   "mis_jugar": "Jugar",
   "mis_repetir": "Repetir",
-  "mis_bloqueado": "Bloqueado"
+  "mis_bloqueado": "Bloqueado",
+  "sellado_titulo": "¡Sella al Tres Colas! Forma los sellos en orden",
+  "msg_sin_sellado": "Necesitas Sellos 3 para sellar a un bijuu",
+  "msg_sellado_fallido": "El sello falló…",
+  "msg_niebla_rota": "¡La niebla de alucinaciones se disipa!",
+  "jefe_fase": "Fase {0}",
+  "msg_jefe_huye": "El Tres Colas se hunde en el lago y escapa",
+  "msg_jefe_sellado": "¡Tres Colas sellado!",
+  "msg_vencido_sin_sellos": "Lo venciste, pero sin Sellos 3 no puedes sellarlo"
 }

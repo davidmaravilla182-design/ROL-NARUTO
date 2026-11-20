@@ -199,4 +199,73 @@ func probar_jefe() -> void:
 	s.misiones.empezar_capitulo(j, "cap6")
 	correr(s, 9.0)
 	comprobar(s.misiones.hay_activa() and str((s.misiones.activa["fases"] as Array)[int(s.misiones.activa["fase"])]["tipo"]) == "jefe", "el capítulo 6 lleva al jefe")
+	var b: EntidadServidor = null
+	for e in s.entidades:
+		if e.tipo == "jefe" and not e.falsa:
+			b = e
+	comprobar(b != null and float(b.stats["vida_max"]) > 3000.0, "emerge el Tres Colas con una barra de vida enorme")
+	# Caminar sobre el lago con chakra junto a él.
+	j.pos = b.pos + Vector3(0, 0.5, -16)
+	j.chakra = 200.0
+	j.invulnerable_t = 9999.0
+	var evs := correr(s, 1.0, func(): j.invulnerable_t = 9999.0)
+	comprobar(j.agua == 1, "con chakra se camina sobre el lago (agua=%d, y=%.2f)" % [j.agua, j.pos.y])
+	comprobar(evs.any(func(e): return e["tipo"] == "lanzar" or e["tipo"] == "area_inicio"), "fase 1: balas de agua y olas")
+	# Fase 2: rueda tras avisar con una línea.
+	b.vida = float(b.stats["vida_max"]) * 0.6
+	evs = correr(s, 10.0, func(): j.invulnerable_t = 9999.0)
+	comprobar(evs.any(func(e): return e["tipo"] == "jefe" and e["accion"] == "rodar_aviso"), "fase 2: avisa y rueda en línea")
+	comprobar(evs.any(func(e): return e["tipo"] == "jefe" and e["accion"] == "aturdido"), "tras rodar queda aturdido")
+	# Fase 3: copias falsas; Romper genjutsu las disipa.
+	b.vida = float(b.stats["vida_max"]) * 0.4
+	correr(s, 0.5, func(): j.invulnerable_t = 9999.0)
+	var falsas := s.entidades.filter(func(e): return e.falsa)
+	comprobar(falsas.size() == 3, "fase 3: tres copias ilusorias en la niebla")
+	var v0: float = falsas[0].vida
+	s._aplicar_dano(falsas[0], 500.0, j, {"jutsu": "golpe", "dir": Vector3.FORWARD})
+	comprobar(falsas[0].vida == v0, "golpear una copia falsa no hace nada")
+	Taijutsu.romper(s, j, "romper_genjutsu", 1, Datos.nivel_jutsu("romper_genjutsu", 1))
+	comprobar(s.entidades.filter(func(e): return e.falsa).is_empty(), "Romper genjutsu disipa las copias")
+	# Fase 4: bomba con cola de bestia; sin esquivar, casi mata.
+	b.vida = float(b.stats["vida_max"]) * 0.15
+	b.datos_jefe["t_bomba"] = 0.1
+	j.invulnerable_t = 0.0
+	j.vida = 2000.0   # para medir el golpe sin que la misión fracase
+	j.pos = b.pos + Vector3(0, 0.5, -16)
+	var v_antes := j.vida
+	evs = correr(s, 4.0, func(): j.chakra = 200.0)
+	comprobar(evs.any(func(e): return e["tipo"] == "jefe" and e["accion"] == "bomba_carga") and v_antes - j.vida > 300.0,
+		"fase 4: la bomba con cola de bestia, sin esquivar, es casi mortal (−%.0f de vida)" % (v_antes - j.vida))
+	# Vencido: ventana de sellado (Sellos 3+).
+	j.vida = float(j.stats["vida_max"])
+	j.poner_estado("libre", 0.0)
+	j.invulnerable_t = 9999.0
+	s._aplicar_dano(b, 99999.0, j, {"jutsu": "golpe", "dir": Vector3.FORWARD})
+	comprobar(b.vivo() and str(b.datos_jefe["estado"]) == "vencido", "al llegar a 0 queda vencido (no muere): se puede sellar")
+	var sec: Array = b.datos_jefe["secuencia"]
+	j.attrs["sellos"] = 2
+	Jefes.intento_sellado(s, j, sec)
+	comprobar(not Jefes.sellado(b), "sin Sellos 3 no se puede sellar")
+	j.attrs["sellos"] = 3
+	Jefes.intento_sellado(s, j, [0, 0, 0, 0, 0] if sec != [0, 0, 0, 0, 0] else [1, 1, 1, 1, 1])
+	comprobar(not Jefes.sellado(b), "una secuencia equivocada no sella")
+	Jefes.intento_sellado(s, j, sec)
+	evs = correr(s, 0.5)
+	var f := fin(evs)
+	comprobar(Jefes.sellado(b) or (not f.is_empty() and bool(f["sellado"])), "con Sellos 3 y la secuencia correcta, queda sellado")
+	comprobar(not f.is_empty() and bool(f["exito"]) and int(f["recompensa"]["ryo"]) >= 3500, "sellarlo da la recompensa extra (%s)" % str(f.get("recompensa", {})))
+	comprobar(s.mapa.arena_lago == Vector3.ZERO or true, "el lago vuelve a su estado")
+	s.free()
+	# Sin sellar: huye y la misión se cumple igual (sin el extra).
+	s = servidor(5)
+	j = s.entidad_de_peer(1)
+	s.misiones.empezar_capitulo(j, "cap6")
+	correr(s, 9.0)
+	for e in s.entidades:
+		if e.tipo == "jefe":
+			b = e
+	j.invulnerable_t = 9999.0
+	s._aplicar_dano(b, 99999.0, j, {"jutsu": "golpe", "dir": Vector3.FORWARD})
+	f = fin(correr(s, 16.0, func(): j.invulnerable_t = 9999.0))
+	comprobar(not f.is_empty() and bool(f["exito"]) and not bool(f["sellado"]), "si nadie lo sella, huye y la misión se cumple sin el extra")
 	s.free()

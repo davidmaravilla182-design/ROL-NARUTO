@@ -575,6 +575,7 @@ func _on_estado(est: Dictionary) -> void:
 	var yo: Dictionary = {}
 	var enemigo: Dictionary = {}
 	var enemigos: Array = []
+	var jefe_e: Dictionary = {}
 	if est.has("jugadores"):
 		for inf in est["jugadores"]:
 			var iid := int(inf["id"])
@@ -597,6 +598,8 @@ func _on_estado(est: Dictionary) -> void:
 			yo = e
 		elif e["tipo"] == "enemigo":
 			enemigos.append(e)
+		elif e["tipo"] == "jefe" and not bool(e.get("falsa", false)):
+			jefe_e = e
 	for id in _visuales.keys():
 		if not vistos.has(id):
 			(_visuales[id]["nodo"] as Node).queue_free()
@@ -614,6 +617,7 @@ func _on_estado(est: Dictionary) -> void:
 			if float(en["vida"]) > 0.0 and dd < mejor:
 				mejor = dd
 				enemigo = en
+	_modo_jefe(jefe_e)
 	if not yo.is_empty():
 		hud.actualizar(yo, enemigo)
 		_actualizar_mapa(yo, est["entidades"])
@@ -622,8 +626,35 @@ func _on_estado(est: Dictionary) -> void:
 		_comprobar_fin(yo, enemigos[0] if not enemigos.is_empty() else {})
 
 
+## Con un jefe en pantalla: barra enorme, música de jefe y cámara más abierta.
+var _jefe_activo := false
+
+
+func _modo_jefe(jefe_e: Dictionary) -> void:
+	var activo := not jefe_e.is_empty()
+	hud.barra_jefe(jefe_e)
+	if activo != _jefe_activo:
+		_jefe_activo = activo
+		sonidos.bucle("musica_jefe", "musica_jefe", activo, -9.0)
+	var dist_obj := 11.0 if activo else 6.2
+	camara.distancia = lerpf(camara.distancia, dist_obj, 0.05)
+
+
 func _crear_visual(e: Dictionary) -> void:
 	var nodo: Node3D
+	if e["tipo"] == "jefe":
+		var jv := JefeVisual.new()
+		add_child(jv)
+		jv.construir()
+		jv.falsa = bool(e.get("falsa", false))
+		# Genjutsu 3+: las copias de la niebla se ven falsas (parpadean).
+		jv.translucida = jv.falsa and Atributos.v(hud.atributos_jugador, "genjutsu") >= 3.0
+		nodo = jv
+		nodo.name = "Entidad_%d" % int(e["id"])
+		nodo.position = e["pos"]
+		nodo.rotation.y = float(e["yaw"])
+		_visuales[int(e["id"])] = {"nodo": nodo, "tipo": e["tipo"], "destino": e["pos"], "yaw": e["yaw"], "estado": "", "carga": null, "vel": 0.0, "paso": -1}
+		return
 	if e["tipo"] == "muneco":
 		var m := MunecoVisual.new()
 		add_child(m)
@@ -719,6 +750,11 @@ func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
 	if v["tipo"] == "muneco":
 		var mu: MunecoVisual = v["nodo"]
 		mu.poner_caido(estado == "muerto")
+		return
+	if v["tipo"] == "jefe":
+		var jv: JefeVisual = v["nodo"]
+		jv.rodando = estado == "jefe_rodar" and float(e.get("estado_total", 0.0)) - float(e.get("estado_t", 0.0)) > 1.4
+		jv.aturdido = estado == "aturdido"
 		return
 	var pv: PersonajeVisual = v["nodo"]
 	var modo := str(e.get("modo", ""))
@@ -905,6 +941,8 @@ func _procesar_evento(ev: Dictionary) -> void:
 			_evento_tai(ev)
 		"mision":
 			_evento_mision(ev)
+		"jefe":
+			_evento_jefe(ev)
 		"escena":
 			ui_mision.escena(ev.get("lineas", []), bool(ev.get("pajaro", false)), float(ev.get("duracion", 4.0)))
 		"anuncio":
@@ -1074,6 +1112,79 @@ func _evento_tai(ev: Dictionary) -> void:
 				efectos.estrellar(Vector3(ev["pos"].x, 0.0, ev["pos"].z))
 
 
+## El Tres Colas: aparición, ataques telegrafiados, niebla, bomba y sellado.
+var _sellado_ui: SelladoUi
+var _niebla_antes := -1.0
+
+
+func _evento_jefe(ev: Dictionary) -> void:
+	var pos: Vector3 = ev.get("pos", Vector3.ZERO)
+	match str(ev.get("accion", "")):
+		"aparece":
+			var ar: Vector3 = ev.get("arena", Vector3.ZERO)
+			mapa.arena_lago = ar   # el cliente también deja caminar sobre el lago (predicción)
+			efectos.chapoteo(pos, 6.0, mapa.nivel_agua())
+			genericas._salpicadura(pos, 12.0, 3)
+			efectos.sacudir_desde(pos, 1.2)
+			sonidos.tocar("trueno", 0.0, 0.6)
+			ui_mision.anuncio(str(ev.get("nombre", "")))
+		"rugido":
+			sonidos.tocar("trueno", -10.0, 0.5)
+		"fase":
+			ui_mision.anuncio(Datos.texto("jefe_fase", [int(ev["fase"])]))
+			efectos.sacudir_desde(pos, 0.8)
+		"rodar_aviso":
+			efectos.aviso(ev["desde"], ev["hasta"], float(ev["duracion"]), false)
+			sonidos.tocar("tambor", -2.0, 0.7)
+		"rodar":
+			efectos.sacudir_desde(_pos_entidad(int(ev["entidad"])), 0.6)
+		"aturdido":
+			genericas._salpicadura(pos, 6.0, 2)
+		"niebla":
+			if efectos.escenario != null and efectos.escenario.entorno != null:
+				_niebla_antes = efectos.escenario.entorno.fog_density
+				create_tween().tween_property(efectos.escenario.entorno, "fog_density", 0.05, 1.5)
+			sonidos.tocar("trueno", -8.0, 1.6)
+		"niebla_fin":
+			if efectos.escenario != null and efectos.escenario.entorno != null and _niebla_antes >= 0.0:
+				create_tween().tween_property(efectos.escenario.entorno, "fog_density", _niebla_antes, 1.5)
+		"copia_disipada":
+			efectos.humo(pos)
+		"bomba_carga":
+			genericas.bomba_bijuu_carga(_pos_entidad(int(ev["entidad"])), ev["punto"], float(ev["duracion"]), float(ev["radio"]))
+			sonidos.tocar("chidori", -12.0, 0.4)
+		"bomba":
+			genericas.bomba_bijuu(pos, float(ev["radio"]))
+			hud.destello_pantalla(0.5, 0.8)
+			sonidos.tocar("explosion", 2.0, 0.5)
+		"vencido":
+			if int(ev.get("para", -1)) == mi_id:
+				if bool(ev.get("puede_sellar", false)):
+					_sellado_ui = SelladoUi.new()
+					_sellado_ui.sonidos = sonidos
+					hud.add_child(_sellado_ui)
+					_sellado_ui.iniciar(ev["secuencia"], float(ev["duracion"]))
+					_sellado_ui.enviado.connect(func(sec): transporte.enviar({"t": Protocolo.C_MISION, "accion": "sellar", "id": "", "sellos": sec}))
+				else:
+					hud.mensaje(Datos.texto("msg_vencido_sin_sellos"), 4.0)
+		"sellado":
+			mapa.arena_lago = Vector3.ZERO
+			tecnicas.golpe_definitivo(pos, 8.0)
+			hud.mensaje(Datos.texto("msg_jefe_sellado"), 3.0)
+			var jv: Node3D = _visuales.get(int(ev["entidad"]), {}).get("nodo", null)
+			if jv != null:
+				create_tween().tween_property(jv, "scale", Vector3.ONE * 0.05, 1.2).set_ease(Tween.EASE_IN)
+		"sellado_fallido":
+			hud.mensaje(Datos.texto("msg_sellado_fallido"), 1.5)
+		"huye":
+			mapa.arena_lago = Vector3.ZERO
+			hud.mensaje(Datos.texto("msg_jefe_huye"), 3.0)
+			genericas._salpicadura(pos, 12.0, 3)
+			var jv2: Node3D = _visuales.get(int(ev["entidad"]), {}).get("nodo", null)
+			if jv2 != null:
+				create_tween().tween_property(jv2, "position:y", jv2.position.y - 14.0, 2.5)
+
+
 func _evento_mision(ev: Dictionary) -> void:
 	match str(ev.get("accion", "")):
 		"inicio":
@@ -1082,6 +1193,7 @@ func _evento_mision(ev: Dictionary) -> void:
 			ui_mision.objetivo(str(ev.get("objetivo", "")), str(ev.get("contador", "")), float(ev.get("limite", 0.0)), float(ev.get("t", 0.0)))
 		"fin":
 			ui_mision.mision_fin()
+			mapa.arena_lago = Vector3.ZERO
 			var asc := Perfil.aplicar_mision(ev)
 			Perfil.guardar()
 			# El servidor ve el progreso nuevo (capítulo, pergaminos) en el personaje.

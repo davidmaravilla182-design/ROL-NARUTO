@@ -15,6 +15,7 @@ func _initialize() -> void:
 	probar_balance()
 	probar_sorteo()
 	probar_servidor()
+	probar_progreso()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -189,3 +190,30 @@ func probar_servidor() -> void:
 	s.recibir_comando(1, {"t": "personaje", "datos": malo})
 	comprobar(j.nombre == "Yuki", "un personaje con atributos de más se rechaza")
 	s.free()
+
+
+## Progreso guardado en el perfil: recompensas de misión, cosméticos, pergaminos y ascenso (sin tocar el disco).
+func probar_progreso() -> void:
+	Perfil._cargado = true
+	var pj := pj_base()
+	pj["misiones"] = {"capitulo": 4, "completadas": [], "pruebas": {}}
+	Perfil.personajes = [pj]
+	Perfil.indice = 0
+	Perfil.sumar_xp(650.0)
+	var asc := Perfil.aplicar_mision({"exito": true, "tipo_mision": "capitulo", "id": "cap5", "prueba": "examen_chunin",
+		"recompensa": {"ryo": 800, "pergaminos": ["lariat"], "cosmeticos": ["chaleco_chunin", "prenda_carmesi"]}})
+	comprobar(int(pj["ryo"]) == 800 and "lariat" in pj["pergaminos"] and "prenda_carmesi" in pj["cosmeticos"], "la misión deja ryō, pergaminos y cosméticos en el personaje")
+	comprobar(int(pj["misiones"]["capitulo"]) == 5 and bool(pj["misiones"]["pruebas"]["examen_chunin"]), "avanza el capítulo y queda superada la prueba")
+	comprobar(asc == "chunin" and str(pj["rango"]) == "chunin", "con XP y el Examen Chūnin superado, asciende a Chūnin")
+	comprobar(Perfil.equipar_cosmetico("prenda_carmesi") and str(pj["aspecto"]["color_prenda"]) == "#7a1f2a", "equipar un cosmético cambia el aspecto")
+	comprobar(not Perfil.equipar_cosmetico("capa_tres_colas"), "no se puede equipar un cosmético que no se ganó")
+	var v := Creacion.validar(pj)
+	comprobar(v["ok"] and (v["pj"]["pergaminos"] as Array).has("lariat") and int(v["pj"]["ryo"]) == 800, "el servidor acepta el progreso guardado")
+	var f := Creacion.ficha(v["pj"])
+	comprobar(Repertorio.requisitos("kirin", f, "sharingan")["motivos"].size() >= 1, "sin pergamino, el Kirin sigue pidiendo su rango")
+	(v["pj"]["pergaminos"] as Array).append("kirin")
+	var f2 := Creacion.ficha(v["pj"])
+	var mot: Array = Repertorio.requisitos("kirin", f2, "sharingan")["motivos"]
+	comprobar(not mot.any(func(m): return "Jōnin" in str(m) or "jonin" in str(m)), "un pergamino enseña el jutsu aunque falte el rango (%s)" % str(mot))
+	Perfil.personajes = []
+	Perfil.indice = -1

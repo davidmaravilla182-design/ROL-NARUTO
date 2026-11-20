@@ -18,7 +18,12 @@
   (emboscada con aviso en el minimapa por Inteligencia 4, alarma de intruso, cazarrecompensas con nombre) y duelo con el
   instructor (+1 punto de atributo o prueba de ascenso); 8 NPC nuevos; recompensas aplicadas al perfil (ryō, pergaminos
   que saltan el requisito de rango, cosméticos equipables, ascenso con XP + prueba); pantalla Misiones; 21 pruebas.
-- [ ] 4. Jefe Tres Colas: 4 fases, sellado (Sellos 3+), música y cámara de jefe; marcador hasta tener su imagen.
+- [x] 4. Jefe Tres Colas: 4 fases, sellado (Sellos 3+), música y cámara de jefe; marcador hasta tener su imagen.
+  Hecho: `scripts/servidor/jefes.gd` (balas en abanico y olas; rodar con línea de aviso y aturdido; niebla con 3 copias
+  que Genjutsu 3+ distingue y Romper genjutsu disipa; bomba con cola de bestia que sigue al objetivo y se fija 1 s antes;
+  a 0 de vida queda vencido: sellado con secuencia de sellos si Sellos 3+, si no huye). Lago pisable con chakra durante
+  la pelea, radio de golpe grande, inmune a control y empuje. Cliente: marcador procedural (caparazón con púas de coral,
+  ojo rojo, tres colas), barra enorme con fases, música de jefe sintetizada, cámara abierta, niebla, minijuego de sellado.
 - [ ] 5. Guardado completo, interfaz premium (ficha, misiones, pergaminos, recompensas), QA por cuadros.
 - [ ] Cierre: APK en demo-latest, workflow, reporte con la lista de imágenes para GPT.
 

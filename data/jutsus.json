@@ -4372,5 +4372,94 @@
    }
   ],
   "usable_controlado": true
+ },
+ "bala_bijuu": {
+  "nombre": "Balas de agua del bijuu",
+  "interno": true,
+  "mecanica": "generica",
+  "naturaleza": "agua",
+  "color": "#3f8cff",
+  "alcance": 60.0,
+  "recarga": 0.0,
+  "niveles": [
+   {
+    "descripcion": "Abanico de balas de agua.",
+    "costo": 0,
+    "dano": 24,
+    "mecanica": "salva",
+    "forma": "bala",
+    "cantidad": 5,
+    "abanico": 40,
+    "velocidad": 24,
+    "radio": 0.7,
+    "radio_explosion": 2.4,
+    "empuje": 7,
+    "derriba": false
+   }
+  ]
+ },
+ "ola_bijuu": {
+  "nombre": "Ola del bijuu",
+  "interno": true,
+  "mecanica": "generica",
+  "naturaleza": "agua",
+  "color": "#3f8cff",
+  "alcance": 60.0,
+  "recarga": 0.0,
+  "niveles": [
+   {
+    "descripcion": "Ola que barre la orilla.",
+    "costo": 0,
+    "dano": 34,
+    "mecanica": "area",
+    "forma": "ola",
+    "centro": "objetivo",
+    "radio": 6.0,
+    "retardo": 1.1,
+    "empuje": 14,
+    "derriba": true,
+    "sacudida": 0.6
+   }
+  ]
+ },
+ "bomba_bijuu": {
+  "nombre": "Bomba con cola de bestia",
+  "interno": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "color": "#2a1a4a",
+  "alcance": 80.0,
+  "recarga": 0.0,
+  "niveles": [
+   {
+    "descripcion": "Explosión que arrasa.",
+    "costo": 0,
+    "dano": 420,
+    "radio": 9.0,
+    "empuje": 25,
+    "derriba": true,
+    "sacudida": 2.0
+   }
+  ]
+ },
+ "rodar_bijuu": {
+  "nombre": "Embestida rodando",
+  "interno": true,
+  "mecanica": "generica",
+  "naturaleza": "",
+  "color": "#7a8a9a",
+  "alcance": 80.0,
+  "recarga": 0.0,
+  "niveles": [
+   {
+    "descripcion": "Rueda arrasando todo.",
+    "costo": 0,
+    "dano": 60,
+    "radio": 6.0,
+    "empuje": 20,
+    "derriba": true,
+    "sacudida": 1.2
+   }
+  ]
  }
 }

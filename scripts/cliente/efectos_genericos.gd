@@ -998,6 +998,32 @@ func area_golpe(ev: Dictionary) -> void:
 		efectos.sacudir_desde(pos, float(nd.get("sacudida", 0.1)) * 0.3)
 
 
+## Bomba con cola de bestia: una esfera oscura crece en la boca del bijuu y un anillo rojo marca dónde caerá.
+func bomba_bijuu_carga(desde: Vector3, punto: Vector3, dur: float, radio: float) -> void:
+	var esfera := Materiales.esfera(0.5, _brillo(Color(0.25, 0.05, 0.4), 3.0), 16)
+	add_child(esfera)
+	esfera.global_position = desde + Vector3(0, 4.0, 0) + (punto - desde).normalized() * 9.0
+	var tw := esfera.create_tween()
+	tw.tween_property(esfera, "scale", Vector3.ONE * 5.0, dur).set_ease(Tween.EASE_IN)
+	tw.tween_callback(esfera.queue_free)
+	var chupa := efectos.particulas({"cantidad": 60, "vida": 0.6, "radio": 6.0, "vel_min": -10.0, "vel_max": -6.0, "tam_min": 0.15, "tam_max": 0.3,
+		"color": Color(0.6, 0.3, 1.0, 0.8), "local": true})
+	esfera.add_child(chupa)
+	chupa.emitting = true
+	_anillo_suelo(Vector3(punto.x, punto.y + 0.1, punto.z), radio, Color(1.0, 0.15, 0.15), dur)
+	efectos.luz_temporal(esfera.global_position, Color(0.5, 0.2, 1.0), 6.0, 30.0, dur)
+
+
+func bomba_bijuu(pos: Vector3, radio: float) -> void:
+	_bola_expansiva(pos + Vector3(0, 1.0, 0), radio, Color(0.35, 0.1, 0.6), false)
+	_onda_aire(pos + Vector3(0, 1.0, 0), radio * 1.6, Color(0.8, 0.6, 1.0), true)
+	_salpicadura(pos, radio, 3)
+	efectos.marca_suelo(pos, radio, Color(0.05, 0.02, 0.08, 0.9), true)
+	efectos.sacudir_desde(pos, 2.0)
+	if efectos.escenario != null:
+		efectos.escenario.destello(Color(0.7, 0.5, 1.0), 6.0, 0.6)
+
+
 ## Genjutsu del repertorio: lo que se ve al lanzarlo sobre el objetivo.
 func _genjutsu_inicio(forma: String, pos: Vector3, r: float, nivel: int) -> void:
 	match forma:

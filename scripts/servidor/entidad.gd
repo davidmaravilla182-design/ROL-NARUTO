@@ -59,7 +59,10 @@ var combo_pos := -1
 var entreno: Dictionary = {}   # barras de entrenamiento 0-1 por atributo (y "control")
 var xp_total := 0.0
 var de_mision := false   # creado por una misión (se quita al terminarla)
-var minijefe := false        # posición dentro de la secuencia del combo (Atributos.secuencia_combo)
+var minijefe := false
+var radio_golpe := 0.0      # radio extra para que los golpes alcancen a criaturas enormes (jefes)
+var datos_jefe: Dictionary = {}
+var falsa := false         # copia ilusoria del jefe (niebla de alucinaciones)        # posición dentro de la secuencia del combo (Atributos.secuencia_combo)
 var combo_ventana := 0.0
 var invulnerable_t := 0.0
 
@@ -243,6 +246,8 @@ func a_estado() -> Dictionary:
 		"modo_activo": modo_activo,
 		"ceguera": ceguera,
 		"efectos": _efectos_estado(),
+		"jefe": {"fase": int(datos_jefe.get("fase", 1)), "estado": str(datos_jefe.get("estado", ""))} if not datos_jefe.is_empty() else {},
+		"falsa": falsa,
 		"niveles": _niveles_estado(),
 		"nombre": nombre,
 		"equipo": equipo,

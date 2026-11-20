@@ -725,6 +725,47 @@ func dialogo(texto: String, segundos := 4.5) -> void:
 
 
 ## Genjutsu: nubla y hace girar la pantalla durante «segundos» (entra y sale suave).
+## Barra del jefe: enorme, arriba, con su nombre y la fase.
+var _jefe_panel: Control
+var _jefe: Dictionary = {}
+var _jefe_mostrado := 1.0
+
+
+func barra_jefe(e: Dictionary) -> void:
+	if _jefe_panel == null:
+		_jefe_panel = Control.new()
+		_jefe_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		_jefe_panel.custom_minimum_size = Vector2(0, 90)
+		_jefe_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_jefe_panel.draw.connect(_dibujar_jefe)
+		add_child(_jefe_panel)
+	_jefe = e
+	_jefe_panel.visible = not e.is_empty()
+	if not e.is_empty():
+		var frac := clampf(float(e["vida"]) / maxf(float(e["vida_max"]), 1.0), 0.0, 1.0)
+		_jefe_mostrado = maxf(frac, move_toward(_jefe_mostrado, frac, 0.01))
+		_jefe_panel.queue_redraw()
+
+
+func _dibujar_jefe() -> void:
+	if _jefe.is_empty():
+		return
+	var ancho := _jefe_panel.size.x * 0.6
+	var r := Rect2(Vector2((_jefe_panel.size.x - ancho) * 0.5, 64), Vector2(ancho, 26))
+	var frac := clampf(float(_jefe["vida"]) / maxf(float(_jefe["vida_max"]), 1.0), 0.0, 1.0)
+	var fase := int((_jefe.get("jefe", {}) as Dictionary).get("fase", 1))
+	Estilo.texto(_jefe_panel, Vector2(0, 54), "%s  ·  %s" % [str(Datos.personaje(str(_jefe["plantilla"])).get("nombre", "")), Datos.texto("jefe_fase", [fase])],
+		26, Color(1.0, 0.85, 0.75), _jefe_panel.size.x, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_titulo(), 8)
+	_jefe_panel.draw_rect(r.grow(3), Color(0.02, 0.02, 0.03, 0.9))
+	_jefe_panel.draw_rect(Rect2(r.position, Vector2(r.size.x * _jefe_mostrado, r.size.y)), Color(1, 0.85, 0.7, 0.5))
+	_jefe_panel.draw_rect(Rect2(r.position, Vector2(r.size.x * frac, r.size.y)), Color(0.7, 0.1, 0.18))
+	_jefe_panel.draw_rect(Rect2(r.position, Vector2(r.size.x * frac, r.size.y * 0.35)), Color(1, 0.5, 0.55, 0.4))
+	# Marcas de las fases.
+	for u in [0.7, 0.45, 0.2]:
+		_jefe_panel.draw_line(r.position + Vector2(r.size.x * u, 0), r.position + Vector2(r.size.x * u, r.size.y), Color(1, 1, 1, 0.6), 2.0)
+	_jefe_panel.draw_rect(r, Estilo.ACERO_BORDE, false, 2.0)
+
+
 ## Destello blanco a pantalla completa (impacto del Kirin): aparece de golpe y se apaga.
 var _destello_ms := 0
 

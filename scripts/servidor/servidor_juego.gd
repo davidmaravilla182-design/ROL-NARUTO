@@ -939,9 +939,9 @@ func _resolver_golpe(e: EntidadServidor, paso: int) -> void:
 		var d := o.pos - e.pos
 		var dy := absf(d.y)
 		d.y = 0
-		if d.length() > alcance + Datos.sim("radio_entidad") or dy > 2.5:
+		if d.length() > alcance + Datos.sim("radio_entidad") + o.radio_golpe or dy > 2.5 + o.radio_golpe:
 			continue
-		if d.length() > 0.3 and f.angle_to(d.normalized()) > medio_ang:
+		if d.length() > 0.3 + o.radio_golpe and f.angle_to(d.normalized()) > medio_ang:
 			continue
 		# Choque: los dos golpean a la vez y de frente → chispas, ninguno recibe daño, ambos retroceden.
 		if not choque.is_empty() and o.estado == "golpe" and not o.accion.get("golpeado", true) and o.adelante().dot(-f) > 0.3:
@@ -1011,7 +1011,7 @@ func _actualizar_proyectiles(dt: float) -> void:
 				continue
 			if p.has("equipo") and e.equipo == int(p["equipo"]):
 				continue
-			if e.centro().distance_to(pos) <= radio + Datos.sim("radio_cuerpo"):
+			if e.centro().distance_to(pos) <= radio + Datos.sim("radio_cuerpo") + e.radio_golpe:
 				if p.get("perfora", false):
 					# Perforante: hiere al pasar y sigue de largo.
 					if not (e.id in p["golpeados"]):
@@ -1071,6 +1071,17 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		return
 	if atacante != null and info.has("empuje"):
 		info["empuje"] = float(info["empuje"]) * Atributos.mult_empuje(atacante.attrs)   # Fuerza: empuja más
+	if o.falsa:
+		_evento({"tipo": "resistido", "entidad": o.id, "pos": o.centro()})
+		return   # golpear una copia ilusoria no hace nada
+	if o.tipo == "jefe":
+		# Un bijuu no se derriba, no se lanza ni se empuja.
+		info["derriba"] = false
+		info["lanza"] = ""
+		info["empuje"] = 0.0
+		info["sin_reaccion"] = true
+		if o.estado == "aturdido":
+			cantidad *= 1.5   # tras rodar queda expuesto
 	# Guardia (bloqueo de NPC): para los golpes de frente; Fuerza 3+ con un golpe fuerte la rompe.
 	if o.estado == "bloqueo" and atacante != null and str(info.get("jutsu", "")) == "golpe" and o.adelante().dot(atacante.pos - o.pos) > 0.0:
 		if Atributos.rompe_guardia(atacante.attrs) and (bool(info.get("fuerte", false)) or int(info.get("paso", 0)) >= 5):
@@ -1119,6 +1130,8 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 	var dir: Vector3 = info.get("dir", Vector3.ZERO)
 	if info.get("dot", false) and o.vida > 0.0:
 		return   # el daño continuo no interrumpe ni derriba
+	if o.vida <= 0.0 and Jefes.al_morir(self, o):
+		return
 	if o.vida <= 0.0:
 		Tecnicas.apagar_modo(self, o)
 		o.sharingan = false
@@ -1167,7 +1180,7 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 
 func _mover(e: EntidadServidor, dt: float) -> void:
 	# Técnicas con cinemática propia (Loto, Liger Bomb, Lariat...): la posición la fija Taijutsu.
-	if e.estado == "tai" or e.estado == "atrapado_tai":
+	if e.estado == "tai" or e.estado == "atrapado_tai" or e.tipo == "jefe":
 		e.empuje = Vector3.ZERO
 		e.vel_y = 0.0
 		return
@@ -1195,7 +1208,7 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	nueva.y = e.pos.y + e.vel_y * dt
 	var suelo := mapa.altura_suelo(Vector2(nueva.x, nueva.z), e.pos.y)
 	# Agua del canal: con chakra se camina sobre ella (gasta poco a poco); sin chakra se hunde y nada.
-	var sobre_agua := mapa.en_canal(Vector2(nueva.x, nueva.z)) and suelo <= float(mapa.canal["nivel_agua"]) + 0.01
+	var sobre_agua := mapa.en_agua(Vector2(nueva.x, nueva.z)) and suelo <= mapa.nivel_agua() + 0.01
 	if not sobre_agua:
 		e.agua = 0
 	elif nueva.y <= suelo + 0.05:
@@ -1205,8 +1218,10 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 			entrenar(e, "control", "control_seg", dt)
 		else:
 			e.agua = 2
+	if e.agua == 1:
+		suelo = maxf(suelo, mapa.nivel_agua())   # de pie sobre el agua
 	if e.agua == 2:
-		suelo -= Datos.sim("nado_profundidad")
+		suelo = maxf(suelo, mapa.nivel_agua()) - Datos.sim("nado_profundidad")
 	if nueva.y <= suelo:
 		nueva.y = suelo
 		e.vel_y = 0.0

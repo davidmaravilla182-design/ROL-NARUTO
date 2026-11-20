@@ -16,6 +16,7 @@ var arcos: Array = []        # [{centro: Vector2, giro: float}]
 var tubos: Array = []        # [{centro: Vector2, giro: float, altura: float}]
 var muralla: Array = []      # tramos de la muralla (solo visual): [{centro: Vector2, giro: float, torre: bool}]
 var canal: Dictionary = {}   # {x_min, x_max, z_sur, z_norte, nivel_agua}
+var arena_lago := Vector3.ZERO   # pelea con un jefe en el lago: (x, z, radio) donde se camina sobre el agua; radio 0 = no hay
 var puentes: Array = []      # posiciones X de los puentes sobre el canal
 var inicio_jugador := Vector2.ZERO
 var inicio_enemigo := Vector2.ZERO
@@ -209,6 +210,8 @@ func _plataforma_torre(c: Vector2, giro: float) -> void:
 ## Altura del suelo bajo un punto: 0, la superficie de una plataforma/rampa o el techo de un obstáculo
 ## si se está encima (o cayendo sobre él). Así todos los techos y niveles son caminables.
 func altura_suelo(p: Vector2, y: float) -> float:
+	if en_lago(p):
+		return nivel_agua() - 3.0   # fondo del lago (con chakra se camina por encima del agua)
 	var h := float(canal["nivel_agua"]) if en_canal(p) else 0.0
 	for pl in plataformas:
 		var d: Vector2 = (p - pl["centro"]).abs()
@@ -255,6 +258,27 @@ func _toca_canal(p: Vector2, r: float) -> bool:
 		if cerca.distance_to(p) < r or cerca == p:
 			return true
 	return false
+
+
+func nivel_agua() -> float:
+	return float(canal.get("nivel_agua", -0.6))
+
+
+## ¿El punto está sobre el lago de la arena del jefe (fuera de la isla, el puente y la orilla)?
+func en_lago(p: Vector2) -> bool:
+	if arena_lago.z <= 0.0 or p.distance_to(Vector2(arena_lago.x, arena_lago.y)) > arena_lago.z:
+		return false
+	if radio_caminable > 0.0 and p.distance_to(centro_aldea) <= radio_caminable:
+		return false
+	for z in zonas_extra:
+		if (z as Rect2).has_point(p):
+			return false
+	return true
+
+
+## Agua sobre la que se camina con chakra: el canal y, durante la pelea con el jefe, el lago.
+func en_agua(p: Vector2) -> bool:
+	return en_canal(p) or en_lago(p)
 
 
 ## ¿El punto está sobre el agua del canal (fuera de los puentes)?
@@ -462,6 +486,8 @@ func dentro_de_la_aldea(q: Vector2, r := 0.0) -> Vector2:
 	var lim := radio_caminable - r
 	if q.distance_to(centro_aldea) <= lim:
 		return q
+	if arena_lago.z > 0.0 and q.distance_to(Vector2(arena_lago.x, arena_lago.y)) <= arena_lago.z - r:
+		return q   # arena del jefe en el lago
 	var mejor := centro_aldea + (q - centro_aldea).limit_length(lim)
 	var dmejor := mejor.distance_to(q)
 	for z in zonas_extra:

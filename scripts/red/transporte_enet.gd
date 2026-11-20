@@ -252,7 +252,7 @@ func _process(delta: float) -> void:
 ## Valores por defecto de los campos de cada entidad que no se envían cuando valen esto.
 const DEFECTO := {"pared": Vector2.ZERO, "agua": 0, "escalando": false, "en_charco": false, "empuje": false,
 	"sharingan": false, "modo_activo": false, "ceguera": 0.0, "jutsu": "", "paso": 0, "estado_t": 0.0,
-	"estado_total": 0.0, "modo": "", "efectos": {}, "recargas": {}, "niveles": {}, "nivel": 0, "en_suelo": true}
+	"estado_total": 0.0, "modo": "", "efectos": {}, "recargas": {}, "niveles": {}, "nivel": 0, "en_suelo": true, "jefe": {}, "falsa": false}
 
 
 func _recibir_estado(estado: Dictionary) -> void:

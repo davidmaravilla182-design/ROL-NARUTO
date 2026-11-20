@@ -36,6 +36,9 @@ func _initialize() -> void:
 	if OS.get_environment("GUION") == "comparar":
 		_guion_comparar()
 		return
+	if OS.get_environment("GUION") == "jefe":
+		_guion_jefe()
+		return
 	if OS.get_environment("GUION") == "locomocion":
 		_guion_locomocion()
 		return
@@ -281,6 +284,46 @@ func _guion_combate() -> void:
 		_accion("golpe")])
 	g.append([t0 + 0.3, func(): _guardar("x0_choque")])
 	g.append([t0 + 0.6, func(): quit(0)])
+	guion = g
+
+
+## Guion GUION=jefe: el capítulo 6 con el Tres Colas en sus 4 fases y la ventana de sellado.
+func _guion_jefe() -> void:
+	var g := [[0.85, func(): menu.queue_free(); juego = (load("res://escenas/juego.tscn") as PackedScene).instantiate(); root.add_child(juego)],
+		[1.4, func():
+			_enemigo(false)
+			var j = juego.servidor.entidad_de_peer(1)
+			j.personaje = {"misiones": {"capitulo": 5}}
+			j.attrs["sellos"] = 3
+			j.invulnerable_t = 9999.0
+			juego.servidor.misiones.empezar_capitulo(j, "cap6")]]
+	var jefe := func():
+		for e in juego.servidor.entidades:
+			if e.tipo == "jefe" and not e.falsa:
+				return e
+		return null
+	g.append([3.0, func(): _guardar("jefe_0_escena")])
+	g.append([10.6, func():
+		var b = jefe.call()
+		var j = juego.servidor.entidad_de_peer(1)
+		j.pos = b.pos + Vector3(4, 0.5, -20)
+		j.chakra = 999.0
+		_seguir(); _cam(PI, 12.0, -0.12, 3.0)])
+	g.append([11.4, func(): _guardar("jefe_1_aparece")])
+	g.append([12.6, func(): _guardar("jefe_2_balas")])
+	g.append([13.0, func(): var b = jefe.call(); b.vida = float(b.stats["vida_max"]) * 0.6; b.datos_jefe["t_rodar"] = 0.2])
+	g.append([13.9, func(): _guardar("jefe_3_rodar_aviso")])
+	g.append([15.2, func(): _guardar("jefe_4_rodando")])
+	g.append([17.0, func(): var b = jefe.call(); b.vida = float(b.stats["vida_max"]) * 0.4])
+	g.append([18.5, func(): _guardar("jefe_5_niebla_copias")])
+	g.append([19.0, func(): var b = jefe.call(); b.vida = float(b.stats["vida_max"]) * 0.15; b.datos_jefe["t_bomba"] = 0.2])
+	g.append([20.4, func(): _guardar("jefe_6_bomba_carga")])
+	g.append([22.3, func(): _guardar("jefe_7_bomba")])
+	g.append([23.0, func():
+		var b = jefe.call()
+		juego.servidor._aplicar_dano(b, 99999.0, juego.servidor.entidad_de_peer(1), {"jutsu": "golpe", "dir": Vector3.FORWARD})])
+	g.append([24.0, func(): _guardar("jefe_8_sellado_ui")])
+	g.append([24.5, func(): quit(0)])
 	guion = g
 
 

@@ -232,6 +232,8 @@ static func golpear(s: ServidorJuego, atacante: EntidadServidor, o: EntidadServi
 
 
 static func _controlar(s: ServidorJuego, o: EntidadServidor, estado: String, t: float, id: String, nivel: int) -> void:
+	if o.tipo == "jefe":
+		return   # un bijuu no se inmoviliza
 	if o.tipo != "muneco":
 		Tecnicas.apagar_modo(s, o)
 		o.poner_estado(estado, t, {"jutsu": id, "nivel": nivel})
@@ -317,7 +319,7 @@ static func _golpe_area(s: ServidorJuego, d: Dictionary) -> void:
 		if not o.vivo() or (dueno != null and (o == dueno or o.equipo == dueno.equipo)):
 			continue
 		var plano := Vector3(o.pos.x, 0, o.pos.z)
-		var dentro := plano.distance_to(pos) <= radio + Datos.sim("radio_cuerpo")
+		var dentro := plano.distance_to(pos) <= radio + Datos.sim("radio_cuerpo") + o.radio_golpe
 		if cono > 0.0:
 			# Ataques frontales: cono desde el lanzador hasta distancia + radio.
 			var desde: Vector3 = d["origen"]
@@ -395,7 +397,7 @@ static func repelido(s: ServidorJuego, p: Dictionary) -> bool:
 		if not o.vivo() or o.id == int(p["dueno"]):
 			continue
 		var r := float(_nd_aura(o).get("repele_radio", 0.0))
-		if r > 0.0 and o.centro().distance_to(p["pos"]) <= r + float(p["radio"]):
+		if r > 0.0 and o.centro().distance_to(p["pos"]) <= r + float(p["radio"]) + o.radio_golpe:
 			if p.has("equipo") and int(p["equipo"]) == o.equipo:
 				continue
 			s._evento({"tipo": "repelido", "entidad": o.id, "pos": p["pos"], "proyectil": p["id"], "forma": str(o.efectos["aura"]["forma"])})
