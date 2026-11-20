@@ -16,8 +16,31 @@ func _initialize() -> void:
 	probar_defensa()
 	probar_eventos()
 	probar_jefe()
+	probar_orilla_lago()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
+
+
+## De la explanada al lago del jefe: se pisa el agua (no se hunde hasta el fondo) y los enemigos lejanos del puente
+## se siguen enviando (antes desaparecían a 70 m).
+func probar_orilla_lago() -> void:
+	var s := servidor(5)
+	var j := s.entidad_de_peer(1)
+	s.poblar_aldea()
+	j.pos = Vector3(0, 0, 168)
+	s.misiones.empezar_capitulo(j, "cap6")
+	correr(s, 9.0)
+	j.pos = Vector3(0, 0, 170)
+	j.chakra = 100.0
+	var y_min := 99.0
+	for i in 60:
+		s.recibir_comando(1, {"t": "entrada", "mov": Vector2(0, 1), "mira": 0.0})
+		s.paso(s.dt_tick)
+		s.eventos = []
+		y_min = minf(y_min, j.pos.y)
+	comprobar(s.mapa.en_lago(j.pos2()) and j.agua == 1 and y_min > s.mapa.nivel_agua() - 0.2,
+		"de la explanada al lago se camina sobre el agua (y mínima %.2f, agua %d)" % [y_min, j.agua])
+	s.free()
 
 
 func comprobar(cond: bool, nombre: String) -> void:

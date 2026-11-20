@@ -20,10 +20,10 @@ static func disponible() -> bool:
 func construir(jugador: Node3D, dur: float) -> void:
 	objetivo = jugador
 	duracion = dur
-	_modelo = Node3D.new()
+	_modelo = Node3D.new()   # pivote sin escala (se orienta con cuaterniones)
 	add_child(_modelo)
-	_modelo.scale = Vector3.ONE * float(Datos.graficos.get("pajaro_escala", 1.4))
 	var mi := MeshInstance3D.new()
+	mi.scale = Vector3.ONE * float(Datos.graficos.get("pajaro_escala", 1.4))
 	mi.mesh = Kit.malla("pajaro_papel")
 	mi.material_override = Shaders.toon_tex_aleteo("pajaro_papel", float(Datos.graficos.get("pajaro_ala_inicio", 0.12)))
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

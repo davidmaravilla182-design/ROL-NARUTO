@@ -1243,7 +1243,9 @@ func _mover(e: EntidadServidor, dt: float) -> void:
 	var sobre_agua := mapa.en_agua(Vector2(nueva.x, nueva.z)) and suelo <= mapa.nivel_agua() + 0.01
 	if not sobre_agua:
 		e.agua = 0
-	elif nueva.y <= suelo + 0.05:
+	elif nueva.y <= maxf(suelo, mapa.nivel_agua()) + 0.05:
+		# Se compara con la superficie (no con el fondo del lago): al pasar de la orilla al lago se pisa el agua
+		# en vez de hundirse 3 m hasta el fondo.
 		if e.agua != 2 and e.chakra > Datos.sim("escalada_chakra_min"):
 			e.agua = 1
 			e.chakra = maxf(e.chakra - Datos.sim("agua_chakra_seg") * Atributos.mult_costo_movil(e.attrs) * dt, 0.0)
@@ -1459,7 +1461,9 @@ func publicar_estado() -> void:
 		# Interés por distancia: los enemigos de la aldea solo se envían a quien está a menos de RADIO_INTERES
 		# (la instantánea debe caber en un paquete: con todos los NPC superaba el MTU y se perdía en redes reales).
 		var yo := entidad(int(_peers[peer]))
-		if yo != null:
+		# El jugador local (offline o anfitrión, peer 1) no pasa por la red: lo ve todo (si no, en el puente los
+		# guardias lejanos aparecían y desaparecían de golpe). El filtro queda para los invitados en red.
+		if yo != null and int(peer) != 1:
 			var filtradas: Array = []
 			for i in ents.size():
 				var ed: Dictionary = ents[i]
