@@ -228,7 +228,8 @@ func _isla(mat: Material) -> void:
 	orilla.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(orilla)
 	# Embarcadero al final del puente (losa ancha a ras del suelo).
-	var emb := Kit.instancia("losa", Transform3D(Basis.from_scale(Vector3(48, 0.6, 26)), Vector3(0, 0.0, 162.0)), false)
+	# Mismo rectángulo que la zona caminable (data/escenario.json: x −24..24, z 150..174); antes sobresalía 1 m sobre el lago.
+	var emb := Kit.instancia("losa", Transform3D(Basis.from_scale(Vector3(48, 0.6, 24)), Vector3(0, 0.0, 162.0)), false)
 	# Textura proyectada en el mundo (como el resto del suelo): estirada 48 × 26 se veía a rayas.
 	emb.material_override = Shaders.toon_tex("suelo", Color(0.9, 0.9, 0.95), Vector2.ONE, true, 0.5, 0.35, 0.6)
 	add_child(emb)

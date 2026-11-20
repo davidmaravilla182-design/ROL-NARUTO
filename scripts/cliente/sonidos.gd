@@ -49,6 +49,9 @@ func bucle(clave: String, nombre: String, activo: bool, volumen_db := 0.0) -> vo
 		p.stream = Sonidos.stream(nombre)
 		p.volume_db = volumen_db
 		add_child(p)
+		# Se repite al terminar (sin el bucle interno del WAV: en algunos celulares, p. ej. Galaxy S25,
+		# el salto del bucle de un WAV generado cerraba la app justo a los 8 s de la música del jefe).
+		p.finished.connect(p.play)
 		p.play()
 		_bucles[clave] = p
 	elif not activo and _bucles.has(clave):
@@ -98,7 +101,7 @@ static func stream(nombre: String) -> AudioStreamWAV:
 	return s
 
 
-static func _a_wav(muestras: PackedFloat32Array, bucle_on: bool) -> AudioStreamWAV:
+static func _a_wav(muestras: PackedFloat32Array, _bucle_on: bool) -> AudioStreamWAV:
 	var bytes := PackedByteArray()
 	bytes.resize(muestras.size() * 2)
 	for i in muestras.size():
@@ -108,10 +111,7 @@ static func _a_wav(muestras: PackedFloat32Array, bucle_on: bool) -> AudioStreamW
 	w.mix_rate = FRECUENCIA
 	w.stereo = false
 	w.data = bytes
-	if bucle_on:
-		w.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		w.loop_begin = 0
-		w.loop_end = muestras.size()
+	# Sin bucle interno (ver bucle()): el reproductor vuelve a empezar al terminar.
 	return w
 
 
