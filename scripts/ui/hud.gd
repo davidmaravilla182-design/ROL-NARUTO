@@ -734,8 +734,8 @@ var _jefe_mostrado := 1.0
 func barra_jefe(e: Dictionary) -> void:
 	if _jefe_panel == null:
 		_jefe_panel = Control.new()
-		_jefe_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
-		_jefe_panel.custom_minimum_size = Vector2(0, 90)
+		_jefe_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+		_jefe_panel.offset_bottom = 140.0
 		_jefe_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_jefe_panel.draw.connect(_dibujar_jefe)
 		add_child(_jefe_panel)
@@ -751,10 +751,10 @@ func _dibujar_jefe() -> void:
 	if _jefe.is_empty():
 		return
 	var ancho := _jefe_panel.size.x * 0.6
-	var r := Rect2(Vector2((_jefe_panel.size.x - ancho) * 0.5, 64), Vector2(ancho, 26))
+	var r := Rect2(Vector2((_jefe_panel.size.x - ancho) * 0.5, 104), Vector2(ancho, 24))
 	var frac := clampf(float(_jefe["vida"]) / maxf(float(_jefe["vida_max"]), 1.0), 0.0, 1.0)
 	var fase := int((_jefe.get("jefe", {}) as Dictionary).get("fase", 1))
-	Estilo.texto(_jefe_panel, Vector2(0, 54), "%s  ·  %s" % [str(Datos.personaje(str(_jefe["plantilla"])).get("nombre", "")), Datos.texto("jefe_fase", [fase])],
+	Estilo.texto(_jefe_panel, Vector2(0, 96), "%s  ·  %s" % [str(Datos.personaje(str(_jefe["plantilla"])).get("nombre", "")), Datos.texto("jefe_fase", [fase])],
 		26, Color(1.0, 0.85, 0.75), _jefe_panel.size.x, HORIZONTAL_ALIGNMENT_CENTER, Estilo.fuente_titulo(), 8)
 	_jefe_panel.draw_rect(r.grow(3), Color(0.02, 0.02, 0.03, 0.9))
 	_jefe_panel.draw_rect(Rect2(r.position, Vector2(r.size.x * _jefe_mostrado, r.size.y)), Color(1, 0.85, 0.7, 0.5))
@@ -777,7 +777,7 @@ func destello_pantalla(segundos: float, intensidad := 0.95) -> void:
 	_destello_ms = Time.get_ticks_msec()
 	var r := ColorRect.new()
 	r.color = Color(1, 1, 1, intensidad)
-	r.set_anchors_preset(Control.PRESET_FULL_RECT)
+	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(r)
 	var tw := create_tween()
@@ -793,7 +793,7 @@ var _velo_gen: ColorRect
 func velo_genjutsu(tipo: String, segundos: float) -> void:
 	quitar_genjutsu()
 	_velo_gen = ColorRect.new()
-	_velo_gen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_velo_gen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_velo_gen.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_velo_gen)
 	move_child(_velo_gen, 0)
@@ -824,7 +824,7 @@ func quitar_genjutsu() -> void:
 func lineas_velocidad(segundos: float) -> void:
 	if _lineas == null:
 		_lineas = Control.new()
-		_lineas.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_lineas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		_lineas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_lineas.draw.connect(_dibujar_lineas)
 		add_child(_lineas)

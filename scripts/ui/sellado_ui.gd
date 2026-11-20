@@ -20,7 +20,7 @@ func iniciar(sec: Array, segundos: float) -> void:
 	secuencia = sec
 	tiempo = segundos
 	_ids = (Datos.mundo.get("sellos", {}) as Dictionary).keys()
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.3)

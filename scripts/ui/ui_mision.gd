@@ -28,7 +28,7 @@ var _anuncio: Label
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel = Control.new()
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -42,9 +42,9 @@ func _ready() -> void:
 	_anuncio.add_theme_color_override("font_color", Color(1.0, 0.85, 0.45))
 	_anuncio.add_theme_color_override("font_outline_color", Color(0.25, 0.02, 0.04))
 	_anuncio.add_theme_constant_override("outline_size", 12)
-	_anuncio.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_anuncio.position = Vector2(-500, 150)
-	_anuncio.size = Vector2(1000, 60)
+	_anuncio.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_anuncio.offset_top = 236.0
+	_anuncio.offset_bottom = 296.0
 	_anuncio.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_anuncio.modulate.a = 0.0
 	add_child(_anuncio)
@@ -82,7 +82,7 @@ func mision_fin() -> void:
 
 func _dibujar_panel() -> void:
 	var ancho := 560.0
-	var r := Rect2(Vector2((size.x - ancho) * 0.5, 96), Vector2(ancho, 84))
+	var r := Rect2(Vector2((size.x - ancho) * 0.5, 140), Vector2(ancho, 84))
 	Estilo.dibujar_pergamino(_panel, r, 0.92)
 	Estilo.texto(_panel, r.position + Vector2(18, 28), _titulo, 22, Color(0.3, 0.08, 0.06), ancho - 36, HORIZONTAL_ALIGNMENT_LEFT, Estilo.fuente_titulo(), 0)
 	Estilo.texto(_panel, r.position + Vector2(18, 54), _objetivo, 17, Color(0.18, 0.13, 0.1), ancho - 150, HORIZONTAL_ALIGNMENT_LEFT, null, 0)
@@ -114,7 +114,7 @@ func escena(lineas: Array, pajaro: bool, duracion: float) -> void:
 	_escena_t = 0.0
 	_pajaro = pajaro
 	_escena = Control.new()
-	_escena.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_escena.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_escena.mouse_filter = Control.MOUSE_FILTER_STOP
 	_escena.draw.connect(_dibujar_escena)
 	_escena.gui_input.connect(func(ev):

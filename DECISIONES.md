@@ -256,3 +256,19 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
   aparte, y se materializan al atacar.
 - **Plaza**: variantes del edificio que gustó generadas con imagen a imagen desde su imagen de referencia (mismo
   estilo) + imagen a 3D con textura; sus espaldas son lisas (vienen de una sola vista), por eso miran a la plaza.
+
+## v0.9 — ciclo de juego premium
+- **Atributos en un solo módulo** (`scripts/core/atributos.gd`): servidor, ficha y pruebas usan las mismas fórmulas
+  (`reglas.json → efectos_atributos`). El entrenamiento por uso es una bonificación fraccionaria (+0,5 máx.) que no
+  cuenta para el tope de puntos, para que entrenar tenga sentido sin romper el «nunca puedes tener todo».
+- **Tope por rango** (14/18/22/26) con 2 puntos «adelantados» por XP o duelos con el instructor; ascender exige XP y
+  una prueba de combate. Los personajes viejos conservan sus puntos (`puntos_legado`).
+- **Clase del jutsu en un campo nuevo (`clase`)**: el campo `tipo` ya se usaba para la mecánica (proyectil, taijutsu…).
+- **Taijutsu con cinemática del servidor** (Lotos, Liger Bomb): el servidor fija la posición de los dos cuadro a cuadro
+  durante la secuencia; así se ve igual en todos los clientes y no depende de la física.
+- **Misiones en el servidor, una a la vez** y compartidas por la partida; el progreso viaja en el personaje y el
+  servidor lo valida. El líder nunca aparece: las escenas son de pájaros de papel.
+- **Jefe sin morir**: a 0 de vida queda vencido para abrir la ventana de sellado (Sellos 3+); si nadie sella, huye.
+  El lago solo se puede pisar durante la pelea (`Mapa.arena_lago`, también en el cliente para la predicción).
+- **Arte**: ningún modelo nuevo se genera con imágenes de Meshy; se piden a GPT y mientras tanto hay marcadores
+  procedurales que el código reemplaza por el GLB en cuanto existe.

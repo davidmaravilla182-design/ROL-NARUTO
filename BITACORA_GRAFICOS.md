@@ -292,3 +292,35 @@ cada uno con LOD de 900) y la tormenta del Kirin (≈100 partículas grandes dur
 - El dragón de agua se lee poco de lejos (serpiente translúcida y fina).
 - Las capturas de este entorno van a ~2–4 fps reales: los tiempos se fijan con `--fixed-fps`, pero conviene ver
   los efectos en el teléfono.
+
+## M5 — ciclo de juego premium (v0.9)
+
+### Ficha del personaje y misiones
+| Ficha (efecto actual de cada atributo, entrenamiento, ascenso) | Misiones (historia, pergaminos, cosméticos) |
+|---|---|
+| ![](docs/capturas/v09/ficha.jpg) | ![](docs/capturas/v09/misiones.jpg) |
+
+### Escena con pájaro de papel y pantalla de recompensa
+![](docs/capturas/v09/escena_y_recompensa.jpg)
+
+### Técnicas nuevas (Loto Primario con las puertas abiertas; Remolino de la Hoja N1–N3; debilidad visible con Inteligencia 3)
+![](docs/capturas/v09/tecnicas_nuevas.jpg)
+
+### El Tres Colas (marcador procedural hasta tener `tres_colas.png`)
+Escena → emerge → balas → aviso de rodar → rueda → niebla con copias → carga de la bomba → bomba → sellado.
+![](docs/capturas/v09/jefe_tres_colas.jpg)
+
+### Problemas encontrados y corregidos
+1. **Diálogo de escena y panel de misión invisibles**: los controles nuevos se anclaban a pantalla completa sin
+   ajustar márgenes y medían 0×0 → `set_anchors_and_offsets_preset` en todos los componentes nuevos.
+2. **Barra del jefe encima de los botones superiores** → bajada a y≈100; el panel de misión, a y≈140.
+3. **Anuncios cortados a la izquierda** (etiqueta centrada con posición negativa) → ancho completo arriba.
+4. **Pantalla de Misiones desbordada** a la derecha (títulos largos) → títulos recortados, columnas fijas.
+5. **Ficha de la plantilla de práctica con «26 / 22»** (sin tope de rango) → la plantilla conserva sus puntos.
+6. **La herramienta de capturas amontonaba a todos los enemigos** en el mismo punto → un solo rival.
+7. **Fuga de memoria** al retirar enemigos de misión (ciclo entidad ↔ IA) → se rompe el ciclo.
+8. **Ajustes de IA compartidos** entre enemigos de la misma plantilla (las misiones cambiaban el radio de detección de
+   todos) → cada IA copia su configuración.
+
+### Pendiente de arte (imágenes pedidas a GPT en `referencias/gpt/PEDIDOS.md`)
+Tres Colas, pájaro de papel, líder rebelde, intruso, pergamino y cofre: hasta tenerlas se usan marcadores.

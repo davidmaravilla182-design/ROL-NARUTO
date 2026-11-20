@@ -24,7 +24,10 @@
   a 0 de vida queda vencido: sellado con secuencia de sellos si Sellos 3+, si no huye). Lago pisable con chakra durante
   la pelea, radio de golpe grande, inmune a control y empuje. Cliente: marcador procedural (caparazón con púas de coral,
   ojo rojo, tres colas), barra enorme con fases, música de jefe sintetizada, cámara abierta, niebla, minijuego de sellado.
-- [ ] 5. Guardado completo, interfaz premium (ficha, misiones, pergaminos, recompensas), QA por cuadros.
+- [x] 5. Guardado completo, interfaz premium (ficha, misiones, pergaminos, recompensas), QA por cuadros.
+  Hecho: el personaje guarda atributos, rango, XP, entrenamiento, ryō, misiones, pergaminos y cosméticos (además de
+  maestría y repertorios); el servidor los valida. Pantallas Ficha y Misiones, escena, recompensa, sellado y barra de
+  jefe con animación y sonido. QA: BITACORA_GRAFICOS.md → M5 (8 problemas corregidos).
 - [ ] Cierre: APK en demo-latest, workflow, reporte con la lista de imágenes para GPT.
 
 ---
