@@ -28,7 +28,7 @@
   Hecho: el personaje guarda atributos, rango, XP, entrenamiento, ryō, misiones, pergaminos y cosméticos (además de
   maestría y repertorios); el servidor los valida. Pantallas Ficha y Misiones, escena, recompensa, sellado y barra de
   jefe con animación y sonido. QA: BITACORA_GRAFICOS.md → M5 (8 problemas corregidos).
-- [ ] Cierre: APK en demo-latest, workflow, reporte con la lista de imágenes para GPT.
+- [x] Cierre: APK en demo-latest (commit ee32eb1, workflow correcto), reporte con la lista de imágenes para GPT.
 
 ---
 
