@@ -299,5 +299,14 @@
       "ninjutsu_impacto": 0.004,
       "inteligencia_jutsu": 0.002
     }
+  },
+  "ia_cuerpo_a_cuerpo": {
+    "_nota": "Ritmo de los NPC en el cuerpo a cuerpo: descanso en segundos tras su combo (hueco para contraatacar), probabilidad de seguir cada paso del combo y pausa antes de responder tras recibir un golpe. Cada NPC puede sobrescribirlos en su \"ia\".",
+    "descanso_combo": [
+      0.9,
+      1.5
+    ],
+    "prob_seguir_combo": 0.6,
+    "pausa_tras_golpeado": 0.5
   }
 }

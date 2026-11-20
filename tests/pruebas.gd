@@ -27,6 +27,7 @@ func _initialize() -> void:
 	probar_atributos_servidor()
 	probar_ia_puede_ganar()
 	probar_jugador_puede_ganar()
+	probar_basicos_contra_guardia()
 	probar_textos_sin_codigo()
 	probar_plataforma_lengua()
 	probar_piezas_suelo()
@@ -519,6 +520,44 @@ func probar_jugador_puede_ganar() -> void:
 		if not j.vivo():
 			break
 	comprobar(gano, "un jugador que usa bien el rayo puede ganar (vida restante %d)" % int(j.vida))
+	s.free()
+
+
+## Un jugador que solo usa golpes básicos debe poder conectar y ganarle a un guardia de la aldea:
+## la guardia y la sustitución se deciden una vez por golpe (no en cada tick) y el NPC descansa tras su combo.
+func probar_basicos_contra_guardia() -> void:
+	var s := nuevo_servidor(false)
+	s.entidades = s.entidades.filter(func(x): return x.tipo != "muneco")
+	var j := s.entidad_de_peer(1)
+	var g := s._crear_entidad("guardia_lluvia", j.pos + Vector3(0, 0, 3.0))
+	g.equipo = 2
+	g.ia = IaEnemigo.new(g)
+	g.ia.t_reaccion = 0.0
+	var golpes_jugador := 0
+	var defendidos := 0
+	var gano := false
+	var vida_g0 := g.vida
+	for i in int(60.0 / s.dt_tick):
+		var d := g.pos - j.pos
+		var mov := Vector2(d.x, d.z).normalized() if d.length() > 1.8 else Vector2.ZERO
+		s.recibir_comando(1, {"t": "entrada", "mov": mov, "mira": atan2(d.x, d.z)})
+		if d.length() < 2.4 and (j.estado == "libre" or j.estado == "golpe"):
+			s.recibir_comando(1, {"t": "accion", "id": "golpe"})
+		s.paso(s.dt_tick)
+		for ev in s.eventos:
+			if ev["tipo"] == "golpe" and int(ev.get("entidad", -1)) == j.id:
+				golpes_jugador += 1
+			if ev["tipo"] in ["bloqueo", "sustitucion"] and int(ev.get("entidad", -1)) == g.id:
+				defendidos += 1
+		s.eventos = []
+		if not g.vivo():
+			gano = true
+			break
+		if not j.vivo():
+			break
+	var frac := float(defendidos) / maxf(float(golpes_jugador), 1.0)
+	comprobar(frac < 0.45, "el guardia no para casi todos los golpes (%d de %d defendidos)" % [defendidos, golpes_jugador])
+	comprobar(gano, "con golpes básicos se le puede ganar a un guardia (vida guardia %d/%d, jugador %d)" % [int(g.vida), int(vida_g0), int(j.vida)])
 	s.free()
 
 

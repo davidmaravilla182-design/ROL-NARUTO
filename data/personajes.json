@@ -162,8 +162,8 @@
       "aggro": 18.0,
       "combo_max": 5,
       "prob_shunshin": 0.45,
-      "prob_sustitucion": 0.15,
-      "prob_bloqueo": 0.35
+      "prob_sustitucion": 0.1,
+      "prob_bloqueo": 0.2
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -292,8 +292,8 @@
       "vida_mult": 2.2,
       "combo_max": 3,
       "prob_shunshin": 0.25,
-      "prob_sustitucion": 0.35,
-      "prob_bloqueo": 0.2
+      "prob_sustitucion": 0.25,
+      "prob_bloqueo": 0.15
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -526,8 +526,8 @@
       "vida_mult": 3.2,
       "combo_max": 5,
       "prob_shunshin": 0.25,
-      "prob_sustitucion": 0.35,
-      "prob_bloqueo": 0.3,
+      "prob_sustitucion": 0.25,
+      "prob_bloqueo": 0.2,
       "modelo": "lider_rebelde"
     },
     "aspecto": {
@@ -596,8 +596,8 @@
       "vida_mult": 2.4,
       "combo_max": 4,
       "prob_shunshin": 0.25,
-      "prob_sustitucion": 0.35,
-      "prob_bloqueo": 0.25
+      "prob_sustitucion": 0.25,
+      "prob_bloqueo": 0.2
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -728,8 +728,8 @@
       "aggro": 60.0,
       "combo_max": 5,
       "prob_shunshin": 0.3,
-      "prob_sustitucion": 0.25,
-      "prob_bloqueo": 0.35,
+      "prob_sustitucion": 0.15,
+      "prob_bloqueo": 0.2,
       "vida_mult": 1.6
     },
     "aspecto": {

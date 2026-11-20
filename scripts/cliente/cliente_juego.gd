@@ -133,7 +133,7 @@ func _ready() -> void:
 	servidor.name = "Servidor"
 	add_child(servidor)
 	servidor.iniciar(mapa)
-	servidor.poblar_entrenamiento()
+	servidor.poblar_entrenamiento(false)   # sin rival de práctica: atacaba al empezar, incluso al ir a misiones
 	servidor.poblar_aldea()
 	var local := TransporteLocal.new()
 	local.name = "Transporte"
@@ -1242,8 +1242,7 @@ func _comprobar_fin(yo: Dictionary, enemigo: Dictionary) -> void:
 	var fin := ""
 	if str(yo["estado"]) == "muerto":
 		fin = "derrota"
-	elif not enemigo.is_empty() and str(enemigo["estado"]) == "muerto":
-		fin = "victoria"
+	# Sin rival de práctica ya no hay «victoria» al matar a un NPC cualquiera de la aldea (las misiones tienen su pantalla).
 	if fin == _anuncio_fin:
 		return
 	_anuncio_fin = fin

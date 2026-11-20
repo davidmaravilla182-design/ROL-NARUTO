@@ -23,6 +23,10 @@ var t_genjutsu := 0.0
 var t_humo := 0.0
 var ruta: Array = []    # perfil "huir": puntos que recorre (techos); al llegar al último, escapa
 var ruta_i := 0
+# Ritmo del cuerpo a cuerpo (data/reglas.json → ia_cuerpo_a_cuerpo; cada NPC puede sobrescribirlo en su "ia"):
+# tras un combo descansa (hueco para el jugador), no siempre lo termina y tras recibir un golpe tarda en responder.
+var _estado_antes := "libre"
+var _accion_leida: Dictionary = {}   # el golpe del jugador que ya evaluó (una decisión por golpe, no por tick)
 
 
 func _init(entidad: EntidadServidor) -> void:
@@ -43,7 +47,21 @@ func reiniciar() -> void:
 	t_humo = 2.0
 
 
+func _ritmo(clave: String, defecto: Variant) -> Variant:
+	if conf.has(clave):
+		return conf[clave]
+	return (Datos.reglas.get("ia_cuerpo_a_cuerpo", {}) as Dictionary).get(clave, defecto)
+
+
 func pensar(s: ServidorJuego, dt: float) -> void:
+	# Transiciones de estado: fin del combo propio → descanso; fin de una reacción a golpe → pausa antes de responder.
+	if e.estado != _estado_antes:
+		if e.estado == "libre" and _estado_antes == "golpe":
+			var dc: Array = _ritmo("descanso_combo", [0.9, 1.5])
+			t_reaccion = maxf(t_reaccion, rng.randf_range(float(dc[0]), float(dc[1])))
+		elif e.estado == "libre" and _estado_antes in ["golpeado", "derribado", "aturdido", "lanzado", "bloqueo"]:
+			t_reaccion = maxf(t_reaccion, float(_ritmo("pausa_tras_golpeado", 0.5)) + rng.randf() * 0.3)
+		_estado_antes = e.estado
 	t_lado -= dt
 	t_reaccion -= dt
 	if t_lado <= 0.0:
@@ -130,10 +148,16 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 	s.aplicar_comando(e, {"t": "entrada", "mov": Vector2(mov.x, mov.z), "mira": atan2(dir.x, dir.z)})
 
 	# Combos: el NPC encadena golpes hasta su máximo (agresivo: los 5 con la patada final).
+	# Cada paso se decide una vez (prob_seguir_combo): a veces corta el combo y deja el hueco.
 	if e.estado == "golpe" and e.combo_pos < int(conf.get("combo_max", 3)) - 1 and e.combo_paso < 10 and dist < float(conf.get("rango_melee", 2.2)) + 1.5:
-		s.aplicar_comando(e, {"t": "accion", "id": "golpe"})
+		if not e.accion.has("_ia_seguir"):
+			e.accion["_ia_seguir"] = rng.randf() < float(_ritmo("prob_seguir_combo", 0.6))
+		if e.accion["_ia_seguir"]:
+			s.aplicar_comando(e, {"t": "accion", "id": "golpe"})
 	# Sustitución: si el jugador está a punto de golpearlo de frente, a veces deja un tronco.
-	if _golpe_inminente(objetivo) and e.recarga("sustitucion") <= 0.0 and e.sustitucion_t <= 0.0:
+	# Se decide UNA vez por golpe del jugador (antes se volvía a sortear en cada tick y casi siempre lo paraba).
+	if _golpe_inminente(objetivo) and not is_same(objetivo.accion, _accion_leida) and e.recarga("sustitucion") <= 0.0 and e.sustitucion_t <= 0.0:
+		_accion_leida = objetivo.accion
 		var r := rng.randf()
 		if r < float(conf.get("prob_sustitucion", 0.0)):
 			s.aplicar_comando(e, {"t": "accion", "id": "esquivar"})

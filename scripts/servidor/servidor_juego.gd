@@ -49,11 +49,13 @@ func iniciar(p_mapa: Mapa = null) -> void:
 
 
 ## Crea el enemigo y los muñecos del campo de entrenamiento.
-func poblar_entrenamiento() -> void:
-	var e := _crear_entidad("ninja_lluvia", Vector3(mapa.inicio_enemigo.x, 0, mapa.inicio_enemigo.y))
-	e.equipo = 2
-	e.ia = IaEnemigo.new(e)
-	e.yaw = PI
+## con_rival = false: solo los muñecos (la partida de la aldea no tiene rival de práctica al empezar).
+func poblar_entrenamiento(con_rival := true) -> void:
+	if con_rival:
+		var e := _crear_entidad("ninja_lluvia", Vector3(mapa.inicio_enemigo.x, 0, mapa.inicio_enemigo.y))
+		e.equipo = 2
+		e.ia = IaEnemigo.new(e)
+		e.yaw = PI
 	for p in mapa.munecos:
 		var m := _crear_entidad("muneco", Vector3(p.x, 0, p.y))
 		m.equipo = 3
