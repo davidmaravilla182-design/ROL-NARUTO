@@ -1,5 +1,7 @@
 class_name Jefes
 extends RefCounted
+
+const RADIO_LAGO := 46.0   # bahía del lago donde emerge el jefe (el escenario la dibuja con agua)
 ## Jefes (bijuu). El Tres Colas emerge del lago (DISENO.md §4) y pelea en 4 fases según su vida:
 ##  1 (100-70 %) balas de agua en abanico y olas que barren la orilla (hay que caminar sobre el agua)
 ##  2 (70-45 %)  se enrolla y rueda en línea recta (línea marcada); al terminar queda aturdido
@@ -22,12 +24,12 @@ static func crear(s: ServidorJuego, id: String, pos: Vector3) -> EntidadServidor
 	var c := conf(e)
 	e.radio_golpe = float(c.get("radio_golpe", 6.0))
 	e.datos_jefe = {"fase": 1, "t_balas": 2.0, "t_ola": 5.0, "t_rodar": 3.0, "t_bomba": 4.0, "copias": [], "estado": "pelea",
-		"lago": Vector3(pos.x, 0, pos.z), "radio_lago": 46.0}
+		"lago": Vector3(pos.x, 0, pos.z), "radio_lago": RADIO_LAGO}
 	e.pos.y = s.mapa.nivel_agua()
 	e.yaw = PI   # mira hacia la aldea (norte)
 	activos.append(e)
 	# Durante la pelea el lago alrededor se puede pisar con chakra (y el servidor y el cliente lo saben).
-	s.mapa.arena_lago = Vector3(pos.x, pos.z, 46.0)
+	s.mapa.arena_lago = Vector3(pos.x, pos.z, RADIO_LAGO)
 	s._evento({"tipo": "jefe", "accion": "aparece", "entidad": e.id, "pos": e.pos, "nombre": str(Datos.personaje(id).get("nombre", id)),
 		"arena": s.mapa.arena_lago})
 	return e

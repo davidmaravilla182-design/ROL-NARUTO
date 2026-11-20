@@ -711,6 +711,8 @@ static func shader(clave: String) -> Shader:
 		# Alas que aletean (pájaro de papel): los vértices fuera del cuerpo (|x| > ala_inicio) giran alrededor del eje del ala.
 		"toon_tex_aleteo": return _shader(clave, TOON_TEX.replace("render_mode cull_back;", "render_mode cull_disabled;").replace(
 			"void vertex() {\n", "uniform float aleteo_t = 0.0;\nuniform float ala_inicio = 0.1;\nuniform float aleteo_amp = 0.6;\nvoid vertex() {\n\tfloat ax = abs(VERTEX.x) - ala_inicio;\n\tif (ax > 0.0) {\n\t\tfloat a = sin(aleteo_t) * aleteo_amp * smoothstep(0.0, 0.15, ax);\n\t\tVERTEX.y += ax * sin(a);\n\t\tVERTEX.x -= sign(VERTEX.x) * ax * (1.0 - cos(a));\n\t}\n"))
+		# Suelo con un hueco circular (la bahía del jefe en la orilla): agujero = (x, z, radio, activo).
+		"toon_tex_agujero": return _shader(clave, TOON_TEX.replace("void fragment() {", "uniform vec4 agujero = vec4(0.0);\nvoid fragment() {\n\tif (agujero.w > 0.5 && distance(wpos.xz, agujero.xy) < agujero.z) {\n\t\tdiscard;\n\t}"))
 		"contorno": return _shader(clave, CONTORNO)
 		"fuego": return _shader(clave, FUEGO)
 		"calor": return _shader(clave, CALOR)

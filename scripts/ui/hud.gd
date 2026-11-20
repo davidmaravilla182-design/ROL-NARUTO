@@ -181,7 +181,8 @@ void fragment() {
 	if _mapa != null and _mapa.radio_caminable > 0.0:
 		_boton_texto(Datos.texto("hud_mapa"), func(): abrir_mapa())
 	_boton_texto(Datos.texto("hud_ajustes"), func(): abrir_ajustes())
-	_boton_texto(Datos.texto("hud_salir"), func(): salir_pedido.emit())
+	# Salir pide confirmación: el botón está donde se arrastra la cámara y un roce lo activaba sin querer.
+	_boton_texto(Datos.texto("hud_salir"), func(): _confirmar_salida())
 
 	_sellos_panel = Control.new()
 	_sellos_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -275,6 +276,52 @@ func _etiqueta(txt: String, tam: int, alin: HorizontalAlignment) -> Label:
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	raiz.add_child(l)
 	return l
+
+
+var _confirmacion: Control
+
+
+func _confirmar_salida() -> void:
+	if _confirmacion != null and is_instance_valid(_confirmacion):
+		return
+	var fondo := ColorRect.new()
+	fondo.color = Color(0, 0, 0, 0.55)
+	fondo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fondo.mouse_filter = Control.MOUSE_FILTER_STOP
+	raiz.add_child(fondo)
+	_confirmacion = fondo
+	var panel := PanelContainer.new()
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(560, 0)
+	panel.position -= Vector2(280, 110)
+	fondo.add_child(panel)
+	var caja := VBoxContainer.new()
+	caja.add_theme_constant_override("separation", 18)
+	panel.add_child(caja)
+	var t := Label.new()
+	t.text = Datos.texto("hud_salir_pregunta")
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD
+	t.add_theme_font_size_override("font_size", 26)
+	caja.add_child(t)
+	var fila := HBoxContainer.new()
+	fila.alignment = BoxContainer.ALIGNMENT_CENTER
+	fila.add_theme_constant_override("separation", 24)
+	caja.add_child(fila)
+	var seguir := Button.new()
+	seguir.text = Datos.texto("hud_seguir")
+	seguir.custom_minimum_size = Vector2(220, 70)
+	seguir.add_theme_font_size_override("font_size", 24)
+	seguir.pressed.connect(func(): fondo.queue_free())
+	fila.add_child(seguir)
+	var salir := Button.new()
+	salir.text = Datos.texto("hud_salir_si")
+	salir.custom_minimum_size = Vector2(220, 70)
+	salir.add_theme_font_size_override("font_size", 24)
+	salir.pressed.connect(func():
+		Registro.nota("MENU (botón Salir)")
+		salir_pedido.emit())
+	fila.add_child(salir)
 
 
 func _boton_texto(txt: String, cb: Callable) -> Button:

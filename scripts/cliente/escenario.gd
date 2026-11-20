@@ -227,12 +227,57 @@ func _isla(mat: Material) -> void:
 	orilla.material_override = mat
 	orilla.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(orilla)
+	_bahia_jefe(orilla, mat)
 	# Embarcadero al final del puente (losa ancha a ras del suelo).
 	# Mismo rectángulo que la zona caminable (data/escenario.json: x −24..24, z 150..174); antes sobresalía 1 m sobre el lago.
 	var emb := Kit.instancia("losa", Transform3D(Basis.from_scale(Vector3(48, 0.6, 24)), Vector3(0, 0.0, 162.0)), false)
 	# Textura proyectada en el mundo (como el resto del suelo): estirada 48 × 26 se veía a rayas.
 	emb.material_override = Shaders.toon_tex("suelo", Color(0.9, 0.9, 0.95), Vector2.ONE, true, 0.5, 0.35, 0.6)
 	add_child(emb)
+
+
+## Bahía del lago donde emerge el jefe (capítulo 6): la orilla oscura tenía suelo ahí y el jugador, que camina
+## sobre el agua (-1,1 m), se veía hundido. Hueco en la orilla, agua al nivel del servidor y un muro de contención.
+func _bahia_jefe(orilla: MeshInstance3D, mat: Material) -> void:
+	var centro := Vector2.ZERO
+	var hay := false
+	for c in Misiones.conf().get("capitulos", []):
+		for f in c.get("fases", []):
+			if str(f.get("tipo", "")) == "jefe":
+				centro = Vector2(float(f["pos"][0]), float(f["pos"][1]))
+				hay = true
+	if not hay:
+		return
+	var r := Jefes.RADIO_LAGO
+	var mo := ShaderMaterial.new()
+	mo.shader = Shaders.shader("toon_tex_agujero")
+	var base := mat as ShaderMaterial
+	if base != null:
+		for u in ["tex_color", "tex_normal", "tinte", "escala_uv", "triplanar", "escala_mundo", "metalico", "humedad", "chorreo"]:
+			mo.set_shader_parameter(u, base.get_shader_parameter(u))
+	mo.set_shader_parameter("agujero", Vector4(centro.x, centro.y, r, 1.0))
+	orilla.material_override = mo
+	var nivel := float(mapa.nivel_agua())
+	var agua := MeshInstance3D.new()
+	var disco := CylinderMesh.new()
+	disco.top_radius = r + 0.5
+	disco.bottom_radius = r + 0.5
+	disco.height = 0.02
+	disco.radial_segments = 64
+	disco.cap_bottom = false
+	var ma := Shaders.material("agua")
+	ma.set_shader_parameter("fuerza", 1.0 if Ajustes.g("ondas_charcos", true) else 0.0)
+	disco.material = ma
+	agua.mesh = disco
+	agua.position = Vector3(centro.x, nivel - 0.02, centro.y)
+	agua.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(agua)
+	var muro := Materiales.cilindro(r, r, 2.0, Shaders.toon_tex("concreto", Color(0.6, 0.62, 0.68), Vector2.ONE, true, 0.12, 0.0, 0.8, 0.0, true), 64)
+	(muro.mesh as CylinderMesh).cap_top = false
+	(muro.mesh as CylinderMesh).cap_bottom = false
+	muro.position = Vector3(centro.x, nivel - 0.9, centro.y)
+	muro.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(muro)
 
 
 func _charcos() -> void:
