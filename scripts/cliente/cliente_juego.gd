@@ -678,6 +678,7 @@ func _on_estado(est: Dictionary) -> void:
 	for e in est["entidades"]:
 		var id := int(e["id"])
 		vistos[id] = true
+		_equipos[id] = int(e.get("equipo", 0))
 		if not _visuales.has(id):
 			_crear_visual(e)
 		_actualizar_visual(_visuales[id], e)
@@ -777,7 +778,38 @@ func _crear_visual(e: Dictionary) -> void:
 		_visuales[int(e["id"])]["placa"] = placa
 
 
+## Aro en el suelo según el bando (rojo enemigo, azul aliado) y placa «ALIADO» en red: se lee quién es quién
+## en las peleas de grupo sin mirar la ropa. Se recalcula si cambia (mi equipo puede llegar después).
+func _marca_bando(v: Dictionary, e: Dictionary) -> void:
+	var id := int(e["id"])
+	if id == mi_id or e["tipo"] in ["muneco", "jefe"] or not (v["nodo"] is Node3D):
+		return
+	var aliado := _es_aliado(id)
+	if v.has("aro") and bool(v.get("aro_aliado", false)) == aliado:
+		return
+	if not v.has("aro"):
+		var aro := MeshInstance3D.new()
+		var tm := TorusMesh.new()
+		tm.inner_radius = 0.48
+		tm.outer_radius = 0.6
+		tm.rings = 32
+		tm.ring_segments = 4
+		aro.mesh = tm
+		aro.scale = Vector3(1, 0.06, 1)
+		aro.position.y = 0.05
+		aro.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		(v["nodo"] as Node3D).add_child(aro)
+		v["aro"] = aro
+	(v["aro"] as MeshInstance3D).material_override = Materiales.transparente(Color(0.3, 0.7, 1.0, 0.85) if aliado else Color(1.0, 0.2, 0.15, 0.7), true)
+	v["aro_aliado"] = aliado
+	if v.has("placa") and e["tipo"] == "jugador":
+		var nom := str(_info.get(id, {}).get("nombre", e.get("nombre", "")))
+		(v["placa"] as Placa).poner_color(Color(0.45, 0.8, 1.0) if aliado else Color(1.0, 0.55, 0.5))
+		(v["placa"] as Placa).prefijo = Datos.texto("aliado_prefijo") if aliado else ""
+
+
 func _actualizar_visual(v: Dictionary, e: Dictionary) -> void:
+	_marca_bando(v, e)
 	var nuevo: Vector3 = e["pos"]
 	var antes: Vector3 = v["destino"]
 	var d := Vector2(nuevo.x - antes.x, nuevo.z - antes.z).length() * 30.0
@@ -945,6 +977,16 @@ func _pos_entidad(id: int) -> Vector3:
 	return Vector3.ZERO
 
 
+var _equipos: Dictionary = {}   # id de entidad -> equipo (para avisos y marcas de aliado/enemigo)
+
+
+## ¿La entidad es de mi bando (yo o un aliado)?
+func _es_aliado(id: int) -> bool:
+	if id == mi_id:
+		return true
+	return _equipos.has(id) and _equipos.has(mi_id) and int(_equipos[id]) == int(_equipos[mi_id])
+
+
 const EVENTOS_REGISTRO := ["mision", "jefe", "escena", "aparece", "mirar", "anuncio", "rendicion", "escape_combo", "reaparecer"]
 
 
@@ -957,6 +999,9 @@ func _procesar_evento(ev: Dictionary) -> void:
 		Registro.nota("ev %s %s %s" % [ev["tipo"], str(ev.get("jutsu", ev.get("accion", ""))), str(ev.get("forma", ""))])
 	tecnicas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
 	genericas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
+	if str(ev["tipo"]) == "area_inicio" and float(ev.get("retardo", 0.0)) > 0.15:
+		# Aviso en el suelo antes del impacto: rojo si me puede dañar, azul si es mío o de un aliado.
+		efectos.aviso_suelo(ev["pos"], float(ev["radio"]), float(ev["retardo"]), not _es_aliado(int(ev.get("entidad", -1))))
 	match str(ev["tipo"]):
 		"maestria":
 			if id == mi_id:

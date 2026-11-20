@@ -631,3 +631,33 @@ func aviso(desde: Vector3, hacia: Vector3, duracion: float, melee := false) -> v
 	tw.tween_property(nodo, "scale", Vector3(1, 1, 1), 0.0)
 	tw.tween_interval(maxf(duracion, 0.2) + 0.4)
 	tw.tween_callback(nodo.queue_free)
+
+
+## Aviso en el suelo de un ataque de área (telegraph): aro en el borde y un relleno que crece hasta el impacto.
+## Rojo si te puede dañar; azul tenue si es tuyo o de un aliado (para no confundirlo con una amenaza).
+func aviso_suelo(pos: Vector3, radio: float, duracion: float, peligro: bool) -> void:
+	if duracion <= 0.05 or radio <= 0.1:
+		return
+	var col := Color(1.0, 0.18, 0.12) if peligro else Color(0.35, 0.65, 1.0)
+	var raiz := Node3D.new()
+	add_child(raiz)
+	raiz.global_position = Vector3(pos.x, pos.y + 0.06, pos.z)
+	var aro := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = maxf(radio - 0.14, 0.05)
+	tm.outer_radius = radio
+	tm.rings = 48
+	tm.ring_segments = 4
+	aro.mesh = tm
+	aro.scale = Vector3(1, 0.05, 1)
+	aro.material_override = Materiales.transparente(Color(col.r, col.g, col.b, 1.0 if peligro else 0.45), not peligro)
+	aro.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	raiz.add_child(aro)
+	var relleno := Materiales.disco(radio, Materiales.transparente(Color(col.r, col.g, col.b, 0.38 if peligro else 0.12), not peligro), 40)
+	relleno.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	relleno.scale = Vector3(0.05, 1, 0.05)
+	raiz.add_child(relleno)
+	var tw := create_tween()
+	tw.tween_property(relleno, "scale", Vector3(1, 1, 1), duracion).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(raiz, "scale", Vector3(1.08, 1, 1.08), 0.08)
+	tw.tween_callback(raiz.queue_free)

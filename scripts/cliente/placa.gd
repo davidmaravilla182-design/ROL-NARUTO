@@ -3,6 +3,7 @@ extends Node3D
 ## Nombre y barra de vida sobre un personaje (siempre mirando a la cámara).
 
 var _nombre: Label3D
+var prefijo := ""   # «ALIADO · » para los compañeros de equipo en red
 var _fondo: MeshInstance3D
 var _barra: MeshInstance3D
 const ANCHO := 0.9
@@ -45,7 +46,12 @@ func _quad(c: Color, tam: Vector2) -> MeshInstance3D:
 	return mi
 
 
+func poner_color(c: Color) -> void:
+	_nombre.modulate = c
+
+
 func actualizar(texto: String, frac: float) -> void:
+	texto = prefijo + texto
 	if _nombre.text != texto:
 		_nombre.text = texto
 	frac = clampf(frac, 0.0, 1.0)
