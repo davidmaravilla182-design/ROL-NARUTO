@@ -13,13 +13,26 @@ func _initialize() -> void:
 
 func _process(_d: float) -> bool:
 	_f += 1
-	if _f == 20:
-		_juego.mostrar_historia()
+	if _f == 2:
+		_juego.mostrar_historia()   # como en el celular: casi al empezar, antes de que el HUD termine
+	if _f == 40:
+		# Un toque en medio de la pantalla debe avanzar el prólogo.
+		var ev := InputEventMouseButton.new()
+		ev.button_index = MOUSE_BUTTON_LEFT
+		ev.pressed = true
+		ev.position = Vector2(640, 500)
+		root.push_input(ev)
+		var ev2 := ev.duplicate()
+		ev2.pressed = false
+		root.push_input(ev2)
 	if _f == 75:
 		root.get_viewport().get_texture().get_image().save_png("res://docs/capturas/v09/guia_prologo.png")
-		for h in _juego.hud.get_children():
-			if h is PantallaHistoria:
-				h.queue_free()
+		for c in _juego.get_children():
+			if c is CanvasLayer:
+				for h in c.get_children():
+					if h is PantallaHistoria:
+						print("GUIA: prólogo en la línea ", h._i, " letras ", int(h._letras))
+						h.queue_free()
 	if _f == 110:
 		root.get_viewport().get_texture().get_image().save_png("res://docs/capturas/v09/guia_minimapa.png")
 		_juego.hud.abrir_mapa()

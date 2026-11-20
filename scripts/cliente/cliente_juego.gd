@@ -160,9 +160,15 @@ func _es_prueba() -> bool:
 
 ## Prólogo de la historia (también desde el menú Misiones → «Ver prólogo»).
 func mostrar_historia() -> void:
+	# Capa propia por encima del HUD: si no, los botones del HUD (que se crean después) quedaban encima y
+	# se comían los toques (no se podía pasar del prólogo).
+	var capa := CanvasLayer.new()
+	capa.layer = 50
+	add_child(capa)
 	var ph := PantallaHistoria.new()
 	ph.sonidos = sonidos
-	hud.add_child(ph)
+	capa.add_child(ph)
+	ph.tree_exited.connect(capa.queue_free)
 	ph.mostrar(Datos.texto("historia_prologo"), Misiones.conf().get("prologo", []))
 	ph.terminado.connect(Perfil.marcar_prologo)
 	Registro.nota("prólogo")
