@@ -4,6 +4,8 @@ extends Control
 ## (experiencia, ryō, pergaminos que enseñan jutsus y cosméticos). El cofre y el pergamino son modelos 3D
 ## (imágenes de GPT → Meshy: cofre_base/cofre_tapa y pergamino) en un visor propio; sin modelos, se dibujan.
 
+signal cerrada
+
 var sonidos: Sonidos
 var _items: Array = []      # [{icono, texto, color}]
 var _t := 0.0
@@ -127,10 +129,18 @@ func _animar_visor() -> void:
 		_pergamino.rotation.y = _t * 1.6
 
 
+var _cerrando := false
+
+
 func cerrar() -> void:
+	if _cerrando:
+		return
+	_cerrando = true
 	var tw := create_tween()
 	tw.tween_property(self, "modulate:a", 0.0, 0.35)
-	tw.tween_callback(queue_free)
+	tw.tween_callback(func():
+		cerrada.emit()
+		queue_free())
 
 
 func _process(delta: float) -> void:

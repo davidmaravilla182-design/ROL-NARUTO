@@ -197,7 +197,10 @@ static func guardar() -> void:
 	if indice >= 0:
 		(personajes[indice] as Dictionary)["progreso"] = prog
 	else:
+		var lug: Variant = _practica.get("lugares")
 		_practica = prog
+		if lug != null:
+			_practica["lugares"] = lug   # lo descubierto en la práctica (puntos de misión, distritos, prólogo)
 	var f := FileAccess.open(RUTA, FileAccess.WRITE)
 	if f == null:
 		return
@@ -313,3 +316,72 @@ static func comando() -> Dictionary:
 	var r := repertorio()
 	return {"t": Protocolo.C_REPERTORIO, "activos": r["activos"], "modo": r["modo"], "niveles_max": r.get("niveles_max", {}),
 		"maestria": maestria.duplicate(), "prueba": modo_prueba}
+
+
+# ------------------------------------------------------------------ guía de la historia
+# Lo que el jugador ya descubrió a pie (en el personaje, o en la práctica si no hay personaje):
+#   lugares.distritos  distritos por los que ya pasó (el «Viaje rápido» del mapa solo lleva a esos)
+#   lugares.misiones   capítulos cuyo punto de misión ya alcanzó (solo entonces se pueden empezar desde el menú)
+#   lugares.prologo    ya vio el prólogo de la historia
+
+static func _lugares() -> Dictionary:
+	cargar()
+	var dueno: Dictionary = personajes[indice] if indice >= 0 else _practica
+	if typeof(dueno.get("lugares")) != TYPE_DICTIONARY:
+		dueno["lugares"] = {"distritos": [], "misiones": [], "prologo": false}
+	return dueno["lugares"]
+
+
+## Índice del capítulo que toca (= número de capítulos completados).
+static func capitulo_indice() -> int:
+	var pj := personaje()
+	return int(pj.get("misiones", {}).get("capitulo", 0)) if not pj.is_empty() else 0
+
+
+## Capítulo siguiente de la historia ({} si ya terminó todos).
+static func capitulo_siguiente() -> Dictionary:
+	var caps: Array = Misiones.conf().get("capitulos", [])
+	var i := capitulo_indice()
+	return caps[i] if i < caps.size() else {}
+
+
+static func mision_visitada(id: String) -> bool:
+	return str(id) in (_lugares().get("misiones", []) as Array)
+
+
+## Marca el punto de misión como alcanzado; devuelve true si es la primera vez.
+static func marcar_mision_visitada(id: String) -> bool:
+	var l := _lugares()
+	var arr: Array = l.get("misiones", [])
+	if str(id) in arr:
+		return false
+	arr.append(str(id))
+	l["misiones"] = arr
+	guardar()
+	return true
+
+
+static func distrito_visitado(id: String) -> bool:
+	return str(id) in (_lugares().get("distritos", []) as Array)
+
+
+static func marcar_distrito(id: String) -> bool:
+	if id == "":
+		return false
+	var l := _lugares()
+	var arr: Array = l.get("distritos", [])
+	if id in arr:
+		return false
+	arr.append(id)
+	l["distritos"] = arr
+	guardar()
+	return true
+
+
+static func prologo_visto() -> bool:
+	return bool(_lugares().get("prologo", false))
+
+
+static func marcar_prologo() -> void:
+	_lugares()["prologo"] = true
+	guardar()

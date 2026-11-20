@@ -148,6 +148,66 @@ func _ready() -> void:
 
 	var aldea := Datos.aldea("lluvia")
 	hud.mensaje(Datos.texto("msg_bienvenida", [aldea.get("nombre_largo", "")]), 3.0)
+	_actualizar_guia()
+	# Primera vez: prólogo con el contexto de la historia (dónde estás y qué pasa).
+	if not Perfil.prologo_visto() and Sesion.mision_pendiente == "" and not _es_prueba():
+		mostrar_historia()
+
+
+func _es_prueba() -> bool:
+	return OS.has_feature("headless") or DisplayServer.get_name() == "headless"
+
+
+## Prólogo de la historia (también desde el menú Misiones → «Ver prólogo»).
+func mostrar_historia() -> void:
+	var ph := PantallaHistoria.new()
+	ph.sonidos = sonidos
+	hud.add_child(ph)
+	ph.mostrar(Datos.texto("historia_prologo"), Misiones.conf().get("prologo", []))
+	ph.terminado.connect(Perfil.marcar_prologo)
+	Registro.nota("prólogo")
+
+
+# ------------------------------------------------------------ guía de la historia
+# Un solo punto dorado: el del capítulo que toca. Al llegar a él la primera vez se puede empezar desde el menú.
+var _guia_cap: Dictionary = {}
+var _guia_pos := Vector2.INF
+var _guia_t := 0.0
+var _en_mision := false
+
+
+func _actualizar_guia() -> void:
+	_guia_cap = Perfil.capitulo_siguiente()
+	_guia_pos = Vector2.INF
+	var distrito := str(_guia_cap.get("distrito", ""))
+	Puntos.mostrar_guia(distrito)
+	for pt in mapa.puntos:
+		if pt["tipo"] == "mision" and str(pt["distrito"]) == distrito:
+			_guia_pos = pt["centro"]
+	if hud.minimapa != null:
+		hud.minimapa.guia = Datos.texto("guia_fin") if _guia_cap.is_empty() else ""
+
+
+func _revisar_guia(delta: float) -> void:
+	_guia_t -= delta
+	if _guia_t > 0.0 or not _visuales.has(mi_id) or hud.minimapa == null:
+		return
+	_guia_t = 0.5
+	var p3 := _pos_entidad(mi_id)
+	var p := Vector2(p3.x, p3.z)
+	var d_id := mapa.distrito_en(p)
+	if Perfil.marcar_distrito(d_id) and d_id != "plaza":
+		hud.mensaje(Datos.texto("guia_distrito", [str(mapa.distrito(d_id).get("nombre", d_id))]), 2.5)
+	if _guia_cap.is_empty() or _guia_pos == Vector2.INF:
+		return
+	if _en_mision:
+		hud.minimapa.guia = ""
+		return
+	var dist := p.distance_to(_guia_pos)
+	hud.minimapa.guia = Datos.texto("guia_siguiente", [str(_guia_cap["titulo"]), int(dist)])
+	if dist < 8.0 and Perfil.marcar_mision_visitada(str(_guia_cap["id"])):
+		hud.mensaje(Datos.texto("guia_llegaste"), 5.0)
+		Registro.nota("punto de misión alcanzado " + str(_guia_cap["id"]))
 
 
 func _conectar_transporte() -> void:
@@ -425,6 +485,7 @@ func _notification(what: int) -> void:
 
 
 func _process(delta: float) -> void:
+	_revisar_guia(delta)
 	_t_latido -= delta
 	if _t_latido <= 0.0:
 		_t_latido = 2.0 if _jefe_activo else 5.0
@@ -1229,12 +1290,14 @@ func _evento_jefe(ev: Dictionary) -> void:
 func _evento_mision(ev: Dictionary) -> void:
 	match str(ev.get("accion", "")):
 		"inicio":
+			_en_mision = true
 			ui_mision.mision_inicio(str(ev.get("titulo", "")))
 		"objetivo":
 			ui_mision.objetivo(str(ev.get("objetivo", "")), str(ev.get("contador", "")), float(ev.get("limite", 0.0)), float(ev.get("t", 0.0)))
 			var zp: Array = ev.get("pos", [])
 			hud.marca_mision(Vector3(float(zp[0]), 0, float(zp[1])) if zp.size() >= 2 else null)
 		"fin":
+			_en_mision = false
 			ui_mision.mision_fin()
 			hud.marca_mision(null)
 			mapa.arena_lago = Vector3.ZERO
@@ -1250,7 +1313,14 @@ func _evento_mision(ev: Dictionary) -> void:
 				extra = Datos.texto("msg_ascenso", [Datos.texto("rango_" + asc)])
 			elif bool(ev.get("sellado", false)):
 				extra = Datos.texto("msg_sellado_ok")
-			ui_mision.recompensa(str(ev.get("titulo", "")), ev.get("recompensa", {}), bool(ev.get("exito", false)), extra)
+			var pr := ui_mision.recompensa(str(ev.get("titulo", "")), ev.get("recompensa", {}), bool(ev.get("exito", false)), extra)
+			_actualizar_guia()
+			# Epílogo del capítulo: qué pasó y adónde ir ahora (el punto dorado ya marca el siguiente).
+			if bool(ev.get("exito", false)) and str(ev.get("tipo_mision", "")) == "capitulo":
+				var cap := Misiones.capitulo(str(ev.get("id", "")))
+				var epi: Array = cap.get("epilogo", [])
+				if not epi.is_empty() and pr != null:
+					pr.cerrada.connect(func(): ui_mision.escena(epi, true, 1.0 + epi.size() * 4.0))
 			if bool(ev.get("exito", false)):
 				_pergaminos_suelo(ev.get("recompensa", {}).get("pergaminos", []))
 

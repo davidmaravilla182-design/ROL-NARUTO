@@ -31,16 +31,19 @@ func configurar(m: Mapa) -> void:
 	col.add_theme_constant_override("separation", 6)
 	add_child(col)
 	var t := Label.new()
-	t.text = "Viaje rápido (pruebas)"
+	t.text = Datos.texto("viaje_titulo")
 	t.add_theme_font_size_override("font_size", 22)
 	col.add_child(t)
+	# Solo a los distritos que ya pisaste (hay que descubrirlos caminando).
 	for d in m.distritos:
 		var b := Button.new()
-		b.text = str(d["nombre"])
+		var id: String = d["id"]
+		var conocido := Perfil.distrito_visitado(id)
+		b.text = str(d["nombre"]) if conocido else Datos.texto("viaje_sin_descubrir")
+		b.disabled = not conocido
 		b.add_theme_font_size_override("font_size", 19)
 		b.custom_minimum_size = Vector2(300, 46)
 		b.focus_mode = Control.FOCUS_NONE
-		var id: String = d["id"]
 		b.pressed.connect(func(): viajar.emit(id))
 		col.add_child(b)
 	var cerrar_b := Button.new()
@@ -89,7 +92,15 @@ func _dibujar() -> void:
 		_lienzo.draw_string_outline(fuente, c - Vector2(90, 0), str(d["corto"]), HORIZONTAL_ALIGNMENT_CENTER, 180, 17, 5, Color(0, 0, 0, 0.95))
 		_lienzo.draw_string(fuente, c - Vector2(90, 0), str(d["corto"]), HORIZONTAL_ALIGNMENT_CENTER, 180, 17, Color(1.0, 0.92, 0.7))
 	for pt in mapa.puntos:
-		_lienzo.draw_circle(_a_lienzo(pt["centro"]), 4.0, Color(1.0, 0.75, 0.3) if pt["tipo"] == "mision" else Color(0.75, 0.55, 1.0))
+		if pt["tipo"] == "mision":
+			if str(pt["distrito"]) == Puntos.distrito_guia and Puntos.distrito_guia != "":
+				var pg := _a_lienzo(pt["centro"])
+				_lienzo.draw_circle(pg, 10.0, Color(0.15, 0.08, 0.0, 0.85))
+				_lienzo.draw_circle(pg, 8.0, Color(1.0, 0.8, 0.25))
+				_lienzo.draw_string_outline(fuente, pg + Vector2(-80, -14), Datos.texto("guia_mapa"), HORIZONTAL_ALIGNMENT_CENTER, 160, 15, 5, Color(0, 0, 0, 0.95))
+				_lienzo.draw_string(fuente, pg + Vector2(-80, -14), Datos.texto("guia_mapa"), HORIZONTAL_ALIGNMENT_CENTER, 160, 15, Color(1.0, 0.85, 0.4))
+			continue
+		_lienzo.draw_circle(_a_lienzo(pt["centro"]), 4.0, Color(0.75, 0.55, 1.0))
 	for o in otros:
 		_lienzo.draw_circle(_a_lienzo(o["pos"]), 5.0, o["color"])
 	_lienzo.draw_circle(_a_lienzo(yo), 7.0, Color(1, 1, 1))

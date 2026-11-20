@@ -71,6 +71,19 @@ func _llenar() -> void:
 		h.queue_free()
 	match _pestana:
 		"historia":
+			# Contexto: dónde estás y de qué va la historia, con el prólogo a mano.
+			var ctx := HBoxContainer.new()
+			ctx.add_theme_constant_override("separation", 14)
+			var tx := _label(str(Misiones.conf().get("contexto", "")), 17, Color(0.86, 0.88, 0.95))
+			tx.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			tx.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			tx.custom_minimum_size = Vector2(400, 0)
+			ctx.add_child(tx)
+			ctx.add_child(_boton(Datos.texto("historia_ver_prologo"), func():
+				var ph := PantallaHistoria.new()
+				add_child(ph)
+				ph.mostrar(Datos.texto("historia_prologo"), Misiones.conf().get("prologo", []))))
+			_contenido.add_child(ctx)
 			var mis: Dictionary = _pj.get("misiones", {})
 			var sig := int(mis.get("capitulo", 0))
 			var caps: Array = Misiones.conf().get("capitulos", [])
@@ -123,7 +136,14 @@ func _tarjeta_capitulo(i: int, c: Dictionary, estado: String) -> Control:
 	lx.custom_minimum_size = Vector2(170, 0)
 	lx.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	fila.add_child(lx)
-	if estado == "siguiente" or estado == "hecho":
+	# El capítulo que toca solo se empieza desde aquí si ya llegaste a pie a su punto dorado en la aldea.
+	if estado == "siguiente" and not Perfil.mision_visitada(str(c["id"])):
+		var lg := _label(Datos.texto("mis_ir_al_punto"), 18, col)
+		lg.custom_minimum_size = Vector2(170, 0)
+		lg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		fila.add_child(lg)
+	elif estado == "siguiente" or estado == "hecho":
 		var id := str(c["id"])
 		var b := _boton(Datos.texto("mis_jugar") if estado == "siguiente" else Datos.texto("mis_repetir"), func():
 			Sesion.mision_pendiente = id

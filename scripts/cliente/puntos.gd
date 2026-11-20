@@ -7,6 +7,8 @@ extends RefCounted
 ## Puntos con los que se puede interactuar: [{nodo, tipo, distrito, nombre}] (el cliente busca el más cercano).
 static var lista: Array = []
 static var _dialogos: Dictionary = {}
+## Distrito del capítulo que toca: solo su punto de misión se ve (en el mundo, el minimapa y el mapa). "" = ninguno.
+static var distrito_guia := ""
 
 
 static func construir(e: Escenario, m: Mapa) -> void:
@@ -56,7 +58,19 @@ static func construir(e: Escenario, m: Mapa) -> void:
 		marca.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		pv.add_child(marca)
 		lista.append({"nodo": pv, "tipo": "npc_mision", "distrito": str(npc["distrito"]), "nombre": Datos.personaje(str(npc["plantilla"])).get("nombre", ""),
-			"mision": str(npc.get("mision", ""))})
+			"mision": str(npc.get("mision", "")), "marca": marca})
+	mostrar_guia(distrito_guia)
+
+
+## Deja visible solo el punto de misión (y la marca del personaje de misión) del distrito del capítulo que toca.
+static func mostrar_guia(distrito: String) -> void:
+	distrito_guia = distrito
+	for p in lista:
+		var activo := str(p["distrito"]) == distrito and distrito != ""
+		if p["tipo"] == "mision" and is_instance_valid(p["nodo"]):
+			(p["nodo"] as Node3D).visible = activo
+		elif p["tipo"] == "npc_mision" and p.has("marca") and is_instance_valid(p["marca"]):
+			(p["marca"] as Node3D).visible = activo
 
 
 static func dialogos() -> Dictionary:

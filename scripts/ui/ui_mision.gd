@@ -23,7 +23,7 @@ var _linea_i := 0
 var _letras := 0.0
 var _escena_t := 0.0
 var _pajaro := false
-var _recompensa: Control
+var _recompensa: PantallaRecompensa
 var _anuncio: Label
 
 
@@ -186,13 +186,14 @@ func _dibujar_escena() -> void:
 
 # ------------------------------------------------------------------ recompensa
 
-func recompensa(titulo: String, rec: Dictionary, exito: bool, extra := "") -> void:
+func recompensa(titulo: String, rec: Dictionary, exito: bool, extra := "") -> PantallaRecompensa:
 	if _recompensa != null and is_instance_valid(_recompensa):
 		_recompensa.queue_free()
 	_recompensa = PantallaRecompensa.new()
 	_recompensa.sonidos = sonidos
 	add_child(_recompensa)
 	_recompensa.mostrar(titulo, rec, exito, extra)
+	return _recompensa
 
 
 func anuncio(t: String) -> void:

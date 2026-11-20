@@ -18,6 +18,7 @@ func _initialize() -> void:
 	probar_jefe()
 	probar_orilla_lago()
 	probar_jutsus_tras_mision()
+	probar_guia_historia()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -69,6 +70,33 @@ func probar_jutsus_tras_mision() -> void:
 	var i := cliente.find("transporte.enviar(Perfil.comando_personaje())\n\t\t\ttransporte.enviar(Perfil.comando())")
 	comprobar(i >= 0, "el cliente reenvía el repertorio después del personaje al terminar una misión")
 	s.free()
+
+
+## Guía de la historia: cada capítulo tiene su punto de misión en el mapa, intro y epílogo; hay prólogo y contexto;
+## el perfil recuerda puntos alcanzados y distritos descubiertos.
+func probar_guia_historia() -> void:
+	var conf := Misiones.conf()
+	comprobar(str(conf.get("contexto", "")).length() > 80 and (conf.get("prologo", []) as Array).size() >= 4, "hay contexto y prólogo de la historia")
+	var m := Mapa.generar()
+	var ok_puntos := true
+	var ok_epi := true
+	for c in conf.get("capitulos", []):
+		var hay := false
+		for pt in m.puntos:
+			if pt["tipo"] == "mision" and str(pt["distrito"]) == str(c["distrito"]):
+				hay = true
+		ok_puntos = ok_puntos and hay
+		ok_epi = ok_epi and (c.get("epilogo", []) as Array).size() >= 1
+	comprobar(ok_puntos, "cada capítulo tiene su punto dorado en el mapa")
+	comprobar(ok_epi, "cada capítulo tiene epílogo (qué pasó y adónde ir)")
+	Perfil.cargar()
+	var idp := "cap_prueba_%d" % Time.get_unix_time_from_system()
+	var antes := Perfil.mision_visitada(idp)
+	var primera := Perfil.marcar_mision_visitada(idp)
+	var segunda := Perfil.marcar_mision_visitada(idp)
+	comprobar(not antes and primera and not segunda and Perfil.mision_visitada(idp), "el punto de misión se marca una sola vez y se recuerda")
+	Perfil.marcar_distrito("canal")
+	comprobar(Perfil.distrito_visitado("canal") and not Perfil.distrito_visitado("distrito_inexistente"), "se recuerdan los distritos descubiertos (viaje rápido)")
 
 
 func comprobar(cond: bool, nombre: String) -> void:
@@ -162,7 +190,7 @@ func probar_oleadas() -> void:
 	j.invulnerable_t = 999.0
 	var lejos := j.pos
 	s.misiones.empezar_capitulo(j, "cap2")
-	var ev0 := correr(s, 6.0)
+	var ev0 := correr(s, 9.5)   # la escena del pájaro (2 líneas) dura ~8 s
 	# Empezada lejos (en la plaza, como desde el menú): el pájaro lleva al jugador a la zona de la emboscada
 	# y los rebeldes lo atacan (antes se quedaban a 150 m y no pasaba nada).
 	var zona := Vector3(92, 0, -120)
@@ -195,7 +223,7 @@ func probar_persecucion() -> void:
 	var j := s.entidad_de_peer(1)
 	j.invulnerable_t = 999.0
 	s.misiones.empezar_capitulo(j, "cap3")
-	correr(s, 5.0)
+	correr(s, 9.0)   # escena del pájaro (2 líneas, ~8 s) y arranca la persecución
 	var presa: EntidadServidor = null
 	for e in s.entidades:
 		if e.de_mision:
@@ -208,7 +236,7 @@ func probar_persecucion() -> void:
 	comprobar(not f.is_empty() and not bool(f["exito"]), "si escapa, la misión fracasa")
 	# Ahora sí: se le alcanza.
 	s.misiones.empezar_capitulo(j, "cap3")
-	correr(s, 5.0)
+	correr(s, 9.0)   # escena del pájaro (2 líneas, ~8 s) y arranca la persecución
 	limpiar(s)
 	f = fin(correr(s, 0.5))
 	comprobar(not f.is_empty() and bool(f["exito"]), "derribar al intruso cumple el capítulo 3")

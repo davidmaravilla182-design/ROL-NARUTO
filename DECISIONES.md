@@ -284,3 +284,11 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
   daño de NPC ×0,4, reacción a golpe de NPC 0,22 s, salida del combo al 3.er golpe seguido, invulnerabilidad al
   levantarse, respiro (40 %) entre oleadas/duelos y al llegar los capitanes, 20 % en cada fase del jefe.
 - **Intruso**: velocidad 3, corre al 80 %, se para 1,5 s en cada punto de la ruta y pelea 4 s si lo alcanzas.
+
+## Guía de la historia (v0.9.2)
+- **Un solo punto dorado**: solo el punto de misión del capítulo que toca se ve (mundo, minimapa —pegado al borde
+  si queda lejos— y mapa completo, con la etiqueta «Misión»). Bajo el minimapa: «Siguiente: <capítulo> · N m».
+- **Descubrir a pie**: el capítulo que toca solo se empieza desde el menú Misiones cuando ya llegaste a su punto
+  (Perfil → lugares.misiones); el «Viaje rápido» del mapa solo lleva a distritos ya pisados (lugares.distritos).
+- **Historia**: `data/misiones.json` → `contexto`, `prologo` (se muestra la primera vez y desde Misiones → «Ver
+  prólogo»), intros más largas por capítulo y `epilogo` (qué pasó y adónde ir) tras la pantalla de recompensa.
