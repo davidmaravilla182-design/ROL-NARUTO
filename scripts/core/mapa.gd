@@ -41,6 +41,19 @@ static func generar(conf: Dictionary = {}) -> Mapa:
 	return m
 
 
+## Arena: el campo abierto sin la aldea (data/escenario.json → "arena" ajusta tamaño, torres del borde, cajas).
+static func conf_arena() -> Dictionary:
+	Datos.cargar()
+	var c: Dictionary = Datos.escenario.duplicate(true)
+	c.erase("trazado")
+	c.erase("aldea")
+	var ar: Dictionary = c.get("arena", {})
+	for k in ar.keys():
+		if not str(k).begins_with("_"):
+			c[k] = ar[k]
+	return c
+
+
 static func _v2(a: Array) -> Vector2:
 	return Vector2(float(a[0]), float(a[1]))
 

@@ -43,6 +43,8 @@ func construir(p_mapa: Mapa) -> void:
 		_torres_cajas()
 		Trazado.construir(self, mapa)
 	_campo_entrenamiento()
+	if mapa.piezas.is_empty() and mapa.radio_caminable <= 0.0:
+		_muro_arena()
 	_atmosfera()
 	Materiales.grosor_contorno = 0.0
 
@@ -419,6 +421,29 @@ func _torres() -> void:
 	mm_t.mesh = cil
 	_llenar(mm_t, tuberias)
 	_mmi(mm_t, true)
+
+
+## Arena: muro bajo de concreto en el borde del campo (límite claro sin tapar la vista) con faroles en las esquinas.
+func _muro_arena() -> void:
+	var l := mapa.limite + 0.6
+	var mat := Shaders.toon_tex("concreto", Color(0.75, 0.76, 0.82), Vector2.ONE, true, 0.25, 0.0, 0.7)
+	for lado in [Vector3(0, 0, -1), Vector3(0, 0, 1), Vector3(-1, 0, 0), Vector3(1, 0, 0)]:
+		var largo := l * 2.0 + 1.2
+		var tam := Vector3(largo, 1.1, 0.6) if lado.z != 0.0 else Vector3(0.6, 1.1, largo)
+		var muro := Materiales.caja(tam, mat)
+		muro.position = lado * l + Vector3(0, 0.55, 0)
+		add_child(muro)
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			var luz := OmniLight3D.new()
+			luz.light_color = Color(1.0, 0.75, 0.4)
+			luz.light_energy = 1.6
+			luz.omni_range = 14.0
+			luz.position = Vector3(sx * l, 3.0, sz * l)
+			add_child(luz)
+			var poste := Materiales.cilindro(0.15, 0.2, 3.0, Materiales.solido(Color(0.2, 0.2, 0.22), 0.5), 6)
+			poste.position = Vector3(sx * l, 1.5, sz * l)
+			add_child(poste)
 
 
 func _campo_entrenamiento() -> void:

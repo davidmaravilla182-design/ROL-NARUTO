@@ -69,6 +69,16 @@ func empezar_capitulo(e: EntidadServidor, id: String) -> bool:
 	return true
 
 
+## Modo Arena: rondas de enemigos cada vez más grandes en un campo abierto, con dos bots aliados.
+## Termina cuando cae el jugador; la recompensa depende de las rondas superadas.
+func empezar_arena(e: EntidadServidor) -> bool:
+	if hay_activa() or e == null:
+		return false
+	_iniciar({"id": "arena", "tipo": "arena", "titulo": "Arena", "fases": [{"tipo": "arena", "objetivo": str(conf().get("arena", {}).get("objetivo", ""))}], "recompensa": {}, "prueba": "",
+		"dueno": e.id})
+	return true
+
+
 ## Evento dinámico (emboscada, alarma, cazarrecompensas) o duelo con el instructor.
 func empezar_evento(tipo: String, e: EntidadServidor = null) -> bool:
 	if hay_activa():
@@ -149,6 +159,17 @@ func _siguiente_fase() -> void:
 		"duelos":
 			d["rival_i"] = 0
 			_nuevo_rival(f)
+		"arena":
+			d["ronda"] = 0
+			d["pausa"] = 2.5
+			activa["aliados"] = []
+			var ca: Dictionary = conf().get("arena", {})
+			var js := _jugadores()
+			for i in int(ca.get("aliados", 2)):
+				var al := _crear(str(ca.get("plantilla_aliado", "guardia_lluvia")), Vector3(-4.0 + i * 8.0, 0, 16.0), {"nombre": str(ca.get("nombre_aliado", "Aliado")) + " %d" % (i + 1)})
+				if not js.is_empty():
+					al.equipo = (js[0] as EntidadServidor).equipo
+				(activa["aliados"] as Array).append(al.id)
 		"oleadas":
 			d["oleada"] = 0
 			_llevar_jugadores(_v3(f["pos"]), 13.0)
@@ -217,6 +238,8 @@ func _contador() -> String:
 			return "Oleada %d / %d · quedan %d enemigos" % [int(d.get("oleada", 0)) + 1, (f["oleadas"] as Array).size(), _vivos().size()]
 		"defender":
 			return "Quedan %d s" % int(maxf(float(d.get("limite", 0.0)) - float(activa.get("t", 0.0)), 0.0))
+		"arena":
+			return "Ronda %d · quedan %d" % [int(d.get("ronda", 0)), _vivos().size()]
 	return ""
 
 
@@ -230,6 +253,9 @@ func actualizar(dt: float) -> void:
 	# Si caen todos los jugadores, la misión fracasa.
 	var vivos_j := _jugadores().filter(func(j): return j.vivo())
 	if vivos_j.is_empty() and str(f["tipo"]) != "escena":
+		if str(f["tipo"]) == "arena":
+			_fin_arena()
+			return
 		terminar(false)
 		return
 	match str(f["tipo"]):
@@ -265,6 +291,8 @@ func actualizar(dt: float) -> void:
 					_respiro()
 					_nueva_oleada(f)
 					_avisar_objetivo()
+		"arena":
+			_actualizar_arena(f, d, dt)
 		"perseguir":
 			var p := s.entidad(int(d["presa"]))
 			if p == null or not p.vivo():
@@ -310,6 +338,55 @@ func actualizar(dt: float) -> void:
 		_avisar_objetivo()
 
 
+func _actualizar_arena(_f: Dictionary, d: Dictionary, dt: float) -> void:
+	if not _vivos().is_empty():
+		return
+	d["pausa"] = float(d["pausa"]) - dt
+	if float(d["pausa"]) > 0.0:
+		return
+	if int(d["ronda"]) > 0:
+		_respiro(float(conf().get("arena", {}).get("respiro", 0.3)))
+	d["ronda"] = int(d["ronda"]) + 1
+	d["pausa"] = 3.0
+	var r := int(d["ronda"])
+	var ca: Dictionary = conf().get("arena", {})
+	s._evento({"tipo": "anuncio", "titulo": "¡Ronda %d!" % r, "para_todos": true})
+	# Composición de la ronda (data/misiones.json → arena): más enemigos cada vez, un tirador desde cierta ronda,
+	# un capitán y un líder cada pocas rondas.
+	var mezcla: Array = ca.get("mezcla", ["rebelde_soldado", "guardia_lluvia"])
+	var n := mini(int(ca.get("base", 1)) + int(ceil(r * float(ca.get("crecimiento", 0.75)))), int(ca.get("maximo", 7)))
+	for i in n:
+		var a := TAU * float(i) / float(n) + _rng.randf() * 0.3
+		var pl := str(mezcla[(i + r) % mezcla.size()])
+		# Desde cierta ronda, uno de ellos ataca a distancia (antes no: un ninja que huye y dispara es injusto al empezar).
+		if i == n - 1 and r >= int(ca.get("distancia_desde", 3)):
+			pl = str(ca.get("plantilla_distancia", "ninja_agua"))
+		_crear(pl, Vector3(cos(a), 0, sin(a)) * 22.0, {"ia": ca.get("ia_distancia", {})} if pl == str(ca.get("plantilla_distancia", "ninja_agua")) else {})
+	if r % int(ca.get("capitan_cada", 4)) == 0:
+		_crear("capitan_rebelde", Vector3(0, 0, -22.0), {"jefe": true, "nombre": "Capitán de la arena"})
+	if r % int(ca.get("lider_cada", 6)) == 0:
+		_crear("lider_rebelde", Vector3(0, 0, -24.0), {"jefe": true, "nombre": "Campeón rebelde", "vida_extra": 1.0 + r * 0.1})
+	# Los aliados caídos vuelven al empezar cada ronda.
+	for id in activa.get("aliados", []):
+		var al := s.entidad(int(id))
+		if al != null and not al.vivo():
+			al.reiniciar()
+			if al.ia != null:
+				al.ia.reiniciar()
+			s._evento({"tipo": "reaparecer_npc", "entidad": al.id})
+	_avisar_objetivo()
+
+
+## Fin de la arena (cayó el jugador): premio según las rondas superadas.
+func _fin_arena() -> void:
+	var d: Dictionary = activa["datos"]
+	var superadas := maxi(int(d.get("ronda", 1)) - 1, 0)
+	var ca: Dictionary = conf().get("arena", {})
+	activa["recompensa"] = {"xp": superadas * int(ca.get("xp_ronda", 120)), "ryo": superadas * int(ca.get("ryo_ronda", 100)), "ronda": superadas}
+	activa["titulo"] = "Arena · %d rondas" % superadas
+	terminar(superadas > 0)
+
+
 ## Respiro entre oleadas y entre duelos: recupera parte de la vida y el chakra.
 func _respiro(frac := -1.0) -> void:
 	var rf := frac if frac >= 0.0 else float(Datos.reglas.get("ia_cuerpo_a_cuerpo", {}).get("respiro_oleada", 0.0))
@@ -352,7 +429,7 @@ func _vivos() -> Array:
 	var r: Array = []
 	for id in activa.get("ent", []):
 		var e := s.entidad(int(id))
-		if e != null and e.vivo() and e.tipo != "jefe":
+		if e != null and e.vivo() and e.tipo != "jefe" and not (int(id) in activa.get("aliados", [])):
 			r.append(e)
 	return r
 
@@ -373,6 +450,8 @@ func _crear(plantilla: String, pos: Vector3, g: Dictionary) -> EntidadServidor:
 	e.de_mision = true
 	if g.has("nombre"):
 		e.nombre = str(g["nombre"])
+	for k in (g.get("ia", {}) as Dictionary).keys():
+		e.ia.conf[k] = g["ia"][k]   # ajustes de IA por misión (p. ej. el tirador de la arena se acerca más)
 	if float(g.get("vida_extra", 1.0)) != 1.0:
 		e.stats["vida_max"] = float(e.stats["vida_max"]) * float(g["vida_extra"])
 		e.vida = float(e.stats["vida_max"])

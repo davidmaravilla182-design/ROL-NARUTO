@@ -48,7 +48,7 @@ func _ready() -> void:
 	Datos.cargar()
 	Ajustes.cargar()
 	_registrar_teclas()
-	mapa = Mapa.generar()
+	mapa = Mapa.generar(Mapa.conf_arena() if Sesion.modo == "arena" else {})
 	Engine.time_scale = 1.0
 	get_viewport().scaling_3d_scale = float(Ajustes.g("escala_3d", 1.0))
 	Ajustes.aplicar_fps()
@@ -137,7 +137,8 @@ func _ready() -> void:
 	add_child(servidor)
 	servidor.iniciar(mapa)
 	servidor.poblar_entrenamiento(false)   # sin rival de práctica: atacaba al empezar, incluso al ir a misiones
-	servidor.poblar_aldea()
+	if Sesion.modo != "arena":
+		servidor.poblar_aldea()
 	var local := TransporteLocal.new()
 	local.name = "Transporte"
 	add_child(local)
@@ -151,7 +152,7 @@ func _ready() -> void:
 	hud.mensaje(Datos.texto("msg_bienvenida", [aldea.get("nombre_largo", "")]), 3.0)
 	_actualizar_guia()
 	# Primera vez: prólogo con el contexto de la historia (dónde estás y qué pasa).
-	if not Perfil.prologo_visto() and Sesion.mision_pendiente == "" and not _es_prueba():
+	if not Perfil.prologo_visto() and Sesion.mision_pendiente == "" and not _es_prueba() and Sesion.modo != "arena":
 		mostrar_historia()
 
 
@@ -226,7 +227,9 @@ func _conectar_transporte() -> void:
 		if not Perfil.personaje().is_empty():
 			transporte.enviar(Perfil.comando_personaje())
 		transporte.enviar(Perfil.comando())
-		if Sesion.mision_pendiente != "":
+		if Sesion.modo == "arena":
+			transporte.enviar({"t": Protocolo.C_MISION, "accion": "arena", "id": ""})
+		elif Sesion.mision_pendiente != "":
 			transporte.enviar({"t": Protocolo.C_MISION, "accion": "empezar", "id": Sesion.mision_pendiente})
 			Sesion.mision_pendiente = "")
 	transporte.estado_recibido.connect(_on_estado)
@@ -419,8 +422,8 @@ func _ciclar_objetivo() -> void:
 	var yo := _pos_entidad(mi_id)
 	var lista: Array = []
 	for e in _estado.get("entidades", []):
-		if int(e["id"]) == mi_id or str(e["estado"]) == "muerto":
-			continue
+		if int(e["id"]) == mi_id or str(e["estado"]) == "muerto" or _es_aliado(int(e["id"])):
+			continue   # no se fija a los aliados
 		var d := ((e["pos"] as Vector3) - yo).length()
 		if d < 30.0:
 			lista.append([d, int(e["id"]), e])
@@ -685,7 +688,7 @@ func _on_estado(est: Dictionary) -> void:
 		_actualizar_visual(_visuales[id], e)
 		if id == mi_id:
 			yo = e
-		elif e["tipo"] == "enemigo":
+		elif e["tipo"] == "enemigo" and not _es_aliado(id):
 			enemigos.append(e)
 		elif e["tipo"] == "jefe" and not bool(e.get("falsa", false)):
 			jefe_e = e
@@ -771,7 +774,7 @@ func _crear_visual(e: Dictionary) -> void:
 	nodo.position = e["pos"]
 	nodo.rotation.y = float(e["yaw"])
 	_visuales[int(e["id"])] = {"nodo": nodo, "tipo": e["tipo"], "destino": e["pos"], "yaw": e["yaw"], "estado": "", "carga": null, "vel": 0.0, "paso": -1}
-	if red != null and e["tipo"] != "muneco":
+	if (red != null or (Sesion.modo == "arena" and int(e["id"]) != mi_id)) and e["tipo"] != "muneco":
 		var placa := Placa.new()
 		nodo.add_child(placa)
 		var propio := int(e["id"]) == mi_id

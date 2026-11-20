@@ -19,6 +19,7 @@ func _initialize() -> void:
 	probar_orilla_lago()
 	probar_jutsus_tras_mision()
 	probar_guia_historia()
+	probar_arena()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -97,6 +98,36 @@ func probar_guia_historia() -> void:
 	comprobar(not antes and primera and not segunda and Perfil.mision_visitada(idp), "el punto de misión se marca una sola vez y se recuerda")
 	Perfil.marcar_distrito("canal")
 	comprobar(Perfil.distrito_visitado("canal") and not Perfil.distrito_visitado("distrito_inexistente"), "se recuerdan los distritos descubiertos (viaje rápido)")
+
+
+## Modo Arena: campo abierto, dos aliados del equipo del jugador, rondas que crecen y la IA elige rival de otro bando.
+func probar_arena() -> void:
+	var s := ServidorJuego.new()
+	s.auto_procesar = false
+	s.iniciar(Mapa.generar(Mapa.conf_arena()))
+	s.agregar_jugador(1)
+	var j := s.entidad_de_peer(1)
+	j.invulnerable_t = 9999.0
+	comprobar(s.mapa.radio_caminable <= 0.0 and s.mapa.limite <= 40.0, "la arena es un campo abierto acotado (límite %.0f m)" % s.mapa.limite)
+	s.recibir_comando(1, {"t": Protocolo.C_MISION, "accion": "arena", "id": ""})
+	var evs := correr(s, 4.0)
+	var aliados := s.entidades.filter(func(e): return e.de_mision and e.equipo == j.equipo)
+	var enemigos := s.entidades.filter(func(e): return e.de_mision and e.equipo != j.equipo and e.vivo())
+	comprobar(aliados.size() == 2, "la arena trae dos aliados del equipo del jugador (%d)" % aliados.size())
+	comprobar(enemigos.size() >= 2 and evs.any(func(ev): return ev["tipo"] == "anuncio" and str(ev["titulo"]).begins_with("¡Ronda 1")), "empieza la ronda 1 con %d enemigos" % enemigos.size())
+	var obj_aliado: EntidadServidor = s.objetivo_ia(aliados[0])
+	comprobar(obj_aliado != null and obj_aliado.equipo != j.equipo, "la IA de un aliado apunta a un enemigo")
+	var obj_enemigo: EntidadServidor = s.objetivo_ia(enemigos[0])
+	comprobar(obj_enemigo != null and obj_enemigo.equipo == j.equipo, "la IA de un enemigo apunta al jugador o a un aliado")
+	for e in enemigos:
+		s._aplicar_dano(e, 99999.0, j, {"jutsu": "golpe", "dir": Vector3.FORWARD})
+	evs = correr(s, 4.5)
+	comprobar(evs.any(func(ev): return ev["tipo"] == "anuncio" and str(ev["titulo"]).begins_with("¡Ronda 2")), "al limpiar la ronda empieza la siguiente")
+	j.invulnerable_t = 0.0
+	s._aplicar_dano(j, 99999.0, null, {"jutsu": "golpe", "dir": Vector3.FORWARD})
+	var f := fin(correr(s, 1.0))
+	comprobar(not f.is_empty() and bool(f["exito"]) and int(f["recompensa"].get("xp", 0)) > 0, "al caer se cobra lo de las rondas superadas (%s)" % str(f.get("recompensa", {})))
+	s.free()
 
 
 func comprobar(cond: bool, nombre: String) -> void:

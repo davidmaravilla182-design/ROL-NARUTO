@@ -953,5 +953,33 @@
    "Pájaro de papel",
    "Preséntate en la academia, al norte de la plaza. Sigue el punto dorado del mapa."
   ]
- ]
+ ],
+ "arena": {
+  "_nota": "Modo Arena: rondas infinitas en un campo abierto. base+ronda enemigos cuerpo a cuerpo (máximo); desde la ronda «distancia_desde» uno de ellos es un ninja a distancia; capitán cada 3 rondas y líder cada 5; dos bots aliados que reviven cada ronda; premio por ronda superada.",
+  "aliados": 2,
+  "plantilla_aliado": "guardia_lluvia",
+  "nombre_aliado": "Aliado",
+  "mezcla": [
+   "rebelde_soldado",
+   "guardia_lluvia"
+  ],
+  "base": 1,
+  "maximo": 7,
+  "xp_ronda": 120,
+  "ryo_ronda": 100,
+  "objetivo": "Sobrevive todas las rondas que puedas",
+  "distancia_desde": 4,
+  "plantilla_distancia": "ninja_agua",
+  "ia_distancia": {
+   "distancia_preferida": 7.0,
+   "distancia_minima": 4.0,
+   "prob_esquivar": 0.3,
+   "prob_sustitucion": 0.2,
+   "usa_dragon": false
+  },
+  "respiro": 0.35,
+  "capitan_cada": 4,
+  "lider_cada": 6,
+  "crecimiento": 0.75
+ }
 }

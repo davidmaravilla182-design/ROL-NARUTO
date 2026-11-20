@@ -292,3 +292,13 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
   (Perfil → lugares.misiones); el «Viaje rápido» del mapa solo lleva a distritos ya pisados (lugares.distritos).
 - **Historia**: `data/misiones.json` → `contexto`, `prologo` (se muestra la primera vez y desde Misiones → «Ver
   prólogo»), intros más largas por capítulo y `epilogo` (qué pasó y adónde ir) tras la pantalla de recompensa.
+
+## Combate en grupo y modo Arena (v0.9.3, a partir del análisis de un video de referencia)
+- **Avisos de área en el suelo**: aro y relleno que crece hasta el impacto (rojo peligro / azul propio o aliado).
+- **Marcas de bando**: aro bajo cada personaje (rojo enemigo, azul aliado) y placa «ALIADO · nombre».
+- **Cámara** que se acerca ante un edificio en vez de atravesarlo (`Mapa.punto_solido`).
+- **IA**: elige el rival más cercano de otro bando (`ServidorJuego.objetivo_ia`), así existen bots aliados.
+- **Modo Arena** (menú → Arena): campo abierto de 64 × 64 m (`escenario.json → arena`), muro bajo en el borde,
+  torres de fondo, cajas de cobertura; rondas que crecen con un tirador, capitán y líder cada pocas rondas
+  (`misiones.json → arena`); dos aliados que reviven cada ronda; premio por ronda superada. La prueba de
+  jugabilidad exige que el jugador promedio supere 3 rondas.

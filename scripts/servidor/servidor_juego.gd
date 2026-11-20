@@ -252,6 +252,8 @@ func aplicar_comando(e: EntidadServidor, cmd: Dictionary) -> void:
 				"evento":
 					if str(cmd["id"]) == "duelo_instructor":
 						misiones.empezar_evento("duelo_instructor", e)
+				"arena":
+					misiones.empezar_arena(e)
 				"abandonar":
 					misiones.abandonar()
 				"sellar":
@@ -1412,6 +1414,23 @@ func _buscar_objetivo(e: EntidadServidor, yaw_base: float, angulo_grados: float,
 		var puntaje := dist + ang * 0.15 + (6.0 if o.tipo == "muneco" else 0.0)
 		if puntaje < mejor_puntaje:
 			mejor_puntaje = puntaje
+			mejor = o
+	return mejor
+
+
+## Rival más cercano para la IA: cualquier personaje vivo de otro bando (jugadores y bots aliados para los
+## enemigos; enemigos para los bots aliados del modo Arena). Sin muñecos, jefes ni copias ilusorias.
+func objetivo_ia(e: EntidadServidor) -> EntidadServidor:
+	var mejor: EntidadServidor = null
+	var md := INF
+	for o in entidades:
+		if o == e or not o.vivo() or o.oculto or o.falsa or o.equipo == e.equipo:
+			continue
+		if o.tipo != "jugador" and o.tipo != "enemigo":
+			continue
+		var d := o.pos.distance_to(e.pos)
+		if d < md:
+			md = d
 			mejor = o
 	return mejor
 

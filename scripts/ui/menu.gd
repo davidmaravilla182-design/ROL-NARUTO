@@ -52,8 +52,10 @@ func _ready() -> void:
 	Perfil.cargar()
 	var boton := _boton_menu("BotonEntrenar", Datos.texto("menu_entrenar_offline"), 34, Vector2(400, 88), func(): _jugar("offline"))
 	boton.add_theme_font_override("font", Estilo.fuente_titulo())
-	var crear_red := _boton_menu("BotonCrearRed", Datos.texto("menu_crear_red"), 24, Vector2(290, 88), func(): _jugar("anfitrion"))
-	var unirse := _boton_menu("BotonUnirse", Datos.texto("menu_unirse_red"), 24, Vector2(290, 88), func(): _jugar("cliente"))
+	var arena := _boton_menu("BotonArena", Datos.texto("menu_arena"), 30, Vector2(220, 88), func(): _jugar("arena"))
+	arena.add_theme_font_override("font", Estilo.fuente_titulo())
+	var crear_red := _boton_menu("BotonCrearRed", Datos.texto("menu_crear_red"), 22, Vector2(250, 88), func(): _jugar("anfitrion"))
+	var unirse := _boton_menu("BotonUnirse", Datos.texto("menu_unirse_red"), 22, Vector2(250, 88), func(): _jugar("cliente"))
 	var personaje := _boton_menu("BotonPersonaje", Datos.texto("pj_activo", [Perfil.nombre_activo()]), 22, Vector2(300, 66),
 		func(): get_tree().change_scene_to_file(ESCENA_PERSONAJE))
 	var repertorio := _boton_menu("BotonRepertorio", Datos.texto("menu_repertorio"), 22, Vector2(220, 66),
@@ -69,6 +71,7 @@ func _ready() -> void:
 	var fila := HBoxContainer.new()
 	fila.add_theme_constant_override("separation", 14)
 	fila.add_child(boton)
+	fila.add_child(arena)
 	fila.add_child(crear_red)
 	fila.add_child(unirse)
 	var fila2 := HBoxContainer.new()

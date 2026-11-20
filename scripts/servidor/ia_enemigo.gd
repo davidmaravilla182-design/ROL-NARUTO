@@ -80,7 +80,7 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 		lado = -lado
 	t_genjutsu -= dt
 	t_humo -= dt
-	var objetivo := s._jugador_mas_cercano(e.pos)
+	var objetivo := s.objetivo_ia(e)   # el rival más cercano de otro bando (jugador, aliado o enemigo)
 	# Intruso: corre por su ruta (sube por las paredes al toparse con ellas); si lo alcanzan, se defiende.
 	# Más lento que a la carrera (velocidad_huida), se para a mirar atrás en cada punto (pausa_ruta) y, si lo
 	# alcanzan o lo golpean, se queda peleando unos segundos (acorralado).
@@ -214,7 +214,7 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 			s.npc_humo(e, objetivo.pos)
 			t_reaccion = 0.4
 			return
-	if perfil == "distancia" and dist <= 15.0 and e.recarga("dragon_agua") <= 0.0 and rng.randf() < 0.25:
+	if perfil == "distancia" and bool(conf.get("usa_dragon", true)) and dist <= 15.0 and e.recarga("dragon_agua") <= 0.0 and rng.randf() < 0.25:
 		s.aplicar_comando(e, {"t": "accion", "id": "dragon_agua", "objetivo": objetivo.id})
 		t_reaccion = 1.2
 		return

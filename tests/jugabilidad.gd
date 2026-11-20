@@ -30,6 +30,18 @@ func _initialize() -> void:
 			print("  ", linea)
 		else:
 			comprobar(ok, linea)
+	# Arena: un jugador promedio debe superar al menos 3 rondas.
+	var notas_a: Array = []
+	var buenas := 0
+	for k in INTENTOS:
+		var r := jugar(0, "arena", 500 + k * 11)
+		notas_a.append("%d rondas (%s %ds vida %d%% %s)" % [int(r.get("rondas", 0)), r["motivo"], int(r["t"]), int(r["vida"] * 100), str(r["dano"])])
+		if int(r.get("rondas", 0)) >= 3:
+			buenas += 1
+	if OS.get_environment("INFORME") == "1":
+		print("  arena (≥3 rondas)                  %d/%d  %s" % [buenas, INTENTOS, ", ".join(notas_a)])
+	else:
+		comprobar(buenas * 2 > INTENTOS, "arena: el jugador promedio supera 3 rondas (%s)" % ", ".join(notas_a))
 	var eventos: Dictionary = Misiones.conf().get("eventos", {})
 	for tipo in eventos.keys():
 		if typeof(eventos[tipo]) != TYPE_DICTIONARY:
@@ -63,7 +75,7 @@ func jugar(indice: int, id: String, semilla: int) -> Dictionary:
 	seed(semilla)
 	var s := ServidorJuego.new()
 	s.auto_procesar = false
-	s.iniciar()
+	s.iniciar(Mapa.generar(Mapa.conf_arena()) if id == "arena" else null)
 	s.agregar_jugador(1)
 	var j := s.entidad_de_peer(1)
 	var pj := Creacion.nuevo()
@@ -73,7 +85,9 @@ func jugar(indice: int, id: String, semilla: int) -> Dictionary:
 		pj["rango"] = "chunin" if indice < 5 else "jonin"   # el examen se hace siendo Genin avanzado; el jefe, ya ascendido
 	s.recibir_comando(1, {"t": Protocolo.C_PERSONAJE, "datos": pj})
 	j.personaje["misiones"] = {"capitulo": indice}
-	if id.begins_with("evento:"):
+	if id == "arena":
+		s.misiones.empezar_arena(j)
+	elif id.begins_with("evento:"):
 		s.misiones.empezar_evento(id.substr(7), j)
 	else:
 		s.misiones.empezar_capitulo(j, id)
@@ -163,6 +177,8 @@ func jugar(indice: int, id: String, semilla: int) -> Dictionary:
 			break
 		if not j.vivo():
 			resultado = {"exito": false, "motivo": "muerto"}
+			if id == "arena" and s.misiones.hay_activa():
+				resultado["recompensa"] = {"ronda": maxi(int(s.misiones.activa["datos"].get("ronda", 1)) - 1, 0)}
 			break
 	if OS.get_environment("TRAZA") != "":
 		for e in s.entidades:
@@ -172,7 +188,7 @@ func jugar(indice: int, id: String, semilla: int) -> Dictionary:
 	for e in s.entidades:
 		if (e.de_mision or e.tipo == "jefe") and e.vivo() and not e.falsa:
 			resto += e.vida / float(e.stats["vida_max"])
-	var r := {"resto": resto, "gano": bool(resultado.get("exito", false)), "t": t, "vida": j.vida / float(j.stats["vida_max"]),
+	var r := {"rondas": int(resultado.get("recompensa", {}).get("ronda", 0)), "resto": resto, "gano": bool(resultado.get("exito", false)), "t": t, "vida": j.vida / float(j.stats["vida_max"]),
 		"motivo": str(resultado.get("motivo", "tiempo" if resultado.is_empty() else "falló")), "dano": dano, "stats": stats, "vida_max": int(j.stats["vida_max"])}
 	s.free()
 	return r
