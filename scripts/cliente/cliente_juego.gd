@@ -66,6 +66,7 @@ func _ready() -> void:
 	camara.name = "Camara"
 	add_child(camara)
 	escenario.camara = camara
+	camara.mapa = mapa
 	escenario.sonidos = sonidos
 
 	efectos = Efectos.new()

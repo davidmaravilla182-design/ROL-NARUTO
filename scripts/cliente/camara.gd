@@ -13,6 +13,8 @@ var sensibilidad := 0.0055
 var _trauma := 0.0
 var _foco := Vector3.ZERO
 var _t := 0.0
+var mapa: Mapa              # para no atravesar paredes (opcional)
+var _dist_libre := -1.0     # distancia real usada (se acerca de golpe ante una pared y se aleja suave)
 
 
 func _ready() -> void:
@@ -44,7 +46,21 @@ func _process(delta: float) -> void:
 	var meta := objetivo.global_position + Vector3(0, altura, 0)
 	_foco = _foco.lerp(meta, minf(1.0, delta * 10.0)) if _foco != Vector3.ZERO else meta
 	var dir := Vector3(sin(yaw) * cos(pitch), -sin(pitch), cos(yaw) * cos(pitch))
-	var pos := _foco + dir * distancia
+	# Si un edificio queda entre el jugador y la cámara, la cámara se pone justo delante de la pared.
+	var meta_d := distancia
+	if mapa != null:
+		var paso := 0.35
+		var t := 0.6
+		while t < distancia:
+			if mapa.punto_solido(_foco + dir * t):
+				meta_d = maxf(t - 0.45, 0.8)
+				break
+			t += paso
+	if _dist_libre < 0.0 or meta_d < _dist_libre:
+		_dist_libre = meta_d
+	else:
+		_dist_libre = lerpf(_dist_libre, meta_d, minf(1.0, delta * 3.0))
+	var pos := _foco + dir * _dist_libre
 	pos.y = maxf(pos.y, 0.4)
 	global_position = pos
 	look_at(_foco, Vector3.UP)

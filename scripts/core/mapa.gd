@@ -364,6 +364,18 @@ func _indexar() -> void:
 
 
 ## Obstáculos cuyas celdas tocan el círculo (p, r). Se reindexa solo si cambió la lista.
+## ¿El punto 3D está dentro de un edificio u obstáculo sólido? (la cámara se acerca para no atravesar paredes)
+func punto_solido(p: Vector3) -> bool:
+	var q := Vector2(p.x, p.z)
+	for o in _cerca(q, 0.0):
+		if o.get("solo_personajes", false):
+			continue
+		var d: Vector2 = (q - o["centro"]).abs()
+		if d.x <= o["medio"].x and d.y <= o["medio"].y and p.y < float(o["alto"]):
+			return true
+	return false
+
+
 func _cerca(p: Vector2, r: float) -> Array:
 	if _indexados != obstaculos.size():
 		_indexar()
