@@ -7,14 +7,24 @@ Reglas comunes (ya incluidas en cada prompt): objeto aislado, fondo gris liso, l
 cuartos; personajes de frente en pose A; estilo anime de videojuego coherente con la aldea de la lluvia (hormigón
 gris manchado, metal oscuro remachado, tuberías granate, acentos lila, faroles ámbar, ambiente lluvioso).
 
-| Estado | Archivo | Para qué |
-|---|---|---|
-| Pendiente | `tres_colas.png` | Jefe: el Tres Colas que emerge del lago (capítulo 6). |
-| Pendiente | `pajaro_papel.png` | Mensajero del líder de la torre (escenas de misión). |
-| Pendiente | `lider_rebelde.png` | Minijefe del capítulo 2 y cazarrecompensas. |
-| Pendiente | `intruso.png` | Ninja infiltrado (capítulo 3 y alarma de la lluvia). |
-| Pendiente | `pergamino.png` | Recompensa: pergamino que enseña un jutsu (pantalla de recompensas y objeto en el suelo). |
-| Pendiente | `cofre_recompensa.png` | Cofre de papel y metal de la pantalla de recompensas. |
+## Imágenes de referencia (adjúntalas en GPT junto con el prompt)
+Así el estilo, la paleta y las proporciones quedan iguales a lo que ya está en el juego.
+- **Personajes** (`lider_rebelde`, `intruso`): `referencias/modelos-ia/ninja-frente.png` — mismo trazo anime, pose A,
+  proporciones y fondo. Antepón al prompt: *«Usa la imagen adjunta como referencia de estilo, proporciones, pose A y
+  nivel de detalle; dibuja un personaje distinto:»*
+- **Objetos y criaturas** (`tres_colas`, `pajaro_papel`, `pergamino`, `cofre_recompensa`): `referencias/modelos-ia/edificio.png`
+  (la casa de la plaza que te gustó) — materiales, paleta granate/gris, acabado de render y luz. Antepón: *«Usa la
+  imagen adjunta solo como referencia de estilo, materiales, paleta y luz; dibuja un objeto distinto:»*
+- No adjuntes imágenes oficiales de la serie: el resultado debe ser diseño propio (y GPT suele rechazar copiarlas).
+
+| Estado | Archivo | Para qué | Referencia a adjuntar |
+|---|---|---|---|
+| Pendiente | `tres_colas.png` | Jefe: el Tres Colas que emerge del lago (capítulo 6). | `edificio.png` |
+| Pendiente | `pajaro_papel.png` | Mensajero del líder de la torre (escenas de misión). | `edificio.png` |
+| Pendiente | `lider_rebelde.png` | Minijefe del capítulo 2 y cazarrecompensas. | `ninja-frente.png` |
+| Pendiente | `intruso.png` | Ninja infiltrado (capítulo 3 y alarma de la lluvia). | `ninja-frente.png` |
+| Pendiente | `pergamino.png` | Recompensa: pergamino que enseña un jutsu (pantalla de recompensas y objeto en el suelo). | `edificio.png` |
+| Pendiente | `cofre_recompensa.png` | Cofre de papel y metal de la pantalla de recompensas. | `edificio.png` |
 
 ---
 
