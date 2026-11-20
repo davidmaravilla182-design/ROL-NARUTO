@@ -334,3 +334,5 @@ Escena → emerge → balas → aviso de rodar → rueda → niebla con copias �
 - **Cofre y pergamino** (`tools/blender/cofre_tapa.py` separa la tapa con su bisagra): la pantalla de recompensas
   muestra el cofre 3D que tiembla, abre la tapa con luz ámbar y, si ganaste un jutsu, el pergamino sube girando.
   Capturas `recompensa_*.png`.
+- **Pergamino en el suelo** (`scripts/cliente/pergamino_suelo.gd`): al ganar un jutsu cae girando delante del jugador,
+  flota sobre un círculo lila y, al acercarse, vuela al jugador: «Aprendiste: …». Capturas `pergamino_*.png`.

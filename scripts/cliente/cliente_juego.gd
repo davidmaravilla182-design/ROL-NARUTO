@@ -1209,6 +1209,26 @@ func _evento_mision(ev: Dictionary) -> void:
 			elif bool(ev.get("sellado", false)):
 				extra = Datos.texto("msg_sellado_ok")
 			ui_mision.recompensa(str(ev.get("titulo", "")), ev.get("recompensa", {}), bool(ev.get("exito", false)), extra)
+			if bool(ev.get("exito", false)):
+				_pergaminos_suelo(ev.get("recompensa", {}).get("pergaminos", []))
+
+
+## Cada pergamino ganado cae delante del jugador; al recogerlo se anuncia el jutsu aprendido.
+func _pergaminos_suelo(lista: Array) -> void:
+	if lista.is_empty() or not PergaminoSuelo.disponible() or not _visuales.has(mi_id):
+		return
+	var nodo: Node3D = _visuales[mi_id]["nodo"]
+	var frente := nodo.global_transform.basis.z.normalized()
+	var lado := nodo.global_transform.basis.x.normalized()
+	for i in lista.size():
+		var p := PergaminoSuelo.new()
+		add_child(p)
+		var pos := nodo.global_position + frente * 2.2 + lado * (i - (lista.size() - 1) * 0.5) * 1.6
+		var nombre := str(Datos.jutsu(str(lista[i])).get("nombre", lista[i]))
+		p.construir(nodo, pos, nombre)
+		p.recogido.connect(func(n: String):
+			sonidos.tocar("papel", -4.0, 1.2)
+			hud.mensaje(Datos.texto("msg_pergamino_recogido", [n]), 2.5))
 
 
 func _sharingan_local() -> bool:

@@ -271,6 +271,7 @@
   "rec_xp": "+{0} de experiencia",
   "rec_ryo": "+{0} ryō",
   "rec_pergamino": "Pergamino: {0}",
+  "msg_pergamino_recogido": "Aprendiste: {0}",
   "rec_cosmetico": "Cosmético: {0}",
   "rec_punto": "+1 punto de atributo",
   "rec_cumplida": "¡Misión cumplida!",
