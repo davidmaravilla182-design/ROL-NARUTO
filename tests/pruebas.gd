@@ -29,6 +29,7 @@ func _initialize() -> void:
 	probar_jugador_puede_ganar()
 	probar_basicos_contra_guardia()
 	probar_basicos_contra_grupo()
+	probar_registro_cierre()
 	probar_textos_sin_codigo()
 	probar_plataforma_lengua()
 	probar_piezas_suelo()
@@ -595,6 +596,23 @@ func probar_basicos_contra_grupo() -> void:
 	comprobar(max_turnos <= 1, "en grupo, solo uno tiene el turno de ataque (máx %d)" % max_turnos)
 	comprobar(vivos == 0 and j.vivo(), "con golpes básicos se gana a 3 rebeldes (quedan %d, vida del jugador %d)" % [vivos, int(j.vida)])
 	s.free()
+
+
+## Registro de cierres inesperados: si la sesión anterior no terminó en FIN/PAUSA/MENU, se recuperan sus últimas líneas.
+func probar_registro_cierre() -> void:
+	var f := FileAccess.open(Registro.RUTA, FileAccess.WRITE)
+	f.store_line("[    0.0] INICIO prueba")
+	f.store_line("[    3.0] evento jefe aparece")
+	f.close()
+	Registro._iniciado = false
+	Registro.iniciar()
+	comprobar(Registro.cierre_anterior.size() == 2 and Registro.cierre_anterior[1].contains("jefe"), "detecta que la partida anterior se cerró de golpe")
+	Registro.nota("MENU")
+	Registro._f = null
+	Registro._iniciado = false
+	Registro.iniciar()
+	comprobar(Registro.cierre_anterior.is_empty(), "un cierre normal (MENU) no se marca como error")
+	Registro._f = null
 
 
 func probar_textos_sin_codigo() -> void:

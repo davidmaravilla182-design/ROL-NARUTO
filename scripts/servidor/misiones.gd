@@ -196,6 +196,7 @@ func _llevar_jugadores(zona: Vector3, distancia: float) -> void:
 		j.yaw = atan2(-dir.x, -dir.z)
 		s._evento({"tipo": "humo", "entidad": j.id, "pos": j.pos})
 		s._evento({"tipo": "mensaje", "entidad": j.id, "clave": "msg_mision_llevado"})
+		s._evento({"tipo": "mirar", "entidad": j.id, "desde": j.pos, "hacia": zona})   # la cámara se vuelve hacia la misión
 
 
 func _avisar_objetivo() -> void:

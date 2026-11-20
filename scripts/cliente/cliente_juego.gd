@@ -43,6 +43,8 @@ var _info: Dictionary = {}         # id entidad -> {nombre, aspecto} (llega del 
 
 
 func _ready() -> void:
+	Registro.iniciar()
+	Registro.nota("PARTIDA modo %s · calidad %s" % [Sesion.modo, str(Ajustes.calidad)])
 	Datos.cargar()
 	Ajustes.cargar()
 	_registrar_teclas()
@@ -409,7 +411,25 @@ func _actualizar_tiempo() -> void:
 
 # ------------------------------------------------------------ entrada
 
+var _t_latido := 0.0
+
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_APPLICATION_PAUSED:
+			Registro.nota("PAUSA")
+		NOTIFICATION_APPLICATION_RESUMED:
+			Registro.nota("reanuda")
+		NOTIFICATION_WM_CLOSE_REQUEST:
+			Registro.nota("FIN")
+
+
 func _process(delta: float) -> void:
+	_t_latido -= delta
+	if _t_latido <= 0.0:
+		_t_latido = 5.0
+		var yo := _pos_entidad(mi_id) if mi_id >= 0 else Vector3.ZERO
+		Registro.latido("· jugador %s · visuales %d" % [str(yo.snapped(Vector3.ONE * 0.1)), _visuales.size()])
 	_actualizar_tiempo()
 	_seguir_objetivo(delta)
 	var j := hud.joystick.vector
@@ -643,9 +663,11 @@ func _modo_jefe(jefe_e: Dictionary) -> void:
 func _crear_visual(e: Dictionary) -> void:
 	var nodo: Node3D
 	if e["tipo"] == "jefe":
+		Registro.nota("crea el modelo del jefe (copia: %s)" % str(e.get("falsa", false)))
 		var jv := JefeVisual.new()
 		add_child(jv)
 		jv.construir()
+		Registro.nota("modelo del jefe listo")
 		jv.falsa = bool(e.get("falsa", false))
 		# Genjutsu 3+: las copias de la niebla se ven falsas (parpadean).
 		jv.translucida = jv.falsa and Atributos.v(hud.atributos_jugador, "genjutsu") >= 3.0
@@ -856,8 +878,13 @@ func _pos_entidad(id: int) -> Vector3:
 	return Vector3.ZERO
 
 
+const EVENTOS_REGISTRO := ["mision", "jefe", "escena", "aparece", "mirar", "anuncio", "rendicion", "escape_combo", "reaparecer"]
+
+
 func _procesar_evento(ev: Dictionary) -> void:
 	var id := int(ev.get("entidad", -1))
+	if str(ev["tipo"]) in EVENTOS_REGISTRO and not str(ev.get("accion", "")) in ["objetivo", "rugido"]:
+		Registro.nota("evento %s %s %s" % [ev["tipo"], str(ev.get("accion", "")), str(ev.get("titulo", ev.get("id", "")))])
 	tecnicas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
 	genericas.evento(ev, mi_id, _pos_entidad, func(eid): return _visuales[eid]["nodo"] if _visuales.has(eid) else null, camara_lenta)
 	match str(ev["tipo"]):
@@ -947,11 +974,17 @@ func _procesar_evento(ev: Dictionary) -> void:
 			ui_mision.escena(ev.get("lineas", []), bool(ev.get("pajaro", false)), float(ev.get("duracion", 4.0)))
 			if bool(ev.get("pajaro", false)) and PajaroPapel.disponible() and _visuales.has(mi_id):
 				# El mensajero del líder llega volando en 3D hasta el hombro del jugador.
+				Registro.nota("pájaro de papel")
 				var pj := PajaroPapel.new()
 				add_child(pj)
 				pj.construir(_visuales[mi_id]["nodo"], float(ev.get("duracion", 4.0)))
 		"anuncio":
 			ui_mision.anuncio(str(ev.get("titulo", "")))
+		"mirar":
+			if id == mi_id:
+				var dm: Vector3 = (ev["hacia"] as Vector3) - (ev["desde"] as Vector3)
+				if Vector2(dm.x, dm.z).length() > 0.1:
+					camara.yaw = atan2(-dm.x, -dm.z)
 		"emboscada_aviso":
 			if id == mi_id:
 				hud.marca_minimapa(ev["pos"], float(ev.get("duracion", 6.0)), Color(1.0, 0.3, 0.3))

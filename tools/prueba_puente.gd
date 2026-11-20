@@ -32,12 +32,15 @@ func _process(_d: float) -> bool:
 		root.get_viewport().get_texture().get_image().save_png("res://docs/capturas/v09/puente_%d.png" % k)
 	var fin_paseo := 30 + PUNTOS.size() * 40
 	if _f == fin_paseo:
+		j.pos = Vector3(0, 0, -20)   # desde la plaza: la misión lo lleva a la explanada y gira la cámara
 		j.personaje["misiones"] = {"capitulo": 5}
 		s.misiones.empezar_capitulo(j, "cap6")
 	if _f > fin_paseo and _f % 30 == 0:
 		var a := _f * 0.03
 		_juego._mov_prueba = Vector2(sin(a), -cos(a * 0.7))
 		print("JEFE f=%d jugador %s agua %d estado %s vida %d" % [_f, str(j.pos.snapped(Vector3.ONE * 0.1)), j.agua, j.estado, int(j.vida)])
+	if _f == fin_paseo + 200:
+		root.get_viewport().get_texture().get_image().save_png("res://docs/capturas/v09/puente_llegada.png")
 	if _f == fin_paseo + 300:
 		root.get_viewport().get_texture().get_image().save_png("res://docs/capturas/v09/puente_jefe.png")
 	return _f > fin_paseo + 900

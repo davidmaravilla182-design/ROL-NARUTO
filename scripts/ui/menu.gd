@@ -15,6 +15,8 @@ var _fondo_3d := false
 func _ready() -> void:
 	Datos.cargar()
 	Ajustes.cargar()
+	Registro.iniciar()
+	Registro.nota("MENU")
 	Engine.time_scale = 1.0
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = Estilo.tema()
@@ -23,6 +25,8 @@ func _ready() -> void:
 		_gotas.append(Vector3(_rng.randf(), _rng.randf(), _rng.randf_range(0.6, 1.4)))
 
 	_crear_fondo_3d()
+	if not Registro.cierre_anterior.is_empty():
+		_aviso_cierre.call_deferred()
 
 	var juego: Dictionary = Datos.mundo["juego"]
 	var aldea := Datos.aldea("lluvia")
@@ -230,3 +234,30 @@ func _draw() -> void:
 	for g in _gotas:
 		var p := Vector2(g.x * t.x, g.y * t.y)
 		draw_line(p, p + Vector2(4, 26) * g.z, Color(0.75, 0.82, 0.95, 0.35), 2.0)
+
+
+## La partida anterior se cerró de golpe: muestra sus últimos pasos para mandarlos en una captura.
+func _aviso_cierre() -> void:
+	var panel := PanelContainer.new()
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(900, 0)
+	panel.position -= Vector2(450, 260)
+	var caja := VBoxContainer.new()
+	caja.add_theme_constant_override("separation", 10)
+	panel.add_child(caja)
+	caja.add_child(_label(Datos.texto("registro_titulo"), 30, Color(1.0, 0.8, 0.45)))
+	caja.add_child(_label(Datos.texto("registro_pide"), 20, Color(0.85, 0.88, 0.95)))
+	var txt := Label.new()
+	txt.text = "\n".join(Registro.cierre_anterior)
+	txt.add_theme_font_size_override("font_size", 15)
+	txt.add_theme_color_override("font_color", Color(0.8, 0.95, 0.8))
+	txt.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	caja.add_child(txt)
+	var b := Button.new()
+	b.text = Datos.texto("registro_cerrar")
+	b.custom_minimum_size = Vector2(220, 60)
+	b.pressed.connect(func():
+		Registro.cierre_anterior = PackedStringArray()
+		panel.queue_free())
+	caja.add_child(b)
+	add_child(panel)
