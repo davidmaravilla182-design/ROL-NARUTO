@@ -28,6 +28,7 @@ func _initialize() -> void:
 	probar_ia_puede_ganar()
 	probar_jugador_puede_ganar()
 	probar_basicos_contra_guardia()
+	probar_basicos_contra_grupo()
 	probar_textos_sin_codigo()
 	probar_plataforma_lengua()
 	probar_piezas_suelo()
@@ -558,6 +559,41 @@ func probar_basicos_contra_guardia() -> void:
 	var frac := float(defendidos) / maxf(float(golpes_jugador), 1.0)
 	comprobar(frac < 0.45, "el guardia no para casi todos los golpes (%d de %d defendidos)" % [defendidos, golpes_jugador])
 	comprobar(gano, "con golpes básicos se le puede ganar a un guardia (vida guardia %d/%d, jugador %d)" % [int(g.vida), int(vida_g0), int(j.vida)])
+	s.free()
+
+
+## Contra un grupo: solo uno ataca a la vez (turnos) y el daño de los NPC está ajustado; con golpes básicos
+## se debe poder ganar a 3 rebeldes.
+func probar_basicos_contra_grupo() -> void:
+	var s := nuevo_servidor(false)
+	s.entidades = s.entidades.filter(func(x): return x.tipo != "muneco")
+	var j := s.entidad_de_peer(1)
+	var grupo: Array = []
+	for k in 3:
+		var g := s._crear_entidad("rebelde_soldado", j.pos + Vector3(-3.0 + k * 3.0, 0, 6.0))
+		g.equipo = 2
+		g.ia = IaEnemigo.new(g)
+		g.ia.t_reaccion = 1.0
+		grupo.append(g)
+	var max_turnos := 0
+	for i in int(120.0 / s.dt_tick):
+		var obj: EntidadServidor = null
+		for g in grupo:
+			if g.vivo() and (obj == null or g.pos.distance_to(j.pos) < obj.pos.distance_to(j.pos)):
+				obj = g
+		if obj == null or not j.vivo():
+			break
+		var d := obj.pos - j.pos
+		var mov := Vector2(d.x, d.z).normalized() if d.length() > 1.8 else Vector2.ZERO
+		s.recibir_comando(1, {"t": "entrada", "mov": mov, "mira": atan2(d.x, d.z)})
+		if d.length() < 2.4 and (j.estado == "libre" or j.estado == "golpe"):
+			s.recibir_comando(1, {"t": "accion", "id": "golpe"})
+		s.paso(s.dt_tick)
+		s.eventos = []
+		max_turnos = maxi(max_turnos, grupo.filter(func(g): return g.vivo() and g.ia.turno).size())
+	var vivos := grupo.filter(func(g): return g.vivo()).size()
+	comprobar(max_turnos <= 1, "en grupo, solo uno tiene el turno de ataque (máx %d)" % max_turnos)
+	comprobar(vivos == 0 and j.vivo(), "con golpes básicos se gana a 3 rebeldes (quedan %d, vida del jugador %d)" % [vivos, int(j.vida)])
 	s.free()
 
 

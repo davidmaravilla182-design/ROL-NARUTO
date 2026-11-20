@@ -301,12 +301,17 @@
     }
   },
   "ia_cuerpo_a_cuerpo": {
-    "_nota": "Ritmo de los NPC en el cuerpo a cuerpo: descanso en segundos tras su combo (hueco para contraatacar), probabilidad de seguir cada paso del combo y pausa antes de responder tras recibir un golpe. Cada NPC puede sobrescribirlos en su \"ia\".",
+    "_nota": "Ritmo de los NPC en el cuerpo a cuerpo: descanso en segundos tras su combo (hueco para contraatacar), probabilidad de seguir cada paso del combo y pausa antes de responder tras recibir un golpe. Cada NPC puede sobrescribirlos en su \"ia\". max_atacantes: cuántos NPC pueden pegarle a la vez a un mismo jugador (los demás rodean a distancia_espera); dano_npc_mult: daño de los NPC a los jugadores; gracia_oleada: segundos que tardan en atacar los de una oleada nueva. respiro_oleada: fracción de vida y chakra que recupera el jugador al empezar cada oleada nueva.",
     "descanso_combo": [
       0.9,
       1.5
     ],
     "prob_seguir_combo": 0.6,
-    "pausa_tras_golpeado": 0.5
+    "pausa_tras_golpeado": 0.5,
+    "max_atacantes": 1,
+    "distancia_espera": 4.5,
+    "dano_npc_mult": 0.65,
+    "gracia_oleada": 2.5,
+    "respiro_oleada": 0.3
   }
 }

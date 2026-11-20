@@ -260,6 +260,13 @@ func actualizar(dt: float) -> void:
 				if int(d["oleada"]) >= (f["oleadas"] as Array).size():
 					_siguiente_fase()
 				else:
+					# Respiro entre oleadas: recupera parte de la vida y el chakra.
+					var rf := float(Datos.reglas.get("ia_cuerpo_a_cuerpo", {}).get("respiro_oleada", 0.0))
+					for j in _jugadores():
+						if j.vivo() and rf > 0.0:
+							j.vida = minf(j.vida + float(j.stats["vida_max"]) * rf, float(j.stats["vida_max"]))
+							j.chakra = minf(j.chakra + float(j.stats["chakra_max"]) * rf, float(j.stats["chakra_max"]))
+							s._evento({"tipo": "mensaje", "entidad": j.id, "clave": "msg_respiro"})
 					_nueva_oleada(f)
 					_avisar_objetivo()
 		"perseguir":
@@ -394,11 +401,25 @@ func _nueva_oleada(f: Dictionary) -> void:
 			titulo = "¡Última oleada: llega el líder!"
 		s._evento({"tipo": "anuncio", "titulo": titulo, "para_todos": true})
 	var centro := _v3(f["pos"])
+	# Aparecen en abanico del lado opuesto al jugador y tardan unos segundos en atacar (tiempo para prepararse).
+	var lejos_de := centro + Vector3(0, 0, 10)
+	var js := _jugadores()
+	if not js.is_empty():
+		lejos_de = (js[0] as EntidadServidor).pos
+	var hacia := centro - lejos_de
+	hacia.y = 0.0
+	var base := atan2(hacia.z, hacia.x) if hacia.length() > 0.1 else 0.0
+	var total := 0
+	for g in ol:
+		total += int(g.get("n", 1))
+	var gracia := float(Datos.reglas.get("ia_cuerpo_a_cuerpo", {}).get("gracia_oleada", 2.5))
 	var k := 0
 	for g in ol:
 		for i in int(g.get("n", 1)):
-			var a := TAU * float(k) / 6.0 + _rng.randf() * 0.5
-			_crear(str(g["plantilla"]), centro + Vector3(cos(a), 0, sin(a)) * 8.0, g)
+			var a := base + (float(k) - (total - 1) * 0.5) * 0.45
+			var e := _crear(str(g["plantilla"]), centro + Vector3(cos(a), 0, sin(a)) * 8.0, g)
+			if e.ia != null:
+				e.ia.t_reaccion = gracia + k * 0.4
 			k += 1
 
 

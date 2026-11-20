@@ -454,7 +454,7 @@
       "genjutsu_duracion": 3.5,
       "genjutsu_rango": 14.0,
       "humo_recarga": 9.0,
-      "vida_mult": 0.9,
+      "vida_mult": 0.7,
       "combo_max": 3,
       "prob_shunshin": 0.15,
       "prob_sustitucion": 0.1,

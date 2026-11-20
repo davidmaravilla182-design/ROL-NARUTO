@@ -26,7 +26,10 @@ var ruta_i := 0
 # Ritmo del cuerpo a cuerpo (data/reglas.json → ia_cuerpo_a_cuerpo; cada NPC puede sobrescribirlo en su "ia"):
 # tras un combo descansa (hueco para el jugador), no siempre lo termina y tras recibir un golpe tarda en responder.
 var _estado_antes := "libre"
-var _accion_leida: Dictionary = {}   # el golpe del jugador que ya evaluó (una decisión por golpe, no por tick)
+var _accion_leida: Dictionary = {}
+# Turnos: solo max_atacantes NPC pueden pegarle a la vez al mismo jugador; los demás lo rodean esperando.
+var turno := false
+var turno_de := -1   # el golpe del jugador que ya evaluó (una decisión por golpe, no por tick)
 
 
 func _init(entidad: EntidadServidor) -> void:
@@ -38,6 +41,8 @@ func _init(entidad: EntidadServidor) -> void:
 
 
 func reiniciar() -> void:
+	turno = false
+	turno_de = -1
 	lado = 1.0
 	t_lado = float(conf.get("cambio_lateral", 2.5))
 	t_reaccion = 2.5
@@ -59,6 +64,7 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 		if e.estado == "libre" and _estado_antes == "golpe":
 			var dc: Array = _ritmo("descanso_combo", [0.9, 1.5])
 			t_reaccion = maxf(t_reaccion, rng.randf_range(float(dc[0]), float(dc[1])))
+			turno = false   # tras su combo cede el turno a otro
 		elif e.estado == "libre" and _estado_antes in ["golpeado", "derribado", "aturdido", "lanzado", "bloqueo"]:
 			t_reaccion = maxf(t_reaccion, float(_ritmo("pausa_tras_golpeado", 0.5)) + rng.randf() * 0.3)
 		_estado_antes = e.estado
@@ -110,6 +116,8 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 	var hacia := objetivo.pos - e.pos
 	hacia.y = 0
 	var dist := hacia.length()
+	# Solo espera si OTRO tiene el turno sobre ese jugador (uno solo pelea normal).
+	var espera := not _actualizar_turno(s, objetivo, dist)
 	var dir := hacia / maxf(dist, 0.001)
 	var lateral := Vector3(-dir.z, 0, dir.x) * lado
 	var mov := Vector3.ZERO
@@ -128,7 +136,11 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 			return
 
 	var preferida := float(conf.get("distancia_preferida", 9.0))
-	if perfil == "agresivo":
+	var d_espera := float(_ritmo("distancia_espera", 4.5))
+	if espera and perfil != "distancia" and dist < d_espera + 3.0:
+		# Sin turno: lo rodea a distancia (amenaza, pero deja pelear con el que tiene el turno).
+		mov = lateral * 0.7 + (-dir if dist < d_espera else dir * 0.3)
+	elif perfil == "agresivo":
 		mov = dir + lateral * 0.25 if dist > float(conf.get("rango_melee", 2.2)) * 0.8 else lateral * 0.3
 	elif perfil == "distancia" and dist < float(conf.get("distancia_minima", 7.0)):
 		mov = -dir + lateral * 0.4   # mantiene la distancia
@@ -186,17 +198,43 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 		t_reaccion = 1.2
 		return
 	# Shunshin: a media distancia aparece de golpe junto al jugador (con estela de humo) y ataca.
-	if dist > 4.0 and dist < 11.0 and not huyendo and e.recarga("shunshin") <= 0.0 and rng.randf() < float(conf.get("prob_shunshin", 0.0)) * dt * 3.0:
+	if dist > 4.0 and dist < 11.0 and not huyendo and not espera and e.recarga("shunshin") <= 0.0 and rng.randf() < float(conf.get("prob_shunshin", 0.0)) * dt * 3.0:
 		s.aplicar_comando(e, {"t": "accion", "id": "esquivar", "objetivo": objetivo.id})
 		t_reaccion = 0.25
 		return
-	if dist <= float(conf.get("rango_melee", 2.2)) and not huyendo:
+	if dist <= float(conf.get("rango_melee", 2.2)) and not huyendo and not espera:
 		s.aplicar_comando(e, {"t": "accion", "id": "golpe"})
 		t_reaccion = 0.15
 	elif dist <= float(conf.get("rango_disparo", 17.0)) and e.recarga("bala_agua") <= 0.0:
-		if not huyendo or rng.randf() < 0.5:
+		# Los que esperan turno disparan poco (si no, el grupo te acribilla mientras peleas con uno).
+		if espera and perfil != "distancia":
+			# Cerca no dispara (rodea); de lejos, alguna vez.
+			if dist > 9.0 and rng.randf() < 0.15:
+				s.aplicar_comando(e, {"t": "accion", "id": "bala_agua"})
+			t_reaccion = 2.0 + rng.randf() * 1.5
+		elif not huyendo or rng.randf() < 0.5:
 			s.aplicar_comando(e, {"t": "accion", "id": "bala_agua"})
 			t_reaccion = float(conf.get("pausa_reaccion", 0.35)) + rng.randf() * 0.4
+
+
+## Toma el turno de ataque si hay hueco (menos de max_atacantes NPC con turno sobre ese jugador); lo suelta al
+## alejarse, al cambiar de objetivo o tras su combo.
+## Devuelve true si puede atacar (tiene el turno o nadie más lo tiene).
+func _actualizar_turno(s: ServidorJuego, objetivo: EntidadServidor, dist: float) -> bool:
+	if turno and (turno_de != objetivo.id or dist > 9.0):
+		turno = false
+	if turno:
+		return true
+	var con_turno := 0
+	for o in s.entidades:
+		if o != e and o.ia != null and o.vivo() and not o.oculto and (o.ia as IaEnemigo).turno and (o.ia as IaEnemigo).turno_de == objetivo.id:
+			con_turno += 1
+	if con_turno < int(_ritmo("max_atacantes", 1)):
+		if dist <= 7.0 and t_reaccion <= 0.0:
+			turno = true
+			turno_de = objetivo.id
+		return true
+	return false
 
 
 ## ¿El jugador está a punto de conectar un golpe contra mí? (para la sustitución con tronco)

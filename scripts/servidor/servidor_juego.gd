@@ -1076,6 +1076,9 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 	if o.falsa:
 		_evento({"tipo": "resistido", "entidad": o.id, "pos": o.centro()})
 		return   # golpear una copia ilusoria no hace nada
+	# Daño de los NPC a los jugadores (data/reglas.json → ia_cuerpo_a_cuerpo.dano_npc_mult).
+	if atacante != null and atacante.ia != null and o.tipo == "jugador":
+		cantidad *= float(Datos.reglas.get("ia_cuerpo_a_cuerpo", {}).get("dano_npc_mult", 1.0))
 	if o.tipo == "jefe":
 		# Un bijuu no se derriba, no se lanza ni se empuja.
 		info["derriba"] = false

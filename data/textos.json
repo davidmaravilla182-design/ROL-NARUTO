@@ -272,6 +272,7 @@
   "rec_ryo": "+{0} ryō",
   "rec_pergamino": "Pergamino: {0}",
   "msg_pergamino_recogido": "Aprendiste: {0}",
+  "msg_respiro": "Respiras hondo: recuperas vida y chakra",
   "msg_mision_llevado": "El pájaro de papel te guía hasta la misión",
   "rec_cosmetico": "Cosmético: {0}",
   "rec_punto": "+1 punto de atributo",
