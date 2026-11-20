@@ -155,7 +155,7 @@ func _siguiente_fase() -> void:
 			_nueva_oleada(f)
 		"perseguir":
 			_llevar_jugadores(_v3(f["inicio"]), 14.0)
-			var e := _crear(str(f["plantilla"]), _v3(f["inicio"]), {})
+			var e := _crear(str(f["plantilla"]), _v3(f["inicio"]), {"nombre": f["nombre"]} if f.has("nombre") else {})
 			var ruta: Array = []
 			for p in f["ruta"]:
 				ruta.append(_v3(p))

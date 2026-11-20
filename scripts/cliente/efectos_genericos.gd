@@ -572,7 +572,7 @@ func evento(ev: Dictionary, mi_id: int, pos_entidad: Callable, visual_de: Callab
 				var tw := create_tween()
 				tw.tween_property(cr, "scale", cr.scale * Vector3(1.1, 0.9, 1.1), 0.08)
 				tw.tween_property(cr, "scale", cr.scale, 0.15)
-			efectos.golpe_fisico(ev["pos"], float(ev["escala"]) >= 1.4)
+			# Las chispas del golpe ya las pone el impacto (antes salían dos veces y la cámara temblaba en cada clon).
 			if float(ev["escala"]) >= 2.0:
 				efectos.polvo(Vector3(Vector3(ev["pos"]).x, 0, Vector3(ev["pos"]).z), 14)
 				efectos.sacudir_desde(ev["pos"], 0.3)

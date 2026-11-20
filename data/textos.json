@@ -287,6 +287,8 @@
   "historia_toca": "Toca para continuar",
   "historia_contexto": "La historia",
   "historia_ver_prologo": "Ver prólogo",
+  "mis_reiniciar": "Reiniciar historia",
+  "mis_reiniciar_seguro": "¿Seguro? Toca otra vez",
   "mis_ir_al_punto": "Ve al punto dorado",
   "registro_titulo": "La última partida se cerró de golpe",
   "registro_pide": "Toma una captura de esta pantalla y mándala para encontrar el error:",

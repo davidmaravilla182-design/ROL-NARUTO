@@ -385,3 +385,13 @@ static func prologo_visto() -> bool:
 static func marcar_prologo() -> void:
 	_lugares()["prologo"] = true
 	guardar()
+
+
+## Vuelve a empezar la historia: capítulo 1, prólogo y puntos por descubrir. Conserva rango, experiencia, ryō,
+## pergaminos y cosméticos (son del personaje, no de la historia).
+static func reiniciar_historia() -> void:
+	cargar()
+	var dueno: Dictionary = personajes[indice] if indice >= 0 else _practica
+	dueno["misiones"] = {"capitulo": 0, "completadas": [], "pruebas": (dueno.get("misiones", {}) as Dictionary).get("pruebas", {}) if typeof(dueno.get("misiones")) == TYPE_DICTIONARY else {}}
+	dueno["lugares"] = {"distritos": [], "misiones": [], "prologo": false}
+	guardar()

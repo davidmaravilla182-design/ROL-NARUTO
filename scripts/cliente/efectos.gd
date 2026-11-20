@@ -460,10 +460,10 @@ func paso_chakra(pos: Vector3, normal: Vector3) -> void:
 
 # ------------------------------------------------------------ varios
 
-func golpe_fisico(pos: Vector3, fuerte: bool) -> void:
+func golpe_fisico(pos: Vector3, fuerte: bool, sacude := true) -> void:
 	rafaga(pos, {"cantidad": 14 if not fuerte else 30, "vida": 0.25, "radio": 0.1, "vel_min": 2.0, "vel_max": 6.0,
 		"tam_min": 0.08, "tam_max": 0.18, "color": Color(1, 0.95, 0.8, 0.9)})
-	if camara != null:
+	if camara != null and sacude:
 		camara.sacudir(0.25 if fuerte else 0.1)
 
 

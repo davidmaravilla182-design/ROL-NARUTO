@@ -1169,9 +1169,12 @@ func _evento_impacto(ev: Dictionary) -> void:
 				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)))
 		_:
 			var fuerte := cant > 10.0 or bool(ev.get("fuerte", false))
-			efectos.golpe_fisico(pos, fuerte)
+			# Golpes de invocaciones (clones de sombra, gólem, criaturas): sin pausa de impacto y sin temblor,
+			# si no, con varios clones pegando seguido la imagen se trababa y temblaba sin parar.
+			var invocacion := str(Datos.nivel_jutsu(jutsu, int(ev.get("nivel", 1))).get("mecanica", Datos.jutsu(jutsu).get("mecanica", ""))) == "invocar"
+			efectos.golpe_fisico(pos, fuerte, not invocacion)
 			sonidos.tocar("golpe", -2.0 if fuerte else -6.0, 0.8 if fuerte else 1.1)
-			if involucra_me:
+			if involucra_me and not invocacion:
 				# Hitstop: breve en cada golpe, largo en los fuertes; líneas de velocidad de anime en los fuertes.
 				pausa_impacto(float(imp.get("pausa_golpe_fuerte", 0.07)) * (1.6 if fuerte else 0.45))
 				if fuerte:

@@ -402,7 +402,305 @@
     ],
     [
      "Pájaro de papel",
-     "El Líder te nombra protector del lago. Fin de la historia de esta demo: los rebeldes que quedan siguen apareciendo por la aldea."
+     "Buen trabajo. Pero el sello no se rompe solo: alguien les dio la llave a los rebeldes. Y ahora el mercado arde."
+    ],
+    [
+     "Pájaro de papel",
+     "Ve al mercado, al oeste de la plaza. Sigue el punto dorado."
+    ]
+   ]
+  },
+  {
+   "id": "cap7",
+   "titulo": "Cenizas en el mercado",
+   "distrito": "mercado",
+   "arco": "La sombra en la torre",
+   "resumen": "Los rebeldes que quedan incendian el mercado. Protege a los comerciantes y atrapa a su capitán.",
+   "fases": [
+    {
+     "tipo": "escena",
+     "pajaro": true,
+     "lineas": [
+      [
+       "Pájaro de papel",
+       "Los rebeldes que huyeron del lago queman los puestos del mercado. La gente no tiene a dónde ir."
+      ],
+      [
+       "Comerciante",
+       "¡Por aquí, ninja! Vinieron por las bodegas... dicen que buscan algo que les dejaron de la torre."
+      ]
+     ]
+    },
+    {
+     "tipo": "oleadas",
+     "pos": [
+      -104,
+      -22
+     ],
+     "oleadas": [
+      [
+       {
+        "plantilla": "rebelde_soldado",
+        "n": 2
+       }
+      ],
+      [
+       {
+        "plantilla": "rebelde_soldado",
+        "n": 2
+       },
+       {
+        "plantilla": "capitan_rebelde",
+        "n": 1,
+        "jefe": true,
+        "nombre": "Capitán de la Ceniza"
+       }
+      ]
+     ],
+     "objetivo": "Expulsa a los rebeldes del mercado y derrota a su capitán"
+    }
+   ],
+   "recompensa": {
+    "xp": 900,
+    "ryo": 1200,
+    "pergaminos": [
+     "oscuridad"
+    ],
+    "cosmeticos": [
+     "prenda_ceniza"
+    ]
+   },
+   "epilogo": [
+    [
+     "Capitán de la Ceniza",
+     "No lo entiendes... el sello no lo rompimos nosotros. Alguien de la torre nos dio la llave."
+    ],
+    [
+     "Pájaro de papel",
+     "Un traidor en la torre... La lluvia acaba de ver a alguien saltando por los tejados de la zona residencial. Ve al noroeste."
+    ]
+   ]
+  },
+  {
+   "id": "cap8",
+   "titulo": "El espía de la torre",
+   "distrito": "residencial",
+   "arco": "La sombra en la torre",
+   "resumen": "Un espía con el sello del Líder huye por los tejados residenciales. Atrápalo antes de que desaparezca.",
+   "fases": [
+    {
+     "tipo": "escena",
+     "pajaro": true,
+     "lineas": [
+      [
+       "Pájaro de papel",
+       "Lleva una capa de la guardia de la torre y un pergamino con el sello del Líder."
+      ],
+      [
+       "Pájaro de papel",
+       "Es rápido, pero se detiene a mirar atrás. Córtale el paso por los tejados y no lo pierdas de vista."
+      ]
+     ]
+    },
+    {
+     "tipo": "perseguir",
+     "plantilla": "intruso",
+     "nombre": "Espía de la torre",
+     "inicio": [
+      -110,
+      -108
+     ],
+     "limite": 100,
+     "ruta": [
+      [
+       -104,
+       -114
+      ],
+      [
+       -98,
+       -138
+      ],
+      [
+       -110,
+       -168
+      ],
+      [
+       -122,
+       -132
+      ],
+      [
+       -134,
+       -108
+      ],
+      [
+       -140,
+       -120
+      ]
+     ],
+     "objetivo": "Derriba al espía antes de que escape"
+    }
+   ],
+   "recompensa": {
+    "xp": 1000,
+    "ryo": 1300,
+    "pergaminos": [
+     "loto_primario"
+    ],
+    "cosmeticos": [
+     "capa_espia"
+    ]
+   },
+   "epilogo": [
+    [
+     "Espía de la torre",
+     "El Consejero dijo que nadie me seguiría... Él controla a la guardia de la torre. Ya es tarde para vosotros."
+    ],
+    [
+     "Pájaro de papel",
+     "El Consejero del Líder. Ve a la torre: si la guardia es suya, tendrás que abrirte paso tú."
+    ]
+   ]
+  },
+  {
+   "id": "cap9",
+   "titulo": "Traición en la torre",
+   "distrito": "torre",
+   "arco": "La sombra en la torre",
+   "prueba": "duelo_jonin",
+   "resumen": "La guardia de la torre obedece al Consejero traidor. Véncelos uno a uno: es también tu prueba de Jōnin.",
+   "fases": [
+    {
+     "tipo": "escena",
+     "pajaro": true,
+     "lineas": [
+      [
+       "Pájaro de papel",
+       "El Líder está aislado en lo alto de la torre. Su guardia personal te cierra el paso."
+      ],
+      [
+       "Consejero",
+       "Llegas lejos para ser un recién graduado. Si quieres subir, demuéstralo. La lluvia ya no responde al Líder."
+      ]
+     ]
+    },
+    {
+     "tipo": "duelos",
+     "pos": [
+      -22,
+      -90
+     ],
+     "rivales": [
+      {
+       "plantilla": "guardia_lluvia",
+       "rendicion": 0.2,
+       "nombre": "Guardia de la torre",
+       "vida_extra": 1.4
+      },
+      {
+       "plantilla": "capitan_rebelde",
+       "rendicion": 0.2,
+       "nombre": "Consejero traidor",
+       "vida_extra": 1.3
+      }
+     ],
+     "objetivo": "Vence a la guardia de la torre y al Consejero"
+    }
+   ],
+   "recompensa": {
+    "xp": 1400,
+    "ryo": 1800,
+    "pergaminos": [
+     "vision_infierno"
+    ],
+    "cosmeticos": [
+     "banda_torre"
+    ]
+   },
+   "epilogo": [
+    [
+     "Consejero traidor",
+     "Ríete... El antiguo señor vuelve esta noche. Tomará la plaza y la lluvia volverá a ser suya."
+    ],
+    [
+     "Pájaro de papel",
+     "El Líder te reconoce como Jōnin si tienes la experiencia. Ahora ve a la plaza: esta noche se decide todo."
+    ]
+   ]
+  },
+  {
+   "id": "cap10",
+   "titulo": "La noche de las sombras",
+   "distrito": "plaza",
+   "arco": "La sombra en la torre",
+   "resumen": "El antiguo señor de la aldea ataca la plaza con todo lo que le queda. Resiste y derrótalo.",
+   "fases": [
+    {
+     "tipo": "escena",
+     "pajaro": true,
+     "lineas": [
+      [
+       "Pájaro de papel",
+       "Vienen por la avenida de la puerta. Son muchos, pero los aldeanos ya están a salvo."
+      ],
+      [
+       "Señor de las Sombras",
+       "Esta aldea era mía antes de que el Líder la llenara de lluvia. Esta noche la recupero."
+      ]
+     ]
+    },
+    {
+     "tipo": "defender",
+     "pos": [
+      2,
+      6
+     ],
+     "origen": [
+      2,
+      32
+     ],
+     "duracion": 90,
+     "oleada_cada": 24,
+     "por_oleada": [
+      {
+       "plantilla": "rebelde_soldado",
+       "n": 2
+      }
+     ],
+     "capitanes_en": 45,
+     "capitanes": [
+      {
+       "plantilla": "lider_rebelde",
+       "n": 1,
+       "jefe": true,
+       "nombre": "Señor de las Sombras",
+       "vida_extra": 1.8
+      }
+     ],
+     "objetivo": "Defiende la plaza y derrota al Señor de las Sombras"
+    }
+   ],
+   "recompensa": {
+    "xp": 2200,
+    "ryo": 3000,
+    "pergaminos": [
+     "pavo_real"
+    ],
+    "cosmeticos": [
+     "prenda_sombra"
+    ]
+   },
+   "epilogo": [
+    [
+     "Señor de las Sombras",
+     "La lluvia... me ha elegido a ti en mi lugar. Qué ironía."
+    ],
+    [
+     "Líder",
+     "Has salvado la aldea dos veces. Desde hoy, la lluvia también te protege a ti."
+    ],
+    [
+     "Narrador",
+     "Fin del segundo arco. Los últimos rebeldes siguen apareciendo por la aldea: no bajes la guardia."
     ]
    ]
   }
@@ -607,6 +905,26 @@
    "nombre": "Prenda azul noche",
    "tipo": "color_prenda",
    "valor": "#1f2a44"
+  },
+  "prenda_ceniza": {
+   "nombre": "Prenda ceniza",
+   "tipo": "color_prenda",
+   "valor": "#4a4440"
+  },
+  "capa_espia": {
+   "nombre": "Capa del espía",
+   "tipo": "ropa",
+   "valor": "capa"
+  },
+  "banda_torre": {
+   "nombre": "Banda de la torre",
+   "tipo": "banda",
+   "valor": "#6b5f86"
+  },
+  "prenda_sombra": {
+   "nombre": "Prenda de las sombras",
+   "tipo": "color_prenda",
+   "valor": "#15121c"
   }
  },
  "contexto": "La Aldea Oculta de la Lluvia nunca ve el sol. Desde que terminó la guerra, el Líder gobierna desde la torre más alta y su chakra recorre cada gota: nada pasa en la aldea sin que la lluvia lo sepa. Pero no todos aceptan su paz. Los rebeldes, leales al antiguo señor de la aldea, se esconden entre las fábricas y planean algo terrible: liberar a la bestia de tres colas que duerme sellada bajo el lago. Tú acabas de terminar la academia. Hoy empieza tu historia.",

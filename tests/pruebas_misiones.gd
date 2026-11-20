@@ -146,7 +146,7 @@ func limpiar(s: ServidorJuego) -> void:
 
 func probar_datos() -> void:
 	var caps: Array = Misiones.conf().get("capitulos", [])
-	comprobar(caps.size() == 6, "hay 6 capítulos de la historia")
+	comprobar(caps.size() == 10, "hay 10 capítulos de la historia (dos arcos)")
 	var bien := true
 	for c in caps:
 		for f in c["fases"]:

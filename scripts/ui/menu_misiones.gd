@@ -95,6 +95,17 @@ func _llenar() -> void:
 			ev.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			ev.custom_minimum_size = Vector2(400, 0)
 			_contenido.add_child(ev)
+			# Volver a empezar la historia (pide confirmación con un segundo toque).
+			var rb := _boton(Datos.texto("mis_reiniciar"), func(): pass)
+			rb.pressed.connect(func():
+				if rb.text == Datos.texto("mis_reiniciar"):
+					rb.text = Datos.texto("mis_reiniciar_seguro")
+					return
+				Perfil.reiniciar_historia()
+				_pj = Perfil.personaje()
+				_llenar())
+			rb.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			_contenido.add_child(rb)
 		"pergaminos":
 			var perg: Array = _pj.get("pergaminos", [])
 			if perg.is_empty():
