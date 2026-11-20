@@ -45,6 +45,14 @@ else
 fi
 if grep -E "SCRIPT ERROR|Parse Error|^ERROR" "$LOG"; then fallo=1; fi
 
+echo "== Jugabilidad: un jugador promedio gana cada misión =="
+if ! "$GODOT" --headless --path . -s res://tests/jugabilidad.gd >"$LOG" 2>&1; then
+  cat "$LOG"; echo "!! Alguna misión no es jugable"; fallo=1
+else
+  grep "Resultado" "$LOG"
+fi
+if grep -E "SCRIPT ERROR|Parse Error|^ERROR" "$LOG"; then fallo=1; fi
+
 echo "== Prueba de red local (servidor + 2 bots por localhost) =="
 if ! timeout 120 "$GODOT" --headless --path . -s res://tests/red.gd >"$LOG" 2>&1; then
   cat "$LOG"; echo "!! Falla la prueba de red"; fallo=1

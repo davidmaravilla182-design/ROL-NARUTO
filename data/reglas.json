@@ -301,7 +301,7 @@
     }
   },
   "ia_cuerpo_a_cuerpo": {
-    "_nota": "Ritmo de los NPC en el cuerpo a cuerpo: descanso en segundos tras su combo (hueco para contraatacar), probabilidad de seguir cada paso del combo y pausa antes de responder tras recibir un golpe. Cada NPC puede sobrescribirlos en su \"ia\". max_atacantes: cuántos NPC pueden pegarle a la vez a un mismo jugador (los demás rodean a distancia_espera); dano_npc_mult: daño de los NPC a los jugadores; gracia_oleada: segundos que tardan en atacar los de una oleada nueva. respiro_oleada: fracción de vida y chakra que recupera el jugador al empezar cada oleada nueva.",
+    "_nota": "Ritmo de los NPC en el cuerpo a cuerpo: descanso en segundos tras su combo (hueco para contraatacar), probabilidad de seguir cada paso del combo y pausa antes de responder tras recibir un golpe. Cada NPC puede sobrescribirlos en su \"ia\". max_atacantes: cuántos NPC pueden pegarle a la vez a un mismo jugador (los demás rodean a distancia_espera); dano_npc_mult: daño de los NPC a los jugadores; gracia_oleada: segundos que tardan en atacar los de una oleada nueva. respiro_oleada: fracción de vida y chakra que recupera el jugador al empezar cada oleada nueva. racha_max/gracia_racha: al recibir ese número de golpes de NPC seguidos el jugador sale del combo con esa invulnerabilidad; gracia_levantarse: invulnerabilidad extra tras un derribo de NPC. golpeado_jugador: duración de la reacción de un jugador a un golpe de NPC. pausa_turno: segundos sin que nadie tome el turno después de que un NPC termina su combo.",
     "descanso_combo": [
       0.9,
       1.5
@@ -310,8 +310,13 @@
     "pausa_tras_golpeado": 0.5,
     "max_atacantes": 1,
     "distancia_espera": 4.5,
-    "dano_npc_mult": 0.65,
+    "dano_npc_mult": 0.4,
     "gracia_oleada": 2.5,
-    "respiro_oleada": 0.3
+    "respiro_oleada": 0.4,
+    "racha_max": 3,
+    "gracia_racha": 1.0,
+    "gracia_levantarse": 0.8,
+    "golpeado_jugador": 0.22,
+    "pausa_turno": 1.2
   }
 }

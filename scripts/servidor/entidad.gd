@@ -65,6 +65,8 @@ var datos_jefe: Dictionary = {}
 var falsa := false         # copia ilusoria del jefe (niebla de alucinaciones)        # posición dentro de la secuencia del combo (Atributos.secuencia_combo)
 var combo_ventana := 0.0
 var invulnerable_t := 0.0
+var racha_npc := 0        # golpes seguidos de NPC recibidos (anti «stunlock»: al 4.º se sale del combo)
+var racha_t := 0.0
 
 var entrada_mov := Vector2.ZERO
 var entrada_mira := 0.0

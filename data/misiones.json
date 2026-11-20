@@ -1,532 +1,532 @@
 {
- "_nota": "Misiones dinámicas: capítulos de la historia (fases con escena y combate) y eventos que aparecen solos. Las posiciones son [x, z] del mapa de la aldea. El líder de la torre nunca aparece: habla por pájaros de papel.",
- "capitulos": [
-  {
-   "id": "cap1",
-   "titulo": "Graduación",
-   "distrito": "academia",
-   "resumen": "Prueba de combate contra el instructor de la academia.",
-   "fases": [
+  "_nota": "Misiones dinámicas: capítulos de la historia (fases con escena y combate) y eventos que aparecen solos. Las posiciones son [x, z] del mapa de la aldea. El líder de la torre nunca aparece: habla por pájaros de papel.",
+  "capitulos": [
     {
-     "tipo": "escena",
-     "pajaro": true,
-     "lineas": [
-      [
-       "Pájaro de papel",
-       "Por orden de la torre: preséntate en la academia. Tu instructor te espera para la prueba de graduación."
+      "id": "cap1",
+      "titulo": "Graduación",
+      "distrito": "academia",
+      "resumen": "Prueba de combate contra el instructor de la academia.",
+      "fases": [
+        {
+          "tipo": "escena",
+          "pajaro": true,
+          "lineas": [
+            [
+              "Pájaro de papel",
+              "Por orden de la torre: preséntate en la academia. Tu instructor te espera para la prueba de graduación."
+            ],
+            [
+              "Instructor",
+              "Muéstrame lo que aprendiste. Si me haces retroceder, te ganas la banda."
+            ]
+          ]
+        },
+        {
+          "tipo": "duelos",
+          "pos": [
+            0,
+            -125
+          ],
+          "rivales": [
+            {
+              "plantilla": "instructor_duelo",
+              "rendicion": 0.3
+            }
+          ],
+          "objetivo": "Vence al instructor (se rinde con 30 % de vida)"
+        }
       ],
-      [
-       "Instructor",
-       "Muéstrame lo que aprendiste. Si me haces retroceder, te ganas la banda."
-      ]
-     ]
-    },
-    {
-     "tipo": "duelos",
-     "pos": [
-      0,
-      -125
-     ],
-     "rivales": [
-      {
-       "plantilla": "instructor_duelo",
-       "rendicion": 0.3
+      "recompensa": {
+        "xp": 300,
+        "ryo": 200,
+        "pergaminos": [
+          "remolino_hoja"
+        ],
+        "cosmeticos": [
+          "banda_acero"
+        ]
       }
-     ],
-     "objetivo": "Vence al instructor (se rinde con 30 % de vida)"
-    }
-   ],
-   "recompensa": {
-    "xp": 300,
-    "ryo": 200,
-    "pergaminos": [
-     "remolino_hoja"
-    ],
-    "cosmeticos": [
-     "banda_acero"
-    ]
-   }
-  },
-  {
-   "id": "cap2",
-   "titulo": "Emboscada en el distrito industrial",
-   "distrito": "industrial",
-   "resumen": "Sobrevive a tres oleadas rebeldes y derrota a su líder.",
-   "fases": [
-    {
-     "tipo": "escena",
-     "pajaro": true,
-     "lineas": [
-      [
-       "Pájaro de papel",
-       "Rebeldes armados en el distrito industrial. La lluvia los vio entre los tanques. Acaba con ellos."
-      ]
-     ]
     },
     {
-     "tipo": "oleadas",
-     "pos": [
-      92,
-      -120
-     ],
-     "oleadas": [
-      [
-       {
-        "plantilla": "rebelde_soldado",
-        "n": 3
-       }
+      "id": "cap2",
+      "titulo": "Emboscada en el distrito industrial",
+      "distrito": "industrial",
+      "resumen": "Sobrevive a tres oleadas rebeldes y derrota a su líder.",
+      "fases": [
+        {
+          "tipo": "escena",
+          "pajaro": true,
+          "lineas": [
+            [
+              "Pájaro de papel",
+              "Rebeldes armados en el distrito industrial. La lluvia los vio entre los tanques. Acaba con ellos."
+            ]
+          ]
+        },
+        {
+          "tipo": "oleadas",
+          "pos": [
+            92,
+            -120
+          ],
+          "oleadas": [
+            [
+              {
+                "plantilla": "rebelde_soldado",
+                "n": 2
+              }
+            ],
+            [
+              {
+                "plantilla": "rebelde_soldado",
+                "n": 3
+              }
+            ],
+            [
+              {
+                "plantilla": "lider_rebelde",
+                "n": 1,
+                "jefe": true
+              },
+              {
+                "plantilla": "rebelde_soldado",
+                "n": 1
+              }
+            ]
+          ],
+          "objetivo": "Sobrevive a las oleadas y derrota al líder"
+        }
       ],
-      [
-       {
-        "plantilla": "rebelde_soldado",
-        "n": 4
-       }
-      ],
-      [
-       {
-        "plantilla": "lider_rebelde",
-        "n": 1,
-        "jefe": true
-       },
-       {
-        "plantilla": "rebelde_soldado",
-        "n": 2
-       }
-      ]
-     ],
-     "objetivo": "Sobrevive a las oleadas y derrota al líder"
-    }
-   ],
-   "recompensa": {
-    "xp": 400,
-    "ryo": 350,
-    "pergaminos": [
-     "atadura_arbol"
-    ],
-    "cosmeticos": [
-     "prenda_carmesi"
-    ]
-   }
-  },
-  {
-   "id": "cap3",
-   "titulo": "La lluvia detecta un intruso",
-   "distrito": "canal",
-   "resumen": "Persigue al intruso por los techos antes de que escape.",
-   "fases": [
-    {
-     "tipo": "escena",
-     "pajaro": true,
-     "lineas": [
-      [
-       "Pájaro de papel",
-       "La lluvia siente a un intruso. Huye hacia el muro por los techos del canal. No dejes que salga de la aldea."
-      ]
-     ]
-    },
-    {
-     "tipo": "perseguir",
-     "plantilla": "intruso",
-     "inicio": [
-      60,
-      -20
-     ],
-     "ruta": [
-      [
-       72,
-       -40
-      ],
-      [
-       88,
-       -28
-      ],
-      [
-       104,
-       -46
-      ],
-      [
-       120,
-       -30
-      ],
-      [
-       132,
-       -58
-      ],
-      [
-       140,
-       -80
-      ]
-     ],
-     "limite": 90,
-     "objetivo": "Derriba al intruso antes de que escape"
-    }
-   ],
-   "recompensa": {
-    "xp": 450,
-    "ryo": 400,
-    "pergaminos": [
-     "entrada_dinamica"
-    ],
-    "cosmeticos": [
-     "capa_lluvia"
-    ]
-   }
-  },
-  {
-   "id": "cap4",
-   "titulo": "Defensa de la puerta",
-   "distrito": "puerta",
-   "resumen": "Los rebeldes atacan la muralla: aguanta y derrota a sus capitanes.",
-   "fases": [
-    {
-     "tipo": "escena",
-     "pajaro": true,
-     "lineas": [
-      [
-       "Pájaro de papel",
-       "Atacan la puerta principal. Resiste hasta que lleguen los refuerzos y elimina a sus capitanes."
-      ]
-     ]
-    },
-    {
-     "tipo": "defender",
-     "pos": [
-      0,
-      74
-     ],
-     "origen": [
-      0,
-      118
-     ],
-     "duracion": 120,
-     "oleada_cada": 18,
-     "por_oleada": [
-      {
-       "plantilla": "rebelde_soldado",
-       "n": 2
+      "recompensa": {
+        "xp": 400,
+        "ryo": 350,
+        "pergaminos": [
+          "atadura_arbol"
+        ],
+        "cosmeticos": [
+          "prenda_carmesi"
+        ]
       }
-     ],
-     "capitanes_en": 60,
-     "capitanes": [
-      {
-       "plantilla": "capitan_rebelde",
-       "n": 2,
-       "jefe": true
-      }
-     ],
-     "objetivo": "Defiende la puerta y derrota a los capitanes"
-    }
-   ],
-   "recompensa": {
-    "xp": 550,
-    "ryo": 500,
-    "pergaminos": [
-     "ilusion_plumas"
-    ],
-    "cosmeticos": [
-     "mascara_tejida"
-    ]
-   }
-  },
-  {
-   "id": "cap5",
-   "titulo": "Examen Chūnin",
-   "distrito": "academia",
-   "resumen": "Torneo de duelos. Ganarlo es la prueba para ascender a Chūnin.",
-   "prueba": "examen_chunin",
-   "fases": [
-    {
-     "tipo": "escena",
-     "pajaro": true,
-     "lineas": [
-      [
-       "Pájaro de papel",
-       "Comienza el Examen Chūnin. Tres duelos en el patio de la academia. Sin rendición hasta el 20 %."
-      ]
-     ]
     },
     {
-     "tipo": "duelos",
-     "pos": [
-      0,
-      -125
-     ],
-     "rivales": [
-      {
-       "plantilla": "aspirante_agua",
-       "rendicion": 0.2
-      },
-      {
-       "plantilla": "aspirante_fuerte",
-       "rendicion": 0.2
-      },
-      {
-       "plantilla": "examinador",
-       "rendicion": 0.2
-      }
-     ],
-     "objetivo": "Gana los tres duelos del torneo"
-    }
-   ],
-   "recompensa": {
-    "xp": 600,
-    "ryo": 800,
-    "pergaminos": [
-     "lariat"
-    ],
-    "cosmeticos": [
-     "chaleco_chunin"
-    ]
-   }
-  },
-  {
-   "id": "cap6",
-   "titulo": "La bestia del lago",
-   "distrito": "puerta",
-   "resumen": "El Tres Colas emerge del lago. Detenlo y, si puedes, séllalo.",
-   "fases": [
-    {
-     "tipo": "escena",
-     "pajaro": true,
-     "lineas": [
-      [
-       "Pájaro de papel",
-       "Algo enorme se mueve bajo el lago, al sur del puente. La aldea entera tiembla. Ve a la orilla."
+      "id": "cap3",
+      "titulo": "La lluvia detecta un intruso",
+      "distrito": "canal",
+      "resumen": "Persigue al intruso por los techos antes de que escape.",
+      "fases": [
+        {
+          "tipo": "escena",
+          "pajaro": true,
+          "lineas": [
+            [
+              "Pájaro de papel",
+              "La lluvia siente a un intruso. Huye hacia el muro por los techos del canal. No dejes que salga de la aldea."
+            ]
+          ]
+        },
+        {
+          "tipo": "perseguir",
+          "plantilla": "intruso",
+          "inicio": [
+            60,
+            -20
+          ],
+          "ruta": [
+            [
+              72,
+              -40
+            ],
+            [
+              88,
+              -28
+            ],
+            [
+              104,
+              -46
+            ],
+            [
+              120,
+              -30
+            ],
+            [
+              132,
+              -58
+            ],
+            [
+              140,
+              -80
+            ]
+          ],
+          "limite": 90,
+          "objetivo": "Derriba al intruso antes de que escape"
+        }
       ],
-      [
-       "Pájaro de papel",
-       "Si tienes la técnica de sellado, séllalo. Si no, ahuyéntalo."
-      ]
-     ]
+      "recompensa": {
+        "xp": 450,
+        "ryo": 400,
+        "pergaminos": [
+          "entrada_dinamica"
+        ],
+        "cosmeticos": [
+          "capa_lluvia"
+        ]
+      }
     },
     {
-     "tipo": "jefe",
-     "jefe": "tres_colas",
-     "pos": [
-      0,
-      215
-     ],
-     "objetivo": "Derrota al Tres Colas"
+      "id": "cap4",
+      "titulo": "Defensa de la puerta",
+      "distrito": "puerta",
+      "resumen": "Los rebeldes atacan la muralla: aguanta y derrota a sus capitanes.",
+      "fases": [
+        {
+          "tipo": "escena",
+          "pajaro": true,
+          "lineas": [
+            [
+              "Pájaro de papel",
+              "Atacan la puerta principal. Resiste hasta que lleguen los refuerzos y elimina a sus capitanes."
+            ]
+          ]
+        },
+        {
+          "tipo": "defender",
+          "pos": [
+            0,
+            74
+          ],
+          "origen": [
+            0,
+            118
+          ],
+          "duracion": 120,
+          "oleada_cada": 25,
+          "por_oleada": [
+            {
+              "plantilla": "rebelde_soldado",
+              "n": 2
+            }
+          ],
+          "capitanes_en": 60,
+          "capitanes": [
+            {
+              "plantilla": "capitan_rebelde",
+              "n": 2,
+              "jefe": true
+            }
+          ],
+          "objetivo": "Defiende la puerta y derrota a los capitanes"
+        }
+      ],
+      "recompensa": {
+        "xp": 550,
+        "ryo": 500,
+        "pergaminos": [
+          "ilusion_plumas"
+        ],
+        "cosmeticos": [
+          "mascara_tejida"
+        ]
+      }
+    },
+    {
+      "id": "cap5",
+      "titulo": "Examen Chūnin",
+      "distrito": "academia",
+      "resumen": "Torneo de duelos. Ganarlo es la prueba para ascender a Chūnin.",
+      "prueba": "examen_chunin",
+      "fases": [
+        {
+          "tipo": "escena",
+          "pajaro": true,
+          "lineas": [
+            [
+              "Pájaro de papel",
+              "Comienza el Examen Chūnin. Tres duelos en el patio de la academia. Sin rendición hasta el 20 %."
+            ]
+          ]
+        },
+        {
+          "tipo": "duelos",
+          "pos": [
+            0,
+            -125
+          ],
+          "rivales": [
+            {
+              "plantilla": "aspirante_agua",
+              "rendicion": 0.2
+            },
+            {
+              "plantilla": "aspirante_fuerte",
+              "rendicion": 0.2
+            },
+            {
+              "plantilla": "examinador",
+              "rendicion": 0.2
+            }
+          ],
+          "objetivo": "Gana los tres duelos del torneo"
+        }
+      ],
+      "recompensa": {
+        "xp": 600,
+        "ryo": 800,
+        "pergaminos": [
+          "lariat"
+        ],
+        "cosmeticos": [
+          "chaleco_chunin"
+        ]
+      }
+    },
+    {
+      "id": "cap6",
+      "titulo": "La bestia del lago",
+      "distrito": "puerta",
+      "resumen": "El Tres Colas emerge del lago. Detenlo y, si puedes, séllalo.",
+      "fases": [
+        {
+          "tipo": "escena",
+          "pajaro": true,
+          "lineas": [
+            [
+              "Pájaro de papel",
+              "Algo enorme se mueve bajo el lago, al sur del puente. La aldea entera tiembla. Ve a la orilla."
+            ],
+            [
+              "Pájaro de papel",
+              "Si tienes la técnica de sellado, séllalo. Si no, ahuyéntalo."
+            ]
+          ]
+        },
+        {
+          "tipo": "jefe",
+          "jefe": "tres_colas",
+          "pos": [
+            0,
+            215
+          ],
+          "objetivo": "Derrota al Tres Colas"
+        }
+      ],
+      "recompensa": {
+        "xp": 1200,
+        "ryo": 2000,
+        "pergaminos": [
+          "tigre_diurno"
+        ],
+        "cosmeticos": [
+          "capa_tres_colas"
+        ],
+        "sellado_extra": {
+          "ryo": 1500,
+          "cosmeticos": [
+            "marca_sellado"
+          ]
+        }
+      }
     }
-   ],
-   "recompensa": {
-    "xp": 1200,
-    "ryo": 2000,
-    "pergaminos": [
-     "tigre_diurno"
-    ],
-    "cosmeticos": [
-     "capa_tres_colas"
-    ],
-    "sellado_extra": {
-     "ryo": 1500,
-     "cosmeticos": [
-      "marca_sellado"
-     ]
-    }
-   }
-  }
- ],
- "eventos": {
-  "intervalo": [
-   200,
-   320
   ],
-  "_nota": "Emboscada, alarma y cazarrecompensas aparecen solos; el duelo con el instructor se pide hablando con él.",
-  "emboscada": {
-   "titulo": "¡Emboscada rebelde!",
-   "enemigos": [
-    {
-     "plantilla": "rebelde_soldado",
-     "n": 4
-    }
-   ],
-   "aviso_previo": 6,
-   "recompensa": {
-    "xp": 120,
-    "ryo": 120
-   },
-   "zonas": [
-    [
-     -100,
-     -30
+  "eventos": {
+    "intervalo": [
+      200,
+      320
     ],
-    [
-     90,
-     -120
-    ],
-    [
-     -90,
-     -150
-    ],
-    [
-     110,
-     -30
-    ],
-    [
-     0,
-     -200
-    ]
-   ]
-  },
-  "alarma": {
-   "titulo": "Alarma de la lluvia: hay un intruso",
-   "plantilla": "intruso",
-   "limite": 75,
-   "recompensa": {
-    "xp": 150,
-    "ryo": 150
-   },
-   "rutas": [
-    [
-     [
-      60,
-      -20
-     ],
-     [
-      72,
-      -40
-     ],
-     [
-      88,
-      -28
-     ],
-     [
-      104,
-      -46
-     ],
-     [
-      120,
-      -30
-     ],
-     [
-      140,
-      -80
-     ]
-    ],
-    [
-     [
-      -60,
-      -40
-     ],
-     [
-      -80,
-      -60
-     ],
-     [
-      -100,
-      -40
-     ],
-     [
-      -120,
-      -70
-     ],
-     [
-      -140,
-      -90
-     ]
-    ]
-   ]
-  },
-  "cazarrecompensas": {
-   "titulo": "Cazarrecompensas",
-   "recompensa": {
-    "xp": 200,
-    "ryo": 600
-   },
-   "objetivos": [
-    {
-     "plantilla": "lider_rebelde",
-     "nombre": "Kuroda «el de la cuchilla»",
-     "pos": [
-      -110,
-      -140
-     ],
-     "pergaminos": [
-      "oscuridad"
-     ]
+    "_nota": "Emboscada, alarma y cazarrecompensas aparecen solos; el duelo con el instructor se pide hablando con él.",
+    "emboscada": {
+      "titulo": "¡Emboscada rebelde!",
+      "enemigos": [
+        {
+          "plantilla": "rebelde_soldado",
+          "n": 4
+        }
+      ],
+      "aviso_previo": 6,
+      "recompensa": {
+        "xp": 120,
+        "ryo": 120
+      },
+      "zonas": [
+        [
+          -100,
+          -30
+        ],
+        [
+          90,
+          -120
+        ],
+        [
+          -90,
+          -150
+        ],
+        [
+          110,
+          -30
+        ],
+        [
+          0,
+          -200
+        ]
+      ]
     },
-    {
-     "plantilla": "capitan_rebelde",
-     "nombre": "Mirei «niebla roja»",
-     "pos": [
-      100,
-      -160
-     ],
-     "pergaminos": [
-      "vision_infierno"
-     ]
+    "alarma": {
+      "titulo": "Alarma de la lluvia: hay un intruso",
+      "plantilla": "intruso",
+      "limite": 75,
+      "recompensa": {
+        "xp": 150,
+        "ryo": 150
+      },
+      "rutas": [
+        [
+          [
+            60,
+            -20
+          ],
+          [
+            72,
+            -40
+          ],
+          [
+            88,
+            -28
+          ],
+          [
+            104,
+            -46
+          ],
+          [
+            120,
+            -30
+          ],
+          [
+            140,
+            -80
+          ]
+        ],
+        [
+          [
+            -60,
+            -40
+          ],
+          [
+            -80,
+            -60
+          ],
+          [
+            -100,
+            -40
+          ],
+          [
+            -120,
+            -70
+          ],
+          [
+            -140,
+            -90
+          ]
+        ]
+      ]
     },
-    {
-     "plantilla": "intruso",
-     "nombre": "Sombra del canal",
-     "pos": [
-      120,
-      10
-     ],
-     "cosmeticos": [
-      "prenda_noche"
-     ]
+    "cazarrecompensas": {
+      "titulo": "Cazarrecompensas",
+      "recompensa": {
+        "xp": 200,
+        "ryo": 600
+      },
+      "objetivos": [
+        {
+          "plantilla": "lider_rebelde",
+          "nombre": "Kuroda «el de la cuchilla»",
+          "pos": [
+            -110,
+            -140
+          ],
+          "pergaminos": [
+            "oscuridad"
+          ]
+        },
+        {
+          "plantilla": "capitan_rebelde",
+          "nombre": "Mirei «niebla roja»",
+          "pos": [
+            100,
+            -160
+          ],
+          "pergaminos": [
+            "vision_infierno"
+          ]
+        },
+        {
+          "plantilla": "intruso",
+          "nombre": "Sombra del canal",
+          "pos": [
+            120,
+            10
+          ],
+          "cosmeticos": [
+            "prenda_noche"
+          ]
+        }
+      ]
+    },
+    "duelo_instructor": {
+      "titulo": "Duelo de entrenamiento",
+      "pos": [
+        0,
+        -125
+      ],
+      "rival": {
+        "plantilla": "instructor_duelo",
+        "rendicion": 0.3
+      },
+      "recompensa": {
+        "xp": 80,
+        "ryo": 50,
+        "punto_atributo": 1
+      }
     }
-   ]
   },
-  "duelo_instructor": {
-   "titulo": "Duelo de entrenamiento",
-   "pos": [
-    0,
-    -125
-   ],
-   "rival": {
-    "plantilla": "instructor_duelo",
-    "rendicion": 0.3
-   },
-   "recompensa": {
-    "xp": 80,
-    "ryo": 50,
-    "punto_atributo": 1
-   }
+  "cosmeticos": {
+    "banda_acero": {
+      "nombre": "Banda de acero pulido",
+      "tipo": "banda",
+      "valor": "#8a93a8"
+    },
+    "prenda_carmesi": {
+      "nombre": "Prenda carmesí",
+      "tipo": "color_prenda",
+      "valor": "#7a1f2a"
+    },
+    "capa_lluvia": {
+      "nombre": "Capa de la lluvia",
+      "tipo": "ropa",
+      "valor": "capa"
+    },
+    "mascara_tejida": {
+      "nombre": "Prenda gris tejida",
+      "tipo": "color_prenda",
+      "valor": "#5e5a52"
+    },
+    "chaleco_chunin": {
+      "nombre": "Chaleco de Chūnin",
+      "tipo": "ropa",
+      "valor": "chaleco"
+    },
+    "capa_tres_colas": {
+      "nombre": "Prenda coral del lago",
+      "tipo": "color_prenda",
+      "valor": "#b8656a"
+    },
+    "marca_sellado": {
+      "nombre": "Interior de sellador",
+      "tipo": "color_interior",
+      "valor": "#2b1f24"
+    },
+    "prenda_noche": {
+      "nombre": "Prenda azul noche",
+      "tipo": "color_prenda",
+      "valor": "#1f2a44"
+    }
   }
- },
- "cosmeticos": {
-  "banda_acero": {
-   "nombre": "Banda de acero pulido",
-   "tipo": "banda",
-   "valor": "#8a93a8"
-  },
-  "prenda_carmesi": {
-   "nombre": "Prenda carmesí",
-   "tipo": "color_prenda",
-   "valor": "#7a1f2a"
-  },
-  "capa_lluvia": {
-   "nombre": "Capa de la lluvia",
-   "tipo": "ropa",
-   "valor": "capa"
-  },
-  "mascara_tejida": {
-   "nombre": "Prenda gris tejida",
-   "tipo": "color_prenda",
-   "valor": "#5e5a52"
-  },
-  "chaleco_chunin": {
-   "nombre": "Chaleco de Chūnin",
-   "tipo": "ropa",
-   "valor": "chaleco"
-  },
-  "capa_tres_colas": {
-   "nombre": "Prenda coral del lago",
-   "tipo": "color_prenda",
-   "valor": "#b8656a"
-  },
-  "marca_sellado": {
-   "nombre": "Interior de sellador",
-   "tipo": "color_interior",
-   "valor": "#2b1f24"
-  },
-  "prenda_noche": {
-   "nombre": "Prenda azul noche",
-   "tipo": "color_prenda",
-   "valor": "#1f2a44"
-  }
- }
 }

@@ -443,7 +443,7 @@
     "ia": {
       "perfil": "agresivo",
       "distancia_preferida": 5.0,
-      "rango_disparo": 15.0,
+      "rango_disparo": 0.0,
       "rango_melee": 2.3,
       "prob_esquivar": 0.5,
       "umbral_huida": 0.0,
@@ -454,8 +454,8 @@
       "genjutsu_duracion": 3.5,
       "genjutsu_rango": 14.0,
       "humo_recarga": 9.0,
-      "vida_mult": 0.7,
-      "combo_max": 3,
+      "vida_mult": 0.5,
+      "combo_max": 2,
       "prob_shunshin": 0.15,
       "prob_sustitucion": 0.1,
       "prob_bloqueo": 0.15
@@ -523,7 +523,7 @@
       "genjutsu_duracion": 3.5,
       "genjutsu_rango": 14.0,
       "humo_recarga": 9.0,
-      "vida_mult": 3.2,
+      "vida_mult": 1.5,
       "combo_max": 5,
       "prob_shunshin": 0.25,
       "prob_sustitucion": 0.25,
@@ -593,7 +593,7 @@
       "genjutsu_duracion": 3.5,
       "genjutsu_rango": 14.0,
       "humo_recarga": 9.0,
-      "vida_mult": 2.4,
+      "vida_mult": 1.2,
       "combo_max": 4,
       "prob_shunshin": 0.25,
       "prob_sustitucion": 0.25,
@@ -639,7 +639,7 @@
       "genjutsu": 1,
       "inteligencia": 3,
       "fuerza": 4,
-      "velocidad": 5,
+      "velocidad": 3,
       "estamina": 4,
       "sellos": 1
     },
@@ -667,7 +667,10 @@
       "prob_shunshin": 0.25,
       "prob_sustitucion": 0.3,
       "prob_bloqueo": 0.2,
-      "modelo": "intruso"
+      "modelo": "intruso",
+      "velocidad_huida": 0.8,
+      "pausa_ruta": 1.5,
+      "acorralado": 4.0
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -767,14 +770,14 @@
       "agua"
     ],
     "atributos": {
-      "ninjutsu": 5,
+      "ninjutsu": 3,
       "taijutsu": 2,
       "genjutsu": 2,
       "inteligencia": 4,
       "fuerza": 2,
       "velocidad": 4,
       "estamina": 3,
-      "sellos": 4
+      "sellos": 2
     },
     "jutsus": [
       "golpe",
@@ -795,7 +798,7 @@
       "aggro": 60.0,
       "combo_max": 2,
       "prob_sustitucion": 0.45,
-      "vida_mult": 1.2
+      "vida_mult": 1.0
     },
     "aspecto": {
       "piel": "#dcbb98",
@@ -972,7 +975,7 @@
     },
     "jutsus": [],
     "ia": {
-      "vida_mult": 28.0
+      "vida_mult": 5.5
     },
     "aspecto": {},
     "rango": "kage",
@@ -986,8 +989,8 @@
         0.45,
         0.2
       ],
-      "cada_balas": 2.4,
-      "cada_ola": 7.0,
+      "cada_balas": 4.5,
+      "cada_ola": 9.0,
       "cada_rodar": 8.0,
       "rodar_velocidad": 26.0,
       "aturdido_tras_rodar": 3.0,

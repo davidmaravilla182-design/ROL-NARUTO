@@ -101,6 +101,8 @@ func _reapariciones(dt: float) -> void:
 			continue
 		if e.plantilla_id == "ninja_lluvia":
 			continue   # el del campo de entrenamiento reaparece con el botón
+		if e.de_mision or e.tipo == "jefe":
+			continue   # los de una misión no reviven (antes volvían a los 30 s con toda la vida)
 		e.muerto_t += dt
 		if e.muerto_t >= espera:
 			e.reiniciar()
@@ -683,6 +685,9 @@ func _actualizar_recursos(e: EntidadServidor, dt: float) -> void:
 	for k in e.recargas.keys():
 		e.recargas[k] = maxf(float(e.recargas[k]) - dt, 0.0)
 	e.invulnerable_t = maxf(e.invulnerable_t - dt, 0.0)
+	e.racha_t = maxf(e.racha_t - dt, 0.0)
+	if e.racha_t <= 0.0:
+		e.racha_npc = 0
 	e.combo_ventana = maxf(e.combo_ventana - dt, 0.0)
 	e.sustitucion_t = maxf(e.sustitucion_t - dt, 0.0)
 	if e.tipo == "jugador" and e.entrada_mov.length() > 0.5 and e.en_suelo:
@@ -1077,7 +1082,7 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		_evento({"tipo": "resistido", "entidad": o.id, "pos": o.centro()})
 		return   # golpear una copia ilusoria no hace nada
 	# Daño de los NPC a los jugadores (data/reglas.json → ia_cuerpo_a_cuerpo.dano_npc_mult).
-	if atacante != null and atacante.ia != null and o.tipo == "jugador":
+	if atacante != null and atacante.tipo != "jugador" and o.tipo == "jugador":
 		cantidad *= float(Datos.reglas.get("ia_cuerpo_a_cuerpo", {}).get("dano_npc_mult", 1.0))
 	if o.tipo == "jefe":
 		# Un bijuu no se derriba, no se lanza ni se empuja.
@@ -1170,6 +1175,25 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 		o.empuje = dir * float(info.get("empuje", 2.0))
 		_evento({"tipo": "estrellar", "entidad": o.id, "pos": Vector3(o.pos.x, mapa.altura_suelo(Vector2(o.pos.x, o.pos.z), 0.0), o.pos.z)})
 		return
+	# Anti «stunlock» (solo golpes de NPC a jugadores): tras un derribo no te rematan en el suelo ni al levantarte,
+	# y al 4.º golpe seguido sales despedido del combo con un instante de invulnerabilidad para reaccionar.
+	var npc_a_jugador := atacante != null and atacante.tipo != "jugador" and o.tipo == "jugador"
+	if npc_a_jugador:
+		var ac: Dictionary = Datos.reglas.get("ia_cuerpo_a_cuerpo", {})
+		o.racha_npc += 1
+		o.racha_t = 2.0
+		if info.get("derriba", false):
+			o.invulnerable_t = maxf(o.invulnerable_t, Datos.reglas["estados"]["caido_duracion"] + float(ac.get("gracia_levantarse", 0.8)))
+			o.racha_npc = 0
+		elif o.racha_npc >= int(ac.get("racha_max", 4)):
+			o.racha_npc = 0
+			o.poner_estado("golpeado", Datos.reglas["estados"]["golpeado_duracion"])
+			o.empuje = dir * 9.0
+			o.invulnerable_t = maxf(o.invulnerable_t, float(ac.get("gracia_racha", 1.0)))
+			_evento({"tipo": "escape_combo", "entidad": o.id, "pos": o.centro()})
+			if atacante != null:
+				o.yaw = _yaw_hacia(o.pos, atacante.pos)
+			return
 	if info.get("derriba", false):
 		o.poner_estado("caido", Datos.reglas["estados"]["caido_duracion"])
 		o.empuje = dir * float(info.get("empuje", 4.0))
@@ -1177,7 +1201,10 @@ func _aplicar_dano(o: EntidadServidor, cantidad: float, atacante: EntidadServido
 			o.vel_y = 4.5
 			o.en_suelo = false
 	elif not info.get("sin_reaccion", false):
-		o.poner_estado("golpeado", Datos.reglas["estados"]["golpeado_duracion"])
+		var dur_g := float(Datos.reglas["estados"]["golpeado_duracion"])
+		if npc_a_jugador:
+			dur_g = float(Datos.reglas.get("ia_cuerpo_a_cuerpo", {}).get("golpeado_jugador", dur_g))
+		o.poner_estado("golpeado", dur_g)
 		o.empuje = dir * float(info.get("empuje", 1.0))
 	if atacante != null and atacante.tipo != "muneco":
 		o.yaw = _yaw_hacia(o.pos, atacante.pos)

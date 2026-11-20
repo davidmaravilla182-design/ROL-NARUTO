@@ -220,7 +220,7 @@ func probar_jefe() -> void:
 	for e in s.entidades:
 		if e.tipo == "jefe" and not e.falsa:
 			b = e
-	comprobar(b != null and float(b.stats["vida_max"]) > 3000.0, "emerge el Tres Colas con una barra de vida enorme")
+	comprobar(b != null and float(b.stats["vida_max"]) > 900.0, "emerge el Tres Colas con una barra de vida enorme (%d)" % (int(b.stats["vida_max"]) if b != null else 0))
 	# Caminar sobre el lago con chakra junto a él.
 	j.pos = b.pos + Vector3(0, 0.5, -16)
 	j.chakra = 200.0

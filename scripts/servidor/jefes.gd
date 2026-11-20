@@ -119,6 +119,9 @@ static func _pensar(s: ServidorJuego, e: EntidadServidor, dt: float) -> void:
 
 static func _cambiar_fase(s: ServidorJuego, e: EntidadServidor, antes: int, fase: int) -> void:
 	var d: Dictionary = e.datos_jefe
+	# Respiro al cambiar de fase: el jugador recupera algo de vida y chakra (la bestia ruge y se reacomoda).
+	if s.misiones != null and s.misiones.hay_activa():
+		s.misiones._respiro(0.2)
 	s._evento({"tipo": "jefe", "accion": "fase", "entidad": e.id, "fase": fase, "pos": e.pos})
 	if antes == 3:
 		_quitar_copias(s, e)
@@ -219,6 +222,8 @@ static func al_morir(s: ServidorJuego, e: EntidadServidor) -> bool:
 	if not (e in activos) or e.falsa:
 		return false
 	e.vida = 1.0
+	if str(e.datos_jefe.get("estado", "")) in ["vencido", "sellado", "huyo"]:
+		return true   # ya vencido: seguir golpeándolo no reinicia la ventana de sellado (antes no terminaba nunca)
 	e.poner_estado("aturdido", 999.0)
 	_quitar_copias(s, e)
 	var c := conf(e)

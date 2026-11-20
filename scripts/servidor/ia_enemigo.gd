@@ -28,6 +28,9 @@ var ruta_i := 0
 var _estado_antes := "libre"
 var _accion_leida: Dictionary = {}
 # Turnos: solo max_atacantes NPC pueden pegarle a la vez al mismo jugador; los demás lo rodean esperando.
+var t_acorralado := 0.0
+var t_pausa := 0.0
+static var _turno_liberado := {}   # id del jugador -> tick en que el último NPC soltó el turno (pausa de grupo)
 var turno := false
 var turno_de := -1   # el golpe del jugador que ya evaluó (una decisión por golpe, no por tick)
 
@@ -64,6 +67,8 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 		if e.estado == "libre" and _estado_antes == "golpe":
 			var dc: Array = _ritmo("descanso_combo", [0.9, 1.5])
 			t_reaccion = maxf(t_reaccion, rng.randf_range(float(dc[0]), float(dc[1])))
+			if turno:
+				_turno_liberado[turno_de] = s.tick
 			turno = false   # tras su combo cede el turno a otro
 		elif e.estado == "libre" and _estado_antes in ["golpeado", "derribado", "aturdido", "lanzado", "bloqueo"]:
 			t_reaccion = maxf(t_reaccion, float(_ritmo("pausa_tras_golpeado", 0.5)) + rng.randf() * 0.3)
@@ -77,18 +82,31 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 	t_humo -= dt
 	var objetivo := s._jugador_mas_cercano(e.pos)
 	# Intruso: corre por su ruta (sube por las paredes al toparse con ellas); si lo alcanzan, se defiende.
+	# Más lento que a la carrera (velocidad_huida), se para a mirar atrás en cada punto (pausa_ruta) y, si lo
+	# alcanzan o lo golpean, se queda peleando unos segundos (acorralado).
 	if perfil == "huir" and not ruta.is_empty():
-		if ruta_i < ruta.size():
+		if objetivo != null and objetivo.pos.distance_to(e.pos) < 3.5:
+			t_acorralado = maxf(t_acorralado, float(conf.get("acorralado", 4.0)))
+		if e.estado in ["golpeado", "derribado", "aturdido", "lanzado"]:
+			t_acorralado = maxf(t_acorralado, float(conf.get("acorralado", 4.0)))
+		t_acorralado -= dt
+		t_pausa -= dt
+		if t_acorralado <= 0.0 and ruta_i < ruta.size():
 			var meta: Vector3 = ruta[ruta_i]
 			var v := meta - e.pos
 			v.y = 0.0
 			if v.length() < 3.0:
 				ruta_i += 1
-			var mv := Vector2(v.x, v.z).normalized()
+				t_pausa = float(conf.get("pausa_ruta", 0.0))
+			if t_pausa > 0.0 and objetivo != null:
+				var atras := objetivo.pos - e.pos
+				s.aplicar_comando(e, {"t": "entrada", "mov": Vector2.ZERO, "mira": atan2(atras.x, atras.z)})
+				return
+			var mv := Vector2(v.x, v.z).normalized() * float(conf.get("velocidad_huida", 1.0))
 			s.aplicar_comando(e, {"t": "entrada", "mov": mv, "mira": atan2(mv.x, mv.y)})
-			if objetivo != null and objetivo.pos.distance_to(e.pos) < 2.5 and e.estado == "libre" and rng.randf() < 0.05:
-				s.aplicar_comando(e, {"t": "accion", "id": "esquivar"})
-		return
+			return
+		if t_acorralado <= 0.0:
+			return
 	# Oscuridad: ciego, pierde de vista al jugador y tantea a ciegas.
 	if e.efectos.has("ciego"):
 		var giro := Vector2(sin(t_lado * 3.0), cos(t_lado * 2.0)) * 0.25
@@ -118,6 +136,9 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 	var dist := hacia.length()
 	# Solo espera si OTRO tiene el turno sobre ese jugador (uno solo pelea normal).
 	var espera := not _actualizar_turno(s, objetivo, dist)
+	# Si el jugador se le echa encima, pelea (no huye hacia atrás mientras otro te pega por la espalda).
+	if espera and dist < 2.8:
+		espera = false
 	var dir := hacia / maxf(dist, 0.001)
 	var lateral := Vector3(-dir.z, 0, dir.x) * lado
 	var mov := Vector3.ZERO
@@ -139,7 +160,7 @@ func pensar(s: ServidorJuego, dt: float) -> void:
 	var d_espera := float(_ritmo("distancia_espera", 4.5))
 	if espera and perfil != "distancia" and dist < d_espera + 3.0:
 		# Sin turno: lo rodea a distancia (amenaza, pero deja pelear con el que tiene el turno).
-		mov = lateral * 0.7 + (-dir if dist < d_espera else dir * 0.3)
+		mov = lateral * 0.7 + (-dir * 0.4 if dist < d_espera - 1.0 else dir * 0.3)
 	elif perfil == "agresivo":
 		mov = dir + lateral * 0.25 if dist > float(conf.get("rango_melee", 2.2)) * 0.8 else lateral * 0.3
 	elif perfil == "distancia" and dist < float(conf.get("distancia_minima", 7.0)):
@@ -229,6 +250,10 @@ func _actualizar_turno(s: ServidorJuego, objetivo: EntidadServidor, dist: float)
 	for o in s.entidades:
 		if o != e and o.ia != null and o.vivo() and not o.oculto and (o.ia as IaEnemigo).turno and (o.ia as IaEnemigo).turno_de == objetivo.id:
 			con_turno += 1
+	# Pausa de grupo: tras soltar uno el turno, el siguiente espera un poco (si no, no hay respiro).
+	var desde := float(s.tick - int(_turno_liberado.get(objetivo.id, -100000))) * s.dt_tick
+	if con_turno == 0 and desde < float(_ritmo("pausa_turno", 1.2)):
+		return false
 	if con_turno < int(_ritmo("max_atacantes", 1)):
 		if dist <= 7.0 and t_reaccion <= 0.0:
 			turno = true

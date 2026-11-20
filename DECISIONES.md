@@ -272,3 +272,15 @@ Registro de decisiones tomadas de forma autónoma durante el desarrollo del demo
   El lago solo se puede pisar durante la pelea (`Mapa.arena_lago`, también en el cliente para la predicción).
 - **Arte**: ningún modelo nuevo se genera con imágenes de Meshy; se piden a GPT y mientras tanto hay marcadores
   procedurales que el código reemplaza por el GLB en cuanto existe.
+
+## Jugabilidad de las misiones (balance v0.9.1)
+- **Prueba de jugabilidad** (`tests/jugabilidad.gd`, en `tools/verificar.sh`): un «jugador promedio» automático
+  (personaje recién creado, Genin con 14 puntos, sus jutsus iniciales, reacciona 5 veces por segundo, esquiva 30 %)
+  juega cada capítulo y cada evento 3 veces; debe ganar la mayoría. Antes solo ganaba el capítulo 1.
+- **Errores corregidos**: los enemigos de misión revivían a los 30 s (la reaparición de la aldea los incluía); el
+  Tres Colas vencido reiniciaba la ventana de sellado con cada golpe y la misión no terminaba; el intruso acorralado
+  se quedaba quieto sin pelear; los NPC que esperaban turno retrocedían y te pegaba el del turno por la espalda.
+- **Ritmo de combate** (`data/reglas.json → ia_cuerpo_a_cuerpo`): turnos de ataque (1 a la vez, con pausa de grupo),
+  daño de NPC ×0,4, reacción a golpe de NPC 0,22 s, salida del combo al 3.er golpe seguido, invulnerabilidad al
+  levantarse, respiro (40 %) entre oleadas/duelos y al llegar los capitanes, 20 % en cada fase del jefe.
+- **Intruso**: velocidad 3, corre al 80 %, se para 1,5 s en cada punto de la ruta y pelea 4 s si lo alcanzas.

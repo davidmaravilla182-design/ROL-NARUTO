@@ -252,6 +252,7 @@ func actualizar(dt: float) -> void:
 				if int(d["rival_i"]) >= (f["rivales"] as Array).size():
 					_siguiente_fase()
 				else:
+					_respiro()
 					_nuevo_rival(f)
 					_avisar_objetivo()
 		"oleadas":
@@ -260,13 +261,7 @@ func actualizar(dt: float) -> void:
 				if int(d["oleada"]) >= (f["oleadas"] as Array).size():
 					_siguiente_fase()
 				else:
-					# Respiro entre oleadas: recupera parte de la vida y el chakra.
-					var rf := float(Datos.reglas.get("ia_cuerpo_a_cuerpo", {}).get("respiro_oleada", 0.0))
-					for j in _jugadores():
-						if j.vivo() and rf > 0.0:
-							j.vida = minf(j.vida + float(j.stats["vida_max"]) * rf, float(j.stats["vida_max"]))
-							j.chakra = minf(j.chakra + float(j.stats["chakra_max"]) * rf, float(j.stats["chakra_max"]))
-							s._evento({"tipo": "mensaje", "entidad": j.id, "clave": "msg_respiro"})
+					_respiro()
 					_nueva_oleada(f)
 					_avisar_objetivo()
 		"perseguir":
@@ -280,7 +275,8 @@ func actualizar(dt: float) -> void:
 				terminar(false)
 		"defender":
 			d["oleada_t"] = float(d["oleada_t"]) - dt
-			if d["oleada_t"] <= 0.0 and float(activa["t"]) < float(d["limite"]) - 10.0:
+			# Los soldados dejan de llegar cuando aparecen los capitanes (el final es contra ellos).
+			if d["oleada_t"] <= 0.0 and float(activa["t"]) < float(d["limite"]) - 10.0 and not bool(d["capitanes"]):
 				d["oleada_t"] = float(f.get("oleada_cada", 18.0))
 				for g in f.get("por_oleada", []):
 					for i in int(g["n"]):
@@ -288,6 +284,7 @@ func actualizar(dt: float) -> void:
 			if not bool(d["capitanes"]) and float(activa["t"]) >= float(f.get("capitanes_en", 60.0)):
 				d["capitanes"] = true
 				s._evento({"tipo": "anuncio", "titulo": "¡Llegan los capitanes rebeldes!", "para_todos": true})
+				_respiro()
 				for g in f.get("capitanes", []):
 					for i in int(g["n"]):
 						var c := _crear(str(g["plantilla"]), _v3(f["origen"]) + Vector3(i * 4.0 - 2.0, 0, 0), g)
@@ -310,6 +307,16 @@ func actualizar(dt: float) -> void:
 	if float(d["aviso_t"]) <= 0.0 and hay_activa():
 		d["aviso_t"] = 0.5
 		_avisar_objetivo()
+
+
+## Respiro entre oleadas y entre duelos: recupera parte de la vida y el chakra.
+func _respiro(frac := -1.0) -> void:
+	var rf := frac if frac >= 0.0 else float(Datos.reglas.get("ia_cuerpo_a_cuerpo", {}).get("respiro_oleada", 0.0))
+	for j in _jugadores():
+		if j.vivo() and rf > 0.0:
+			j.vida = minf(j.vida + float(j.stats["vida_max"]) * rf, float(j.stats["vida_max"]))
+			j.chakra = minf(j.chakra + float(j.stats["chakra_max"]) * rf, float(j.stats["chakra_max"]))
+			s._evento({"tipo": "mensaje", "entidad": j.id, "clave": "msg_respiro"})
 
 
 func terminar(exito: bool) -> void:
@@ -360,7 +367,7 @@ func _crear(plantilla: String, pos: Vector3, g: Dictionary) -> EntidadServidor:
 	var e := s._crear_entidad(plantilla, Vector3(p2.x, s.mapa.altura_suelo(p2, 0.0), p2.y))
 	e.equipo = 2
 	e.ia = IaEnemigo.new(e)
-	e.ia.conf["aggro"] = maxf(float(e.ia.conf.get("aggro", 30.0)), 60.0) if str(e.ia.perfil) != "huir" else 0.0
+	e.ia.conf["aggro"] = maxf(float(e.ia.conf.get("aggro", 30.0)), 60.0)   # el que huye también pelea si lo acorralan
 	e.ia.t_reaccion = 1.0
 	e.de_mision = true
 	if g.has("nombre"):
