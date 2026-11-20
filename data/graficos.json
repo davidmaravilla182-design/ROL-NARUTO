@@ -212,5 +212,7 @@
     3.76,
     4.72
   ],
-  "tres_colas_escala": 1.8
+  "tres_colas_escala": 1.8,
+  "pajaro_ala_inicio": 0.07,
+  "pajaro_escala": 1.4
 }

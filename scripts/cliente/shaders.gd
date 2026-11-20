@@ -708,6 +708,9 @@ static func shader(clave: String) -> Shader:
 		# Doble cara: los huecos de los modelos destrozados se ven oscuros por dentro, no transparentes.
 		"toon_tex_doble": return _shader(clave, TOON_TEX.replace("render_mode cull_back;", "render_mode cull_disabled;").replace(
 			"	EMISSION = emision.rgb * emision_fuerza;\n}", "	EMISSION = emision.rgb * emision_fuerza;\n	if (!FRONT_FACING) {\n		ALBEDO = vec3(0.012, 0.012, 0.018);\n		METALLIC = 0.0;\n		ROUGHNESS = 1.0;\n		NORMAL_MAP = vec3(0.5, 0.5, 1.0);\n	}\n}"))
+		# Alas que aletean (pájaro de papel): los vértices fuera del cuerpo (|x| > ala_inicio) giran alrededor del eje del ala.
+		"toon_tex_aleteo": return _shader(clave, TOON_TEX.replace("render_mode cull_back;", "render_mode cull_disabled;").replace(
+			"void vertex() {\n", "uniform float aleteo_t = 0.0;\nuniform float ala_inicio = 0.1;\nuniform float aleteo_amp = 0.6;\nvoid vertex() {\n\tfloat ax = abs(VERTEX.x) - ala_inicio;\n\tif (ax > 0.0) {\n\t\tfloat a = sin(aleteo_t) * aleteo_amp * smoothstep(0.0, 0.15, ax);\n\t\tVERTEX.y += ax * sin(a);\n\t\tVERTEX.x -= sign(VERTEX.x) * ax * (1.0 - cos(a));\n\t}\n"))
 		"contorno": return _shader(clave, CONTORNO)
 		"fuego": return _shader(clave, FUEGO)
 		"calor": return _shader(clave, CALOR)
@@ -765,6 +768,23 @@ static func toon_tex(nombre: String, tinte := Color.WHITE, escala_uv := Vector2.
 	if contorno > 0.0:
 		m.next_pass = material_contorno(contorno)
 	_cache[clave] = m
+	return m
+
+
+## Material de un modelo de Meshy con alas que aletean (sin contorno: no seguiría la deformación).
+static func toon_tex_aleteo(nombre: String, ala_inicio: float) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = shader("toon_tex_aleteo")
+	m.set_shader_parameter("tex_color", load("res://assets/texturas/%s_color.png" % nombre))
+	m.set_shader_parameter("tex_normal", load("res://assets/texturas/%s_normal.png" % nombre))
+	m.set_shader_parameter("tinte", Color(1.0, 0.98, 1.02))
+	m.set_shader_parameter("escala_uv", Vector2.ONE)
+	m.set_shader_parameter("triplanar", 0.0)
+	m.set_shader_parameter("escala_mundo", 0.25)
+	m.set_shader_parameter("metalico", 0.0)
+	m.set_shader_parameter("humedad", 0.3)
+	m.set_shader_parameter("chorreo", 0.0)
+	m.set_shader_parameter("ala_inicio", ala_inicio)
 	return m
 
 

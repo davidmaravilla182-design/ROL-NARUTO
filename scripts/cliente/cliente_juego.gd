@@ -945,6 +945,11 @@ func _procesar_evento(ev: Dictionary) -> void:
 			_evento_jefe(ev)
 		"escena":
 			ui_mision.escena(ev.get("lineas", []), bool(ev.get("pajaro", false)), float(ev.get("duracion", 4.0)))
+			if bool(ev.get("pajaro", false)) and PajaroPapel.disponible() and _visuales.has(mi_id):
+				# El mensajero del líder llega volando en 3D hasta el hombro del jugador.
+				var pj := PajaroPapel.new()
+				add_child(pj)
+				pj.construir(_visuales[mi_id]["nodo"], float(ev.get("duracion", 4.0)))
 		"anuncio":
 			ui_mision.anuncio(str(ev.get("titulo", "")))
 		"emboscada_aviso":

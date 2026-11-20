@@ -172,8 +172,8 @@ func _dibujar_escena() -> void:
 	var visible_t := texto.left(int(_letras))
 	var f := Estilo.fuente_ui()
 	_escena.draw_multiline_string(f, r.position + Vector2(28, 80), visible_t, HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 56, 22, -1, Color(0.15, 0.1, 0.08))
-	if _pajaro:
-		# Pájaro de papel: entra volando y aletea junto al pergamino.
+	if _pajaro and not PajaroPapel.disponible():
+		# Sin modelo 3D: pájaro de papel dibujado, entra volando y aletea junto al pergamino.
 		var u := clampf(_escena_t / 0.7, 0.0, 1.0)
 		var c := Vector2(lerpf(sz.x + 80, r.end.x - 40, 1.0 - pow(1.0 - u, 3.0)), r.position.y - 30 + sin(_escena_t * 6.0) * 6.0)
 		var ala := sin(_escena_t * 14.0) * 18.0

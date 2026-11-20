@@ -21,7 +21,7 @@ Así el estilo, la paleta y las proporciones quedan iguales a lo que ya está en
 | Estado | Archivo | Para qué | Referencia a adjuntar |
 |---|---|---|---|
 | Hecho (Meshy 15 cr, en el juego) | `tres_colas.png` | Jefe: el Tres Colas que emerge del lago (capítulo 6). | `edificio.png` |
-| Pendiente | `pajaro_papel.png` | Mensajero del líder de la torre (escenas de misión). | `edificio.png` |
+| Hecho (Meshy 15 cr, en el juego) | `pajaro_papel.png` | Mensajero del líder de la torre (escenas de misión). | `edificio.png` |
 | Pendiente | `lider_rebelde.png` | Minijefe del capítulo 2 y cazarrecompensas. | `ninja-frente.png` |
 | Pendiente | `intruso.png` | Ninja infiltrado (capítulo 3 y alarma de la lluvia). | `ninja-frente.png` |
 | Pendiente | `pergamino.png` | Recompensa: pergamino que enseña un jutsu (pantalla de recompensas y objeto en el suelo). | `edificio.png` |
