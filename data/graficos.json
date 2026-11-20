@@ -206,5 +206,11 @@
       "golpe": 3.467,
       "caminar": 1.033
     }
-  }
+  },
+  "tres_colas_ojo": [
+    -1.9,
+    3.76,
+    4.72
+  ],
+  "tres_colas_escala": 1.8
 }

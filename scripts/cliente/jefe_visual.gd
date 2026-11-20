@@ -19,9 +19,28 @@ func construir() -> void:
 	_cuerpo = Node3D.new()
 	add_child(_cuerpo)
 	if ResourceLoader.exists("res://assets/modelos/tres_colas.glb"):
-		var m := (load("res://assets/modelos/tres_colas.glb") as PackedScene).instantiate()
-		m.scale = Vector3.ONE * 1.0
+		# Modelo de Meshy (desde la imagen de GPT) con su textura y el toon del juego; el frente mira a +Z.
+		var esc := float(Datos.graficos.get("tres_colas_escala", 1.8))
+		var m := Kit.instancia("tres_colas")
+		m.scale = Vector3.ONE * esc
 		_cuerpo.add_child(m)
+		# Meshy no reconstruyó las colas (en la imagen van enroscadas detrás): colas propias que se mecen.
+		_crear_colas(Vector3(0, 2.4 * esc, -4.6 * esc), esc * 0.9, Materiales.solido(Color(0.46, 0.3, 0.31), 0.9), Materiales.solido(Color(0.9, 0.58, 0.56), 0.8))
+		_ojo = MeshInstance3D.new()   # brillo del ojo rojo encima del modelo
+		var os2 := SphereMesh.new()
+		os2.radius = 0.45
+		os2.height = 0.9
+		_ojo.mesh = os2
+		_ojo.material_override = Materiales.emisivo(Color(1.0, 0.15, 0.1), 3.5)
+		# Posición del ojo en el modelo (data/graficos.json → tres_colas_ojo, medida en Blender).
+		var po: Array = Datos.graficos.get("tres_colas_ojo", [0.0, -50.0, 0.0])
+		_ojo.position = Vector3(float(po[0]), float(po[1]), float(po[2])) * esc
+		_cuerpo.add_child(_ojo)
+		var luz := OmniLight3D.new()
+		luz.light_color = Color(1.0, 0.2, 0.15)
+		luz.light_energy = 2.0
+		luz.omni_range = 8.0
+		_ojo.add_child(luz)
 		return
 	var gris := _mat(Color(0.28, 0.31, 0.34))
 	var piel := _mat(Color(0.33, 0.47, 0.47))
@@ -88,19 +107,35 @@ func construir() -> void:
 			pata.position = Vector3(lx * 5.2, 0.4, lz * 4.6)
 			_cuerpo.add_child(pata)
 	# Tres colas (cadenas de segmentos que se mecen).
+	_crear_colas(Vector3(0, 2.0, -7.5), 1.0, piel, coral)
+
+
+func _crear_colas(base: Vector3, esc: float, mat: Material, punta: Material) -> void:
 	for c in 3:
 		var raiz := Node3D.new()
-		raiz.position = Vector3((c - 1) * 2.6, 2.0, -7.5)
+		raiz.position = base + Vector3((c - 1) * 2.6 * esc, 0, 0)
+		raiz.rotation.x = 0.5   # suben un poco hacia atrás
 		_cuerpo.add_child(raiz)
 		var segs: Array = []
 		var padre: Node3D = raiz
-		for i in 7:
+		var n := 9
+		for i in n:
+			var r := lerpf(1.15, 0.45, float(i) / (n - 1)) * esc
 			var nodo := Node3D.new()
-			nodo.position = Vector3(0, 0, -1.6) if i > 0 else Vector3.ZERO
+			nodo.position = Vector3(0, 0, -r * 1.25) if i > 0 else Vector3.ZERO
 			padre.add_child(nodo)
-			var seg := Materiales.esfera(1.1 - i * 0.12, piel if i < 5 else coral, 8)
-			seg.scale = Vector3(1, 0.8, 1.3)
+			# Segmentos solapados (cola continua, con anillos como de crustáceo).
+			var seg := Materiales.esfera(r, mat, 10)
+			seg.scale = Vector3(1.0, 0.92, 1.5)
 			nodo.add_child(seg)
+			if i == n - 1:
+				# Aleta en la punta (como en la imagen): dos hojas de coral.
+				for lado in [-1.0, 1.0]:
+					var aleta := Materiales.cilindro(0.0, r * 0.9, r * 3.2, punta, 4)
+					aleta.position = Vector3(lado * r * 0.6, r * 0.9, -r * 0.6)
+					aleta.rotation = Vector3(-0.9, 0, lado * 0.5)
+					aleta.scale = Vector3(1, 1, 0.25)
+					nodo.add_child(aleta)
 			segs.append(nodo)
 			padre = nodo
 		_colas.append(segs)
@@ -124,7 +159,8 @@ func _process(d: float) -> void:
 	for c in _colas.size():
 		var segs: Array = _colas[c]
 		for i in segs.size():
-			(segs[i] as Node3D).rotation = Vector3(sin(_t * 1.6 + i * 0.5 + c) * 0.12, sin(_t * 1.1 - i * 0.6 + c * 2.0) * 0.25, 0)
+			# Se enroscan hacia arriba (como en la imagen) y se mecen con una onda que va hacia la punta.
+			(segs[i] as Node3D).rotation = Vector3(0.22 + sin(_t * 1.6 + i * 0.5 + c) * 0.08, sin(_t * 1.1 - i * 0.6 + c * 2.0) * 0.18, 0)
 	if _ojo != null:
 		var m := _ojo.material_override as StandardMaterial3D
 		if m != null:
