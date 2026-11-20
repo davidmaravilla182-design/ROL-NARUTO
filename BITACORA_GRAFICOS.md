@@ -322,5 +322,15 @@ Escena → emerge → balas → aviso de rodar → rueda → niebla con copias �
 8. **Ajustes de IA compartidos** entre enemigos de la misma plantilla (las misiones cambiaban el radio de detección de
    todos) → cada IA copia su configuración.
 
-### Pendiente de arte (imágenes pedidas a GPT en `referencias/gpt/PEDIDOS.md`)
-Tres Colas, pájaro de papel, líder rebelde, intruso, pergamino y cofre: hasta tenerlas se usan marcadores.
+### Arte de GPT → Meshy (todas las imágenes de `referencias/gpt/PEDIDOS.md` integradas, 15 créditos cada una)
+- **Tres Colas**: modelo de Meshy + colas propias que se mecen, ojo brillante, rueda y se aturde.
+- **Pájaro de papel** (`scripts/cliente/pajaro_papel.gd`): llega volando en 3D al hombro del jugador en las escenas
+  del líder; las alas aletean en el shader (`toon_tex_aleteo`). Capturas `docs/capturas/v09/pajaro_*.png`.
+- **Líder rebelde e intruso** (`tools/blender/npc_ia.py`): el esqueleto de 17 huesos del juego sobre el modelo de
+  Meshy (mismo proceso que el ninja del jugador), así usan todas las animaciones del juego y las de Meshy.
+  Correcciones: punta de la mano a lo largo del antebrazo (la detección caía en la capa y estiraba el muslo con el
+  brazo), sin pesos de brazo en lo pegado al cuerpo y el arma de la espalda fija al pecho. La textura va aparte
+  (la incrustada en JPEG no la importaba Godot). Capturas `npc_animados.png`, `npc_detalle.png`.
+- **Cofre y pergamino** (`tools/blender/cofre_tapa.py` separa la tapa con su bisagra): la pantalla de recompensas
+  muestra el cofre 3D que tiembla, abre la tapa con luz ámbar y, si ganaste un jutsu, el pergamino sube girando.
+  Capturas `recompensa_*.png`.

@@ -52,6 +52,22 @@
   "pajaro_papel": [
    "01a1f725-86c7-7689-b28d-318adcdf32ae",
    15
+  ],
+  "lider_rebelde": [
+   "01a1f72b-8316-71da-8745-07643b7b1a2f",
+   15
+  ],
+  "intruso": [
+   "01a1f72b-8925-773c-840c-6f4d809a4708",
+   15
+  ],
+  "pergamino": [
+   "01a1f72b-9094-720b-8e1b-29481472ea64",
+   15
+  ],
+  "cofre_recompensa": [
+   "01a1f72b-960b-74b6-b18f-30accc6745ad",
+   15
   ]
  }
 }

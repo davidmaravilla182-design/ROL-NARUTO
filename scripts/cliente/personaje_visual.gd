@@ -42,10 +42,14 @@ var sharingan := false
 var modelo_ia := false          # true: ninja del modelo generado por IA (tools/blender/ninja_ia.py)
 var _mat_ninja: ShaderMaterial
 var _malla_pelo: MeshInstance3D
+var modelo_npc := ""            # NPC con nombre: assets/modelos/npc_<modelo>.glb (imagen de GPT → Meshy → tools/blender/npc_ia.py)
 
 
 func construir(plantilla_id: String) -> void:
 	var d := Datos.personaje(plantilla_id)
+	var mod := str(d.get("ia", {}).get("modelo", ""))
+	if mod != "" and ResourceLoader.exists("res://assets/modelos/npc_%s.glb" % mod):
+		modelo_npc = mod
 	# Jugadores y NPC humanos usan el ninja por piezas (los muñecos no pasan por aquí).
 	construir_aspecto(d.get("aspecto", {}), str(d.get("aldea", "")), str(d.get("clan", "")), str(d.get("tipo", "")) != "muneco")
 
@@ -64,7 +68,12 @@ func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "",
 	modelo_ia = por_piezas or (usar_ia and ResourceLoader.exists(RUTA_NINJA) and Datos.graficos.has("ninja_ia"))
 	_conf_ninja = "ninja_piezas" if por_piezas else "ninja_ia"
 	cuerpo_continuo = modelo_ia or ResourceLoader.exists(RUTA_CUERPO)
-	if por_piezas:
+	if modelo_npc != "":
+		por_piezas = false
+		modelo_ia = true
+		cuerpo_continuo = true
+		_cargar_npc()
+	elif por_piezas:
 		_cargar_piezas(aspecto, clan_id)
 	elif modelo_ia:
 		_cargar_ninja(aspecto, clan_id)
@@ -94,7 +103,9 @@ func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "",
 		ba.add_child(marco)
 		_adjuntos[h[0]] = marco
 
-	if modelo_ia:
+	if modelo_npc != "":
+		_detalles_npc()
+	elif modelo_ia:
 		_detalles_ninja(aspecto)
 		Vestimenta.vestir_ia(self, aspecto)
 	else:
@@ -124,9 +135,9 @@ func construir_aspecto(aspecto: Dictionary, aldea_id := "lluvia", clan_id := "",
 		var pos_cad := esqueleto.get_bone_rest(esqueleto.find_bone("Caderas")).origin
 		anim.add_animation_library("", Animaciones.crear_libreria(ruta_esq, nombres, pos_cad, rests))
 		# Animaciones de Meshy (combate, reacciones, caminar/correr) retargeteadas a este esqueleto.
-		if por_piezas:
+		if por_piezas or modelo_npc != "":
 			var rg := func(n: String) -> Transform3D: return _rest_global(esqueleto.find_bone(n))
-			anim.add_animation_library("m", Animaciones.libreria_meshy("piezas|" + ruta_esq, ruta_esq, rg, pos_cad))
+			anim.add_animation_library("m", Animaciones.libreria_meshy(("npc_%s|" % modelo_npc if modelo_npc != "" else "piezas|") + ruta_esq, ruta_esq, rg, pos_cad))
 	else:
 		anim.add_animation_library("", Animaciones.crear_libreria(ruta_esq, nombres, HUESOS[0][2]))
 	reproducir("quieto")
@@ -170,6 +181,35 @@ func _cargar_cuerpo(a: Dictionary) -> void:
 				(mi as MeshInstance3D).visible = false
 			var col: Color = colores.get(base_n, Color(0.5, 0.5, 0.5))
 			(mi as MeshInstance3D).set_surface_override_material(i, Materiales.solido(col, 0.75 if nombre == "piel" else 0.9))
+
+
+## NPC con nombre (modelo propio con el esqueleto del juego): la textura tal cual con el sombreado toon de los ninjas.
+func _cargar_npc() -> void:
+	var escena: Node3D = (load("res://assets/modelos/npc_%s.glb" % modelo_npc) as PackedScene).instantiate()
+	escena.name = "Cuerpo"
+	add_child(escena)
+	esqueleto = _buscar(escena, "Skeleton3D")
+	var mallas: Array = []
+	_buscar_todos(escena, mallas)
+	var tex: Texture2D = load("res://assets/texturas/npc_%s_color.png" % modelo_npc)
+	_mat_ninja = ShaderMaterial.new()
+	_mat_ninja.shader = Shaders.shader("ninja_ia")   # sin recolor: colores elegidos = originales (blanco)
+	_mat_ninja.set_shader_parameter("tex", tex)
+	if Materiales.grosor_contorno > 0.0:
+		_mat_ninja.next_pass = Shaders.material_contorno(Materiales.grosor_contorno * 0.8)
+	for mi in mallas:
+		(mi as MeshInstance3D).material_override = _mat_ninja
+
+
+## El NPC con modelo propio no cambia de ojos: solo el brillo rojo del modo ocular.
+func _detalles_npc() -> void:
+	_mat_ojos_normal = Shaders.material("ojo")
+	_luz_ojos = OmniLight3D.new()
+	_luz_ojos.light_color = Color(1, 0.1, 0.1)
+	_luz_ojos.omni_range = 0.35
+	_luz_ojos.light_energy = 0.0
+	_luz_ojos.position = Vector3(0, 0.1, 0.15)
+	hueso("Cabeza").add_child(_luz_ojos)
 
 
 ## Ninja de los modelos IA: malla con textura recoloreada por zonas, cabello aparte y calcomanía del clan.
@@ -308,7 +348,7 @@ func vestir_piezas(a: Dictionary, clan_id: String) -> void:
 
 ## Colores de la personalización sobre las zonas de la textura del modelo IA.
 func recolorear(a: Dictionary) -> void:
-	if _mat_ninja == null:
+	if _mat_ninja == null or modelo_npc != "":
 		return
 	var z: Dictionary = Datos.graficos[_conf_ninja]["zonas"]
 	var origen := func(k): return Color(z[k][0], z[k][1], z[k][2])
@@ -523,7 +563,7 @@ const ALIAS_MESHY := {"correr": "m/m_correr", "golpeado": "m/m_golpeado", "esqui
 
 
 func _resolver_nombre(nombre: String) -> String:
-	if por_piezas and ALIAS_MESHY.has(nombre) and anim.has_animation(ALIAS_MESHY[nombre]):
+	if (por_piezas or modelo_npc != "") and ALIAS_MESHY.has(nombre) and anim.has_animation(ALIAS_MESHY[nombre]):
 		return ALIAS_MESHY[nombre]
 	return nombre
 

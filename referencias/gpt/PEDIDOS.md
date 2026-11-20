@@ -22,10 +22,10 @@ Así el estilo, la paleta y las proporciones quedan iguales a lo que ya está en
 |---|---|---|---|
 | Hecho (Meshy 15 cr, en el juego) | `tres_colas.png` | Jefe: el Tres Colas que emerge del lago (capítulo 6). | `edificio.png` |
 | Hecho (Meshy 15 cr, en el juego) | `pajaro_papel.png` | Mensajero del líder de la torre (escenas de misión). | `edificio.png` |
-| Pendiente | `lider_rebelde.png` | Minijefe del capítulo 2 y cazarrecompensas. | `ninja-frente.png` |
-| Pendiente | `intruso.png` | Ninja infiltrado (capítulo 3 y alarma de la lluvia). | `ninja-frente.png` |
-| Pendiente | `pergamino.png` | Recompensa: pergamino que enseña un jutsu (pantalla de recompensas y objeto en el suelo). | `edificio.png` |
-| Pendiente | `cofre_recompensa.png` | Cofre de papel y metal de la pantalla de recompensas. | `edificio.png` |
+| Hecho (Meshy 15 cr, en el juego) | `lider_rebelde.png` | Minijefe del capítulo 2 y cazarrecompensas. | `ninja-frente.png` |
+| Hecho (Meshy 15 cr, en el juego) | `intruso.png` | Ninja infiltrado (capítulo 3 y alarma de la lluvia). | `ninja-frente.png` |
+| Hecho (Meshy 15 cr, en el juego) | `pergamino.png` | Recompensa: pergamino que enseña un jutsu (pantalla de recompensas y objeto en el suelo). | `edificio.png` |
+| Hecho (Meshy 15 cr, en el juego) | `cofre_recompensa.png` | Cofre de papel y metal de la pantalla de recompensas. | `edificio.png` |
 
 ---
 

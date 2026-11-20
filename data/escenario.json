@@ -344,6 +344,16 @@
     0.99,
     0.74,
     0.5
+   ],
+   "cofre_recompensa": [
+    0.71,
+    0.67,
+    0.6
+   ],
+   "pergamino": [
+    0.38,
+    0.39,
+    0.12
    ]
   },
   "canal": {
@@ -10057,6 +10067,14 @@
    "pajaro_papel": [
     5784,
     1200
+   ],
+   "cofre_recompensa": [
+    5241,
+    1200
+   ],
+   "pergamino": [
+    4932,
+    999
    ]
   },
   "props_base": [
