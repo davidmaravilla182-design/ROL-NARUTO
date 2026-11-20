@@ -109,8 +109,17 @@ func probar_oleadas() -> void:
 	var s := servidor(1)
 	var j := s.entidad_de_peer(1)
 	j.invulnerable_t = 999.0
+	var lejos := j.pos
 	s.misiones.empezar_capitulo(j, "cap2")
-	correr(s, 6.0)
+	var ev0 := correr(s, 6.0)
+	# Empezada lejos (en la plaza, como desde el menú): el pájaro lleva al jugador a la zona de la emboscada
+	# y los rebeldes lo atacan (antes se quedaban a 150 m y no pasaba nada).
+	var zona := Vector3(92, 0, -120)
+	comprobar(Vector2(j.pos.x - zona.x, j.pos.z - zona.z).length() < 25.0 and lejos.distance_to(zona) > 60.0,
+		"desde lejos, la misión lleva al jugador a las oleadas (%.0f m → %.0f m)" % [Vector2(lejos.x - zona.x, lejos.z - zona.z).length(), Vector2(j.pos.x - zona.x, j.pos.z - zona.z).length()])
+	var cerca := s.entidades.filter(func(e): return e.de_mision and e.pos.distance_to(j.pos) < 6.0)
+	comprobar(not cerca.is_empty(), "los rebeldes de la oleada van a por el jugador")
+	comprobar(ev0.any(func(e): return e["tipo"] == "anuncio" and str(e["titulo"]).begins_with("¡Oleada 1")), "se anuncia la oleada 1")
 	var evs: Array = []
 	for k in 3:
 		limpiar(s)

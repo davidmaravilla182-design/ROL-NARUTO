@@ -1196,8 +1196,11 @@ func _evento_mision(ev: Dictionary) -> void:
 			ui_mision.mision_inicio(str(ev.get("titulo", "")))
 		"objetivo":
 			ui_mision.objetivo(str(ev.get("objetivo", "")), str(ev.get("contador", "")), float(ev.get("limite", 0.0)), float(ev.get("t", 0.0)))
+			var zp: Array = ev.get("pos", [])
+			hud.marca_mision(Vector3(float(zp[0]), 0, float(zp[1])) if zp.size() >= 2 else null)
 		"fin":
 			ui_mision.mision_fin()
+			hud.marca_mision(null)
 			mapa.arena_lago = Vector3.ZERO
 			var asc := Perfil.aplicar_mision(ev)
 			Perfil.guardar()

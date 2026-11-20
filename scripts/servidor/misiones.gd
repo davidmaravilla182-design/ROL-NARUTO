@@ -151,8 +151,10 @@ func _siguiente_fase() -> void:
 			_nuevo_rival(f)
 		"oleadas":
 			d["oleada"] = 0
+			_llevar_jugadores(_v3(f["pos"]), 13.0)
 			_nueva_oleada(f)
 		"perseguir":
+			_llevar_jugadores(_v3(f["inicio"]), 14.0)
 			var e := _crear(str(f["plantilla"]), _v3(f["inicio"]), {})
 			var ruta: Array = []
 			for p in f["ruta"]:
@@ -163,14 +165,37 @@ func _siguiente_fase() -> void:
 			d["presa"] = e.id
 			d["limite"] = float(f.get("limite", 90.0))
 		"defender":
+			_llevar_jugadores(_v3(f["pos"]), 6.0)
 			d["limite"] = float(f.get("duracion", 120.0))
 			d["oleada_t"] = 0.0
 			d["capitanes"] = false
 		"jefe":
 			var b := Jefes.crear(s, str(f["jefe"]), _v3(f["pos"]))
+			_llevar_jugadores(_v3(f["pos"]), s.mapa.arena_lago.z + 5.0 if s.mapa.arena_lago.z > 0.0 else 25.0)
 			activa["ent"].append(b.id)
 			d["jefe"] = b.id
 	_avisar_objetivo()
+
+
+## Si el jugador está lejos de donde ocurre la fase (p. ej. empezó desde el menú en la plaza), el pájaro lo lleva:
+## humo, y aparece a «distancia» metros de la zona, del lado por donde venía y mirándola.
+func _llevar_jugadores(zona: Vector3, distancia: float) -> void:
+	for j in _jugadores():
+		if not j.vivo():
+			continue
+		var v: Vector3 = j.pos - zona
+		v.y = 0.0
+		if v.length() <= distancia + 15.0:
+			continue
+		var dir: Vector3 = v.normalized() if v.length() > 0.1 else Vector3(0, 0, 1)
+		var p2 := s.mapa.resolver_colision(Vector2(zona.x + dir.x * distancia, zona.z + dir.z * distancia), Datos.sim("radio_entidad"), 0.0)
+		s._evento({"tipo": "humo", "entidad": j.id, "pos": j.pos})
+		j.pos = Vector3(p2.x, s.mapa.altura_suelo(p2, 0.0), p2.y)
+		j.empuje = Vector3.ZERO
+		j.vel_y = 0.0
+		j.yaw = atan2(-dir.x, -dir.z)
+		s._evento({"tipo": "humo", "entidad": j.id, "pos": j.pos})
+		s._evento({"tipo": "mensaje", "entidad": j.id, "clave": "msg_mision_llevado"})
 
 
 func _avisar_objetivo() -> void:
@@ -188,7 +213,7 @@ func _contador() -> String:
 		"duelos":
 			return "%d / %d" % [int(d.get("rival_i", 0)) + 1, (f["rivales"] as Array).size()]
 		"oleadas":
-			return "Oleada %d / %d · quedan %d" % [int(d.get("oleada", 0)) + 1, (f["oleadas"] as Array).size(), _vivos().size()]
+			return "Oleada %d / %d · quedan %d enemigos" % [int(d.get("oleada", 0)) + 1, (f["oleadas"] as Array).size(), _vivos().size()]
 		"defender":
 			return "Quedan %d s" % int(maxf(float(d.get("limite", 0.0)) - float(activa.get("t", 0.0)), 0.0))
 	return ""
@@ -361,6 +386,13 @@ func _nuevo_rival(f: Dictionary) -> void:
 func _nueva_oleada(f: Dictionary) -> void:
 	var d: Dictionary = activa["datos"]
 	var ol: Array = (f["oleadas"] as Array)[int(d["oleada"])]
+	var n_ol := (f["oleadas"] as Array).size()
+	if n_ol > 1:
+		var con_jefe := ol.any(func(g): return bool(g.get("jefe", false)))
+		var titulo := "¡Oleada %d de %d!" % [int(d["oleada"]) + 1, n_ol]
+		if con_jefe:
+			titulo = "¡Última oleada: llega el líder!"
+		s._evento({"tipo": "anuncio", "titulo": titulo, "para_todos": true})
 	var centro := _v3(f["pos"])
 	var k := 0
 	for g in ol:

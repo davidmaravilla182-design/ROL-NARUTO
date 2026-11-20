@@ -677,13 +677,21 @@ func marca_minimapa(pos: Vector3, segundos: float, color: Color) -> void:
 	_marcas.append({"pos": Vector2(pos.x, pos.z), "color": color, "hasta": Time.get_ticks_msec() + int(segundos * 1000.0)})
 
 
+## Zona de la misión activa en el minimapa (dorada, parpadea); null la quita.
+var _marca_mision: Variant = null
+func marca_mision(pos: Variant) -> void:
+	_marca_mision = Vector2(pos.x, pos.z) if pos is Vector3 else null
+
+
 func actualizar_mapa(yo: Vector2, yaw: float, otros: Array) -> void:
 	var ahora := Time.get_ticks_msec()
 	_marcas = _marcas.filter(func(m): return int(m["hasta"]) > ahora)
-	if not _marcas.is_empty():
+	if not _marcas.is_empty() or _marca_mision != null:
 		otros = otros.duplicate()
 		for m in _marcas:
 			otros.append({"pos": m["pos"], "color": m["color"] if (ahora / 250) % 2 == 0 else Color(1, 1, 1)})
+		if _marca_mision != null:
+			otros.append({"pos": _marca_mision, "color": Color(1.0, 0.82, 0.3) if (ahora / 400) % 2 == 0 else Color(1, 1, 0.85)})
 	if minimapa != null:
 		minimapa.actualizar(yo, yaw, otros)
 	if mapa_completo != null and is_instance_valid(mapa_completo):
