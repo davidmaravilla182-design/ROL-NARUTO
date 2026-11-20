@@ -102,7 +102,7 @@
     "kage"
   ],
   "repertorio": {
-    "_nota": "4 jutsus activos + 1 modo; el combo de taijutsu siempre está. Tope de puntos de maestría por repertorio.",
+    "_nota": "4 jutsus activos + 1 modo; el combo de taijutsu siempre está. Tope de puntos de maestría por repertorio: según el rango (tope_por_rango) más 1 por cada «capitulos_por_punto» capítulos de la historia (hasta max_puntos_historia).",
     "ranuras_activas": 4,
     "tope_puntos": 12,
     "repertorios_guardados": 3,
@@ -138,7 +138,17 @@
         },
         "motivo": "Rinnegan y Mangekyō no van juntos"
       }
-    ]
+    ],
+    "tope_por_rango": {
+      "estudiante": 12,
+      "genin": 12,
+      "chunin": 14,
+      "jonin": 16,
+      "elite": 18,
+      "kage": 20
+    },
+    "capitulos_por_punto": 3,
+    "max_puntos_historia": 3
   },
   "maestria": {
     "_nota": "Experiencia por jutsu: usarlo en combate y acertar desbloquea N2 y N3.",

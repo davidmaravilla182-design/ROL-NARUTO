@@ -273,7 +273,7 @@ func _refrescar() -> void:
 		rn.queue_redraw()
 	_ranura_modo.queue_redraw()
 	var v := Repertorio.validar(rep(), Perfil.ficha(), Perfil.modo_prueba)
-	var tope := int(Repertorio.conf().get("tope_puntos", 12))
+	var tope := Repertorio.tope_puntos(Perfil.ficha())
 	_puntos.text = Datos.texto("rep_puntos_hud", [v["puntos"], tope])
 	_puntos.add_theme_color_override("font_color", Color(1, 0.4, 0.35) if int(v["puntos"]) > tope and not Perfil.modo_prueba else Estilo.TEXTO)
 	_errores.text = "\n".join(v["errores"]) if not v["ok"] else Datos.texto("rep_arrastra")
@@ -306,7 +306,7 @@ func equipar(id: String, i: int) -> bool:
 					break
 			nuevo["modo"] = elegido
 			aviso = Datos.texto("rep_modo_auto", [Datos.jutsu(elegido).get("nombre", elegido), Datos.jutsu(id).get("nombre", id)])
-	var tope := int(Repertorio.conf().get("tope_puntos", 12))
+	var tope := Repertorio.tope_puntos(Perfil.ficha())
 	if not Perfil.modo_prueba and Repertorio.puntos_usados(nuevo) > tope:
 		_refrescar()
 		_errores.text = Datos.texto("rep_sin_puntos")

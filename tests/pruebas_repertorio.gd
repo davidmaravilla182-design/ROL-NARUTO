@@ -25,6 +25,7 @@ func _initialize() -> void:
 	probar_ocho_puertas()
 	probar_bola_fuego_suelo()
 	probar_tecnicas_nuevas()
+	probar_tope_creciente()
 	print("== Resultado: %d pasadas, %d fallos ==" % [pasadas, fallos])
 	quit(1 if fallos > 0 else 0)
 
@@ -124,8 +125,10 @@ func probar_validacion() -> void:
 	var v := Repertorio.validar(defecto, f)
 	comprobar(v["ok"], "el repertorio por defecto es válido (%d puntos) %s" % [v["puntos"], str(v["errores"])])
 	var caro := {"activos": ["kirin", "chidori", "rasengan", "bola_fuego"], "modo": "sharingan"}
-	v = Repertorio.validar(caro, f)
-	comprobar(not v["ok"] and int(v["puntos"]) > 12, "superar 12 puntos se rechaza (%d)" % v["puntos"])
+	var f_genin := f.duplicate()
+	f_genin["rango"] = "genin"   # tope de un Genin sin historia: 12
+	v = Repertorio.validar(caro, f_genin)
+	comprobar(not v["ok"] and int(v["puntos"]) > 12, "superar el tope de un Genin (12) se rechaza (%d)" % v["puntos"])
 	comprobar(Repertorio.validar(caro, f, true)["ok"], "modo prueba ignora puntos y requisitos")
 	var inc := {"activos": ["amaterasu", "", "", ""], "modo": "ocho_puertas"}
 	v = Repertorio.validar(inc, f, false)
@@ -192,9 +195,9 @@ func muneco_central(s: ServidorJuego) -> EntidadServidor:
 
 
 func probar_servidor_repertorio() -> void:
-	var s := servidor(["kirin", "chidori", "rasengan", "bola_fuego"], "sharingan", false, false)
+	var s := servidor(["kirin", "rasenshuriken", "chibaku_tensei", "hiraishin"], "sharingan", false, false)
 	var j := s.entidad_de_peer(1)
-	comprobar(not ("rasengan" in j.jutsus and "kirin" in j.jutsus and "bola_fuego" in j.jutsus and "chidori" in j.jutsus), "el servidor rechaza un repertorio que supera los puntos")
+	comprobar(not ("kirin" in j.jutsus and "rasenshuriken" in j.jutsus and "chibaku_tensei" in j.jutsus and "hiraishin" in j.jutsus), "el servidor rechaza un repertorio que supera los puntos (20 > tope)")
 	s.free()
 	s = servidor(["kirin", "chidori", "rasengan", "bola_fuego"], "sharingan", false, true)
 	j = s.entidad_de_peer(1)
@@ -651,3 +654,17 @@ func probar_tecnicas_nuevas() -> void:
 	evs = correr(s, 0.3)
 	comprobar(contar(evs, "tai") == 0, "sin abrir la primera puerta, no hay Loto")
 	s.free()
+
+
+## El tope de puntos crece poco a poco con el rango y la historia (antes era 12 fijo).
+func probar_tope_creciente() -> void:
+	var gen := Repertorio.tope_puntos({"rango": "genin", "capitulos": 0})
+	var chu := Repertorio.tope_puntos({"rango": "chunin", "capitulos": 0})
+	var jon := Repertorio.tope_puntos({"rango": "jonin", "capitulos": 6})
+	var tope := Repertorio.tope_puntos({"rango": "kage", "capitulos": 99})
+	comprobar(gen == 12 and chu > gen and jon > chu, "el tope sube con el rango y la historia (%d → %d → %d)" % [gen, chu, jon])
+	comprobar(tope <= 23, "pero sube despacio: tope máximo %d" % tope)
+	var pj := Creacion.nuevo()
+	pj["rango"] = "jonin"
+	pj["misiones"] = {"capitulo": 6}
+	comprobar(Repertorio.tope_puntos(Creacion.ficha(pj)) == 18, "un Jōnin con 6 capítulos tiene 18 puntos (%d)" % Repertorio.tope_puntos(Creacion.ficha(pj)))

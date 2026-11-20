@@ -205,6 +205,18 @@ static func incompatible(id: String, rep: Dictionary) -> String:
 	return ""
 
 
+## Tope de puntos del repertorio: crece poco a poco con el rango y con la historia
+## (data/reglas.json → repertorio.tope_por_rango y puntos_por_capitulos).
+static func tope_puntos(ficha_pj: Dictionary) -> int:
+	var c := conf()
+	var base := int(c.get("tope_puntos", 12))
+	var por_rango: Dictionary = c.get("tope_por_rango", {})
+	base = int(por_rango.get(str(ficha_pj.get("rango", "genin")), base))
+	var cada := int(c.get("capitulos_por_punto", 3))
+	var extra := mini(int(ficha_pj.get("capitulos", 0)) / maxi(cada, 1), int(c.get("max_puntos_historia", 3)))
+	return base + extra
+
+
 ## Valida un repertorio completo. Con `prueba` (modo prueba) se ignoran requisitos, puntos y maestría.
 static func validar(rep: Dictionary, ficha_pj: Dictionary, prueba := false) -> Dictionary:
 	var errores: Array = []
@@ -230,8 +242,8 @@ static func validar(rep: Dictionary, ficha_pj: Dictionary, prueba := false) -> D
 		errores.append(Datos.texto("rep_modo_invalido"))
 	var pts := puntos_usados(rep)
 	if not prueba:
-		if pts > int(c.get("tope_puntos", 12)):
-			errores.append(Datos.texto("rep_puntos", [pts, int(c.get("tope_puntos", 12))]))
+		if pts > tope_puntos(ficha_pj):
+			errores.append(Datos.texto("rep_puntos", [pts, tope_puntos(ficha_pj)]))
 		for id in equipados(rep):
 			if not (id in catalogo()):
 				continue

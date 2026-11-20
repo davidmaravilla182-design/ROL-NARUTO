@@ -127,7 +127,8 @@ static func linajes(pj: Dictionary) -> Array:
 ## Ficha para las reglas del repertorio (requisitos, validación).
 static func ficha(pj: Dictionary, maestria: Dictionary = {}) -> Dictionary:
 	return {"attrs": pj.get("atributos", {}), "naturalezas": naturalezas(pj), "linajes": linajes(pj), "contratos": [],
-		"rango": str(pj.get("rango", "genin")), "maestria": maestria, "pergaminos": pj.get("pergaminos", [])}
+		"rango": str(pj.get("rango", "genin")), "maestria": maestria, "pergaminos": pj.get("pergaminos", []),
+		"capitulos": int((pj.get("misiones", {}) as Dictionary).get("capitulo", 0)) if typeof(pj.get("misiones")) == TYPE_DICTIONARY else 0}
 
 
 ## Estadísticas con los modificadores del clan.
@@ -285,7 +286,7 @@ static func repertorio_inicial(pj: Dictionary) -> Dictionary:
 	for id in lista:
 		if activos.size() >= 3:
 			break
-		if puntos + Repertorio.puntos(id) <= int(Repertorio.conf().get("tope_puntos", 12)):
+		if puntos + Repertorio.puntos(id) <= Repertorio.tope_puntos(f):
 			activos.append(id)
 			puntos += Repertorio.puntos(id)
 	while activos.size() < int(Repertorio.conf().get("ranuras_activas", 4)):

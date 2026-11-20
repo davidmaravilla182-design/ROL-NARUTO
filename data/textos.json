@@ -133,7 +133,7 @@
   "hud_nivel_auto": "Nivel auto",
   "boton_modo": "Modo",
   "rep_cat_todas": "Todas",
-  "rep_sin_puntos": "No alcanzan los puntos: quita otro jutsu primero",
+  "rep_sin_puntos": "No alcanzan los puntos: quita otro jutsu primero. Subes el tope al ascender de rango y cada 3 capítulos de la historia",
   "rep_modo_auto": "Se equipó {0} en la ranura MODO (lo necesita {1})",
   "rep_rol_todos": "Todos",
   "msg_sustitucion": "¡Sustitución!",
